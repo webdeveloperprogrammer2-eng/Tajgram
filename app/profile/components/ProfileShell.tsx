@@ -6,7 +6,6 @@
 //    - SIDEBAR-i chap (kompyuter)
 //    - qatori poyoni (telefon)
 //    - qatori boloi bo logo (telefon)
-//  Logika ivaz nashudaast: faqat naql (theme) va baromadan.
 // ============================================================
 import { useEffect } from "react";
 import Link from "next/link";
@@ -34,7 +33,6 @@ export default function ProfileShell({
 }: {
   children: React.ReactNode;
 }) {
-  // Avval Provider, ba'd Frame - chunki Frame az Provider ma'lumot megirad
   return (
     <ProfileProvider>
       <Frame>{children}</Frame>
@@ -42,21 +40,19 @@ export default function ProfileShell({
   );
 }
 
-// Ro-ykhati navigatsiya. "soon" = hanuz sahifaash nest.
+// Рӯйхати навигатсия бо ҳарфҳои тоҷикӣ
 const NAV = [
-  { key: "home", label: "Asosi", icon: Home, soon: true },
-  { key: "search", label: "Justuju", icon: Search, soon: true },
-  { key: "explore", label: "Kashf", icon: Compass, soon: true },
-  { key: "likes", label: "Bayanho", icon: Heart, soon: true },
-  { key: "create", label: "Guzoshtan", icon: PlusSquare, soon: true },
-  { key: "saved", label: "Saqlshuda", icon: Bookmark, soon: true },
+  { key: "home", label: "Асосӣ", icon: Home, soon: true },
+  { key: "search", label: "Ҷустуҷӯ", icon: Search, soon: true },
+  { key: "explore", label: "Кашф", icon: Compass, soon: true },
+  { key: "likes", label: "Огоҳиҳо", icon: Heart, soon: true },
+  { key: "create", label: "Эҷод кардан", icon: PlusSquare, soon: true },
+  { key: "saved", label: "Захирашудаҳо", icon: Bookmark, soon: true },
 ];
 
 function Frame({ children }: { children: React.ReactNode }) {
   const { theme, toggleTheme, status, logout, profile } = useProfile();
 
-  // Radix modal-horo ba <body> mekashad - berun az .shell.
-  // Baroi hamin rangho boyad dar <html> ham bosand.
   useEffect(() => {
     document.documentElement.setAttribute("data-profile-theme", theme);
     return () => {
@@ -69,7 +65,6 @@ function Frame({ children }: { children: React.ReactNode }) {
       data-theme={theme}
       className={`${styles.shell} relative min-h-screen`}
     >
-      {/* Nurhoi narmi gradient dar fon */}
       <span className={styles.aura} aria-hidden />
       <span className={styles.auraLow} aria-hidden />
 
@@ -109,13 +104,13 @@ function Frame({ children }: { children: React.ReactNode }) {
           {/* PAYOMHO - sahifai haqiqi (/chats) */}
           <Link href="/chats" className={styles.navItem}>
             <MessageCircle className="h-6 w-6 shrink-0" strokeWidth={1.8} />
-            <span className="hidden text-sm xl:inline">Payomho</span>
+            <span className="hidden text-sm xl:inline">Паёмҳо</span>
           </Link>
 
           {/* Profil - sahifai hozira */}
           <Link href="/profile" className={`${styles.navItem} ${styles.navItemActive}`}>
             <User className="h-6 w-6 shrink-0" strokeWidth={2} />
-            <span className="hidden text-sm xl:inline">Profil</span>
+            <span className="hidden text-sm xl:inline">Профил</span>
           </Link>
         </nav>
 
@@ -128,20 +123,20 @@ function Frame({ children }: { children: React.ReactNode }) {
               <Moon className="h-6 w-6 shrink-0" strokeWidth={1.8} />
             )}
             <span className="hidden text-sm xl:inline">
-              {theme === "dark" ? "Naqli ravshan" : "Naqli torik"}
+              {theme === "dark" ? "Мавзӯи равшан" : "Мавзӯи торик"}
             </span>
           </button>
 
           {status === "ready" && (
             <button type="button" onClick={logout} className={styles.navItem}>
               <LogOut className="h-6 w-6 shrink-0" strokeWidth={1.8} />
-              <span className="hidden text-sm xl:inline">Baromadan</span>
+              <span className="hidden text-sm xl:inline">Баромадан</span>
             </button>
           )}
 
           <span className={`${styles.navItem} ${styles.navItemSoon}`}>
             <Menu className="h-6 w-6 shrink-0" strokeWidth={1.8} />
-            <span className="hidden text-sm xl:inline">Boz ham</span>
+            <span className="hidden text-sm xl:inline">Бештар</span>
           </span>
         </div>
       </aside>
@@ -162,7 +157,7 @@ function Frame({ children }: { children: React.ReactNode }) {
         </Link>
 
         <div className="flex items-center gap-1">
-          <IconBtn onClick={toggleTheme} label="Naqlro ivaz kuned">
+          <IconBtn onClick={toggleTheme} label="Мавзӯъро иваз кунед">
             {theme === "dark" ? (
               <Sun className="h-5 w-5" strokeWidth={1.8} />
             ) : (
@@ -171,7 +166,7 @@ function Frame({ children }: { children: React.ReactNode }) {
           </IconBtn>
 
           {status === "ready" && (
-            <IconBtn onClick={logout} label="Baromadan">
+            <IconBtn onClick={logout} label="Баромадан">
               <LogOut className="h-5 w-5" strokeWidth={1.8} />
             </IconBtn>
           )}
@@ -193,7 +188,7 @@ function Frame({ children }: { children: React.ReactNode }) {
           </span>
         ))}
 
-        <Link href="/chats" aria-label="Payomho" className="p-2">
+        <Link href="/chats" aria-label="Паёмҳо" className="p-2">
           <MessageCircle className="h-6 w-6" strokeWidth={1.8} />
         </Link>
 
@@ -209,7 +204,6 @@ function Frame({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Nuqtai nav dar sidebar - hanuz sahifaash nest
 function SideItem({
   label,
   icon: Icon,
@@ -220,7 +214,7 @@ function SideItem({
   return (
     <span
       className={`${styles.navItem} ${styles.navItemSoon}`}
-      title="Ba zudi"
+      title="Ба наздикӣ"
     >
       <Icon className="h-6 w-6 shrink-0" strokeWidth={1.8} />
       <span className="hidden text-sm xl:inline">{label}</span>

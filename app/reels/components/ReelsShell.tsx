@@ -40,14 +40,13 @@ export default function ReelsShell({
   );
 }
 
-// Nuqtahoi hanuz sahifanadosht
 const NAV = [
-  { key: "home", label: "Asosi", icon: Home },
-  { key: "search", label: "Justuju", icon: Search },
-  { key: "explore", label: "Kashf", icon: Compass },
-  { key: "likes", label: "Bayanho", icon: Heart },
-  { key: "create", label: "Guzoshtan", icon: PlusSquare },
-  { key: "saved", label: "Saqlshuda", icon: Bookmark },
+  { key: "home", label: "Асосӣ", icon: Home },
+  { key: "search", label: "Ҷустуҷӯ", icon: Search },
+  { key: "explore", label: "Кашф", icon: Compass },
+  { key: "likes", label: "Огоҳиҳо", icon: Heart },
+  { key: "create", label: "Эҷод кардан", icon: PlusSquare },
+  { key: "saved", label: "Захирашудаҳо", icon: Bookmark },
 ];
 
 function Frame({ children }: { children: React.ReactNode }) {
@@ -87,7 +86,7 @@ function Frame({ children }: { children: React.ReactNode }) {
             <span
               key={item.key}
               className={`${styles.navItem} ${styles.navItemSoon}`}
-              title="Ba zudi"
+              title="Ба наздикӣ"
             >
               <item.icon className="h-6 w-6 shrink-0" strokeWidth={1.8} />
               <span className="hidden text-sm xl:inline">{item.label}</span>
@@ -102,12 +101,12 @@ function Frame({ children }: { children: React.ReactNode }) {
 
           <Link href="/chats" className={styles.navItem}>
             <MessageCircle className="h-6 w-6 shrink-0" strokeWidth={1.8} />
-            <span className="hidden text-sm xl:inline">Payomho</span>
+            <span className="hidden text-sm xl:inline">Паёмҳо</span>
           </Link>
 
           <Link href="/profile" className={styles.navItem}>
             <User className="h-6 w-6 shrink-0" strokeWidth={1.8} />
-            <span className="hidden text-sm xl:inline">Profil</span>
+            <span className="hidden text-sm xl:inline">Профил</span>
           </Link>
         </nav>
 
@@ -119,7 +118,7 @@ function Frame({ children }: { children: React.ReactNode }) {
               <Volume2 className="h-6 w-6 shrink-0" strokeWidth={1.8} />
             )}
             <span className="hidden text-sm xl:inline">
-              {muted ? "Sadọro kushoed" : "Sadọ khomush"}
+              {muted ? "Садоро фурӯзон кунед" : "Садоро хомӯш кунед"}
             </span>
           </button>
 
@@ -130,20 +129,20 @@ function Frame({ children }: { children: React.ReactNode }) {
               <Moon className="h-6 w-6 shrink-0" strokeWidth={1.8} />
             )}
             <span className="hidden text-sm xl:inline">
-              {theme === "dark" ? "Naqli ravshan" : "Naqli torik"}
+              {theme === "dark" ? "Мавзӯи равшан" : "Мавзӯи торик"}
             </span>
           </button>
 
           {status === "ready" && (
             <button type="button" onClick={logout} className={styles.navItem}>
               <LogOut className="h-6 w-6 shrink-0" strokeWidth={1.8} />
-              <span className="hidden text-sm xl:inline">Baromadan</span>
+              <span className="hidden text-sm xl:inline">Баромадан</span>
             </button>
           )}
 
           <span className={`${styles.navItem} ${styles.navItemSoon}`}>
             <Menu className="h-6 w-6 shrink-0" strokeWidth={1.8} />
-            <span className="hidden text-sm xl:inline">Boz ham</span>
+            <span className="hidden text-sm xl:inline">Бештар</span>
           </span>
         </div>
       </aside>
@@ -167,7 +166,7 @@ function Frame({ children }: { children: React.ReactNode }) {
           <button
             type="button"
             onClick={toggleMuted}
-            aria-label="Sadọ"
+            aria-label="Садо"
             className={styles.iconBtn}
           >
             {muted ? (
@@ -177,7 +176,7 @@ function Frame({ children }: { children: React.ReactNode }) {
             )}
           </button>
 
-          <Link href="/profile" aria-label="Profil" className="p-1.5">
+          <Link href="/profile" aria-label="Профил" className="p-1.5">
             <span
               className={`${styles.gradBg} flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-black`}
             >
