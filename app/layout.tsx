@@ -16,6 +16,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Tajgram",
   description: "Tajgram — веб-приложение на Next.js",
+  icons: {
+    icon: "/icon.svg",
+  },
 };
 
 export default function RootLayout({
