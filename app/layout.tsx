@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Grand_Hotel } from "next/font/google";
+import { LocaleProvider } from "@/components/LocaleProvider";
+import { SessionProvider } from "@/components/SessionProvider";
+import { Sidebar } from "@/components/Sidebar";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -24,13 +27,26 @@ export const metadata: Metadata = {
   description: "Tajgram — веб-приложение на Next.js",
 };
 
+/**
+ * Навигация живёт здесь, а не в группе (app): разделы команды
+ * (profile, chats, reels, search, getInfoUsers) тоже должны её видеть —
+ * их оболочки уже оставляют слева отступ под сайдбар.
+ */
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
-      lang="en"
+      lang="tg"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} ${grandHotel.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-white text-[#262626]">{children}</body>
+      <body className="min-h-full bg-[var(--background)] text-[var(--foreground)]">
+        <LocaleProvider>
+          <SessionProvider>
+            <Sidebar />
+            {children}
+          </SessionProvider>
+        </LocaleProvider>
+      </body>
     </html>
   );
 }

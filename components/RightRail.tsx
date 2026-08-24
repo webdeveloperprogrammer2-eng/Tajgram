@@ -7,10 +7,12 @@ import type { ProfileUser } from "@/lib/types";
 import { Avatar } from "./Avatar";
 import { FollowButton } from "./FollowButton";
 import { useSession } from "./SessionProvider";
+import { useT } from "./LocaleProvider";
 
 /** Правая колонка: текущий пользователь и рекомендации. */
 export function RightRail() {
   const { me } = useSession();
+  const { t } = useT();
   const [people, setPeople] = useState<ProfileUser[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -35,18 +37,18 @@ export function RightRail() {
   return (
     <aside className="hidden w-[320px] shrink-0 pl-16 pt-9 xl:block">
       {me && (
-        <div className="animate-fade-up mb-6 flex items-center gap-3 rounded-2xl p-2 transition-colors hover:bg-[#fafafa]">
+        <div className="animate-fade-up mb-6 flex items-center gap-3 rounded-2xl p-2 transition-colors hover:bg-[var(--hover)]">
           <Link href="/profile">
             <Avatar src={me.image} name={me.fullName ?? me.userName} size={44} />
           </Link>
           <div className="min-w-0 flex-1 leading-tight">
             <Link
               href="/profile"
-              className="block truncate text-[14px] font-semibold transition-colors hover:text-[#0095f6]"
+              className="block truncate text-[14px] font-semibold transition-colors hover:text-[var(--sb-accent)]"
             >
               {me.userName}
             </Link>
-            <span className="block truncate text-[14px] text-[#8e8e8e]">
+            <span className="block truncate text-[14px] text-[var(--muted)]">
               {me.fullName}
             </span>
           </div>
@@ -54,14 +56,14 @@ export function RightRail() {
       )}
 
       <div className="mb-3 flex items-center justify-between px-2">
-        <span className="text-[14px] font-semibold text-[#8e8e8e]">
-          Suggested for you
+        <span className="text-[14px] font-semibold text-[var(--muted)]">
+          {t.suggestedForYou}
         </span>
         <Link
           href="/search"
-          className="text-[12px] font-semibold text-[#262626] transition-colors hover:text-[#0095f6]"
+          className="text-[12px] font-semibold text-[var(--foreground)] transition-colors hover:text-[var(--sb-accent)]"
         >
-          See all
+          {t.seeAll}
         </Link>
       </div>
 
@@ -81,7 +83,7 @@ export function RightRail() {
           <li
             key={person.userId}
             style={{ animationDelay: `${index * 70}ms` }}
-            className="animate-fade-up flex items-center gap-3 rounded-xl p-2 transition-colors hover:bg-[#fafafa]"
+            className="animate-fade-up flex items-center gap-3 rounded-xl p-2 transition-colors hover:bg-[var(--hover)]"
           >
             <Link href={`/profile/${person.userId}`}>
               <Avatar
@@ -93,16 +95,16 @@ export function RightRail() {
             <div className="min-w-0 flex-1 leading-tight">
               <Link
                 href={`/profile/${person.userId}`}
-                className="block truncate text-[12px] font-semibold transition-colors hover:text-[#0095f6]"
+                className="block truncate text-[12px] font-semibold transition-colors hover:text-[var(--sb-accent)]"
               >
                 {person.userName}
               </Link>
-              <span className="block truncate text-[12px] text-[#8e8e8e]">
+              <span className="block truncate text-[12px] text-[var(--muted)]">
                 {person.isFriend
-                  ? "You follow each other"
+                  ? t.friends
                   : person.isFollower
-                    ? "Follows you"
-                    : "Suggested for you"}
+                    ? t.followsYou
+                    : t.suggestedForYou}
               </span>
             </div>
             <FollowButton userId={person.userId} initialFollowing={person.isFollowing} />
@@ -110,14 +112,14 @@ export function RightRail() {
         ))}
 
         {!loading && people.length === 0 && (
-          <li className="px-2 text-[13px] text-[#8e8e8e]">No suggestions right now.</li>
+          <li className="px-2 text-[13px] text-[var(--muted)]">{t.noSuggestions}</li>
         )}
       </ul>
 
-      <footer className="mt-8 space-y-3 px-2 text-[11px] uppercase text-[#c7c7c7]">
+      <footer className="mt-8 space-y-3 px-2 text-[11px] uppercase text-[var(--muted)]">
         <p className="flex flex-wrap gap-x-2 gap-y-1">
           {["About", "Help", "Press", "API", "Jobs", "Privacy", "Terms"].map((item) => (
-            <span key={item} className="transition-colors hover:text-[#8e8e8e]">
+            <span key={item} className="transition-colors hover:text-[var(--muted)]">
               {item}
             </span>
           ))}

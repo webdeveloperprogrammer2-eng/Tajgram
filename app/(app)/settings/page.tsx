@@ -5,22 +5,26 @@ import { api } from "@/lib/api";
 import type { Settings } from "@/lib/types";
 import { Avatar } from "@/components/Avatar";
 import { useSession } from "@/components/SessionProvider";
+import { useT } from "@/components/LocaleProvider";
 
-const TOGGLES: { key: keyof Settings; label: string }[] = [
-  { key: "isPrivateAccount", label: "Закрытый аккаунт" },
-  { key: "showActivityStatus", label: "Показывать статус активности" },
-  { key: "allowComments", label: "Разрешить комментарии" },
-  { key: "allowMessages", label: "Разрешить сообщения" },
-  { key: "allowTags", label: "Разрешить отметки" },
-  { key: "notifyLikes", label: "Уведомлять о лайках" },
-  { key: "notifyComments", label: "Уведомлять о комментариях" },
-  { key: "notifyFollows", label: "Уведомлять о подписках" },
-  { key: "notifyMessages", label: "Уведомлять о сообщениях" },
-  { key: "emailNotifications", label: "Уведомления на email" },
+type ToggleKey = keyof Settings;
+
+const TOGGLES: { key: ToggleKey; dict: keyof ReturnType<typeof useT>["t"] }[] = [
+  { key: "isPrivateAccount", dict: "setPrivate" },
+  { key: "showActivityStatus", dict: "setActivity" },
+  { key: "allowComments", dict: "setComments" },
+  { key: "allowMessages", dict: "setMessages" },
+  { key: "allowTags", dict: "setTags" },
+  { key: "notifyLikes", dict: "setNotifyLikes" },
+  { key: "notifyComments", dict: "setNotifyComments" },
+  { key: "notifyFollows", dict: "setNotifyFollows" },
+  { key: "notifyMessages", dict: "setNotifyMessages" },
+  { key: "emailNotifications", dict: "setEmail" },
 ];
 
 export default function SettingsPage() {
   const { me } = useSession();
+  const { t } = useT();
   const [settings, setSettings] = useState<Settings | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +37,7 @@ export default function SettingsPage() {
         if (alive) setSettings(response.data);
       })
       .catch((cause: unknown) => {
-        if (alive) setError(cause instanceof Error ? cause.message : "Настройки недоступны");
+        if (alive) setError(cause instanceof Error ? cause.message : t.settingsUnavailable);
       })
       .finally(() => {
         if (alive) setLoading(false);
@@ -56,45 +60,46 @@ export default function SettingsPage() {
 
   return (
     <div className="mx-auto w-full max-w-[600px] px-4 py-6">
-      <h1 className="animate-fade-up mb-5 text-[22px] font-bold">Settings</h1>
+      <h1 className="animate-fade-up mb-5 text-[22px] font-bold">{t.settings}</h1>
 
       {me && (
         <div className="animate-fade-up mb-6 flex items-center gap-4 rounded-2xl bg-[linear-gradient(120deg,#fafafa,#f5f7ff)] px-4 py-3">
           <Avatar src={me.image} name={me.fullName} size={56} ring="gradient" />
           <div className="leading-tight">
             <div className="text-[15px] font-semibold">{me.userName}</div>
-            <div className="text-[14px] text-[#8e8e8e]">{me.fullName}</div>
-            <div className="text-[13px] text-[#8e8e8e]">{me.email}</div>
+            <div className="text-[14px] text-[var(--muted)]">{me.fullName}</div>
+            <div className="text-[13px] text-[var(--muted)]">{me.email}</div>
           </div>
         </div>
       )}
 
-      {loading && <p className="text-[14px] text-[#8e8e8e]">Загружаем настройки...</p>}
+      {loading && <p className="text-[14px] text-[var(--muted)]">{t.loading}</p>}
       {error && <p className="text-[14px] text-[#ed4956]">{error}</p>}
 
       {settings && (
-        <ul className="divide-y divide-[#efefef] overflow-hidden rounded-2xl border border-[#efefef]">
+        <ul className="divide-y divide-[var(--border)] overflow-hidden rounded-2xl border border-[var(--border)]">
           {TOGGLES.map((item, index) => {
             const value = Boolean(settings[item.key]);
+            const label = t[item.dict];
             return (
               <li
                 key={item.key}
                 style={{ animationDelay: `${Math.min(index, 10) * 35}ms` }}
-                className="animate-fade-up flex items-center justify-between px-4 py-3 transition-colors hover:bg-[#fafafa]"
+                className="animate-fade-up flex items-center justify-between px-4 py-3 transition-colors hover:bg-[var(--hover)]"
               >
-                <span className="text-[14px]">{item.label}</span>
+                <span className="text-[14px]">{label}</span>
                 <button
                   type="button"
                   role="switch"
                   aria-checked={value}
-                  aria-label={item.label}
+                  aria-label={label}
                   onClick={() => toggle(item.key)}
                   className={`relative h-6 w-11 shrink-0 rounded-full transition-colors duration-300 active:scale-95 ${
-                    value ? "bg-[#0095f6]" : "bg-[#dbdbdb]"
+                    value ? "bg-[var(--sb-accent)]" : "bg-[#dbdbdb]"
                   }`}
                 >
                   <span
-                    className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
+                    className={`absolute top-0.5 h-5 w-5 rounded-full bg-[var(--card)] shadow-sm transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
                       value ? "left-[22px]" : "left-0.5"
                     }`}
                   />

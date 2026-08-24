@@ -9,9 +9,11 @@ import { Avatar } from "@/components/Avatar";
 import { FollowButton } from "@/components/FollowButton";
 import { useSession } from "@/components/SessionProvider";
 import { HeartIcon } from "@/components/icons";
+import { useT } from "@/components/LocaleProvider";
 
 export default function NotificationsPage() {
   const { refresh } = useSession();
+  const { t } = useT();
   const [items, setItems] = useState<AppNotification[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -41,7 +43,7 @@ export default function NotificationsPage() {
 
   return (
     <div className="mx-auto w-full max-w-[600px] px-4 py-6">
-      <h1 className="animate-fade-up mb-5 text-[22px] font-bold">Notifications</h1>
+      <h1 className="animate-fade-up mb-5 text-[22px] font-bold">{t.notifications}</h1>
 
       {loading && (
         <ul className="space-y-1">
@@ -55,11 +57,11 @@ export default function NotificationsPage() {
       )}
 
       {!loading && items.length === 0 && (
-        <div className="animate-fade-up flex flex-col items-center gap-3 py-16 text-center text-[#8e8e8e]">
+        <div className="animate-fade-up flex flex-col items-center gap-3 py-16 text-center text-[var(--muted)]">
           <span className="flex h-20 w-20 items-center justify-center rounded-full bg-[linear-gradient(135deg,#fff1f2,#fdf4ff)] text-[#fb7185]">
             <HeartIcon size={40} />
           </span>
-          <p className="text-[14px]">Активности пока нет.</p>
+          <p className="text-[14px]">{t.noActivity}</p>
         </div>
       )}
 
@@ -70,7 +72,7 @@ export default function NotificationsPage() {
             <li
               key={item.id}
               style={{ animationDelay: `${Math.min(index, 12) * 45}ms` }}
-              className={`animate-fade-up flex items-center gap-3 rounded-xl px-2 py-2.5 transition-colors hover:bg-[#fafafa] ${
+              className={`animate-fade-up flex items-center gap-3 rounded-xl px-2 py-2.5 transition-colors hover:bg-[var(--hover)] ${
                 item.isRead ? "" : "bg-[#f2f8ff]"
               }`}
             >
@@ -84,7 +86,7 @@ export default function NotificationsPage() {
                 </Link>{" "}
                 {item.text}
                 {item.preview ? ` «${item.preview}»` : ""}{" "}
-                <span className="text-[#8e8e8e]">{shortTimeAgo(item.createdAt)}</span>
+                <span className="text-[var(--muted)]">{shortTimeAgo(item.createdAt)}</span>
               </p>
 
               {item.type === "subscribed" ? (

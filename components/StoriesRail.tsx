@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import type { Story } from "@/lib/types";
 import { Avatar } from "./Avatar";
 import { useSession } from "./SessionProvider";
+import { useT } from "./LocaleProvider";
 import { ChevronLeftIcon, ChevronRightIcon } from "./icons";
 
 type StoryGroup = {
@@ -18,6 +19,7 @@ type StoryGroup = {
 /** Истории за 24 часа, сгруппированные по автору. */
 export function StoriesRail() {
   const { me } = useSession();
+  const { t } = useT();
   const [groups, setGroups] = useState<StoryGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const railRef = useRef<HTMLDivElement>(null);
@@ -58,7 +60,7 @@ export function StoriesRail() {
   };
 
   return (
-    <div className="animate-fade-up relative mb-4 rounded-2xl border border-[#efefef] bg-white px-2 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+    <div className="animate-fade-up relative mb-4 rounded-2xl border border-[var(--border)] bg-[var(--card)] px-2 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
       <div
         ref={railRef}
         onScroll={syncArrows}
@@ -75,12 +77,12 @@ export function StoriesRail() {
               size={56}
               ring="muted"
             />
-            <span className="absolute bottom-0 right-0 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-[#0095f6] text-[13px] leading-none text-white transition-transform duration-300 group-hover:scale-110">
+            <span className="absolute bottom-0 right-0 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-[var(--sb-accent)] text-[13px] leading-none text-white transition-transform duration-300 group-hover:scale-110">
               +
             </span>
           </span>
-          <span className="w-full truncate text-center text-[12px] text-[#262626]">
-            your story
+          <span className="w-full truncate text-center text-[12px] text-[var(--foreground)]">
+            {t.yourStory}
           </span>
         </Link>
 
@@ -103,15 +105,15 @@ export function StoriesRail() {
             className="animate-scale-in flex w-[74px] shrink-0 flex-col items-center gap-1.5"
           >
             <Avatar src={story.avatar} name={story.userName} size={56} ring="gradient" />
-            <span className="w-full truncate text-center text-[12px] text-[#262626]">
+            <span className="w-full truncate text-center text-[12px] text-[var(--foreground)]">
               {story.userName}
             </span>
           </Link>
         ))}
 
         {!loading && groups.length === 0 && (
-          <div className="flex items-center px-3 text-[13px] text-[#8e8e8e]">
-            No new stories in the last 24 hours.
+          <div className="flex items-center px-3 text-[13px] text-[var(--muted)]">
+            {t.noStories}
           </div>
         )}
       </div>
@@ -121,7 +123,7 @@ export function StoriesRail() {
           type="button"
           onClick={() => slide(-1)}
           aria-label="Scroll stories left"
-          className="animate-fade-in absolute left-1 top-[44px] flex h-[28px] w-[28px] items-center justify-center rounded-full bg-white text-[#262626] shadow-[0_2px_8px_rgba(0,0,0,0.18)] transition-transform duration-200 hover:scale-110 active:scale-95"
+          className="animate-fade-in absolute left-1 top-[44px] flex h-[28px] w-[28px] items-center justify-center rounded-full bg-[var(--card)] text-[var(--foreground)] shadow-[0_2px_8px_rgba(0,0,0,0.18)] transition-transform duration-200 hover:scale-110 active:scale-95"
         >
           <ChevronLeftIcon size={14} />
         </button>
@@ -131,7 +133,7 @@ export function StoriesRail() {
           type="button"
           onClick={() => slide(1)}
           aria-label="Scroll stories right"
-          className="animate-fade-in absolute right-1 top-[44px] flex h-[28px] w-[28px] items-center justify-center rounded-full bg-white text-[#262626] shadow-[0_2px_8px_rgba(0,0,0,0.18)] transition-transform duration-200 hover:scale-110 active:scale-95"
+          className="animate-fade-in absolute right-1 top-[44px] flex h-[28px] w-[28px] items-center justify-center rounded-full bg-[var(--card)] text-[var(--foreground)] shadow-[0_2px_8px_rgba(0,0,0,0.18)] transition-transform duration-200 hover:scale-110 active:scale-95"
         >
           <ChevronRightIcon size={14} />
         </button>

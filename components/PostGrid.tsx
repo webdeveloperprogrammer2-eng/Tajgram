@@ -13,7 +13,7 @@ export function PostGrid({ posts }: { posts: Post[] }) {
         <div
           key={post.postId}
           style={{ animationDelay: `${Math.min(index, 12) * 40}ms` }}
-          className="group/media animate-scale-in relative aspect-square overflow-hidden rounded-md bg-[#fafafa]"
+          className="group/media animate-scale-in relative aspect-square overflow-hidden rounded-md bg-[var(--hover)]"
         >
           <PostMedia
             fileName={post.images?.[0]?.imageName ?? null}

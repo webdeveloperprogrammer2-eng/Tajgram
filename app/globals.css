@@ -7,6 +7,10 @@
   --muted: #8e8e8e;
   --brand: #0095f6;
   --gradient: linear-gradient(45deg, #f9ce34, #ee2a7b 45%, #6228d7);
+  --card: #ffffff;
+  --hover: #fafafa;
+  --skeleton-a: #f0f0f0;
+  --skeleton-b: #f8f8f8;
 
   /* Sidebar-i UMUMI (components/Sidebar.tsx) - naqli ravshan */
   --sb-bg: #ffffff;
@@ -17,10 +21,24 @@
   --sb-activeBg: linear-gradient(90deg, #e8f2fd, #f7fbff);
 }
 
-/* Modulho naqlro dar <html> menavisand -> sidebar hamon rangro megirad */
+/*
+  Naqli TORIK - YAK JOI UMUMI.
+  data-theme-ро LocaleProvider dar <html> meguzorad, kalidhoi kuhnai
+  modulho ham nigoh doshta shudaand - ki chizi kuhna nashikanad.
+*/
+html[data-theme="dark"],
 html[data-chats-theme="dark"],
 html[data-profile-theme="dark"],
 html[data-reels-theme="dark"] {
+  --background: #000000;
+  --foreground: #f4f4f6;
+  --border: rgba(255, 255, 255, 0.12);
+  --muted: #a1a1aa;
+  --card: #0b0b0f;
+  --hover: #15151a;
+  --skeleton-a: #15151a;
+  --skeleton-b: #1f1f27;
+
   --sb-bg: #000000;
   --sb-line: rgba(255, 255, 255, 0.12);
   --sb-fg: #f4f4f6;
@@ -178,7 +196,12 @@ html {
 
 /* Мерцающая заглушка вместо серого прямоугольника. */
 .skeleton {
-  background-image: linear-gradient(90deg, #f0f0f0 25%, #f8f8f8 37%, #f0f0f0 63%);
+  background-image: linear-gradient(
+    90deg,
+    var(--skeleton-a) 25%,
+    var(--skeleton-b) 37%,
+    var(--skeleton-a) 63%
+  );
   background-size: 200% 100%;
   animation: var(--animate-shimmer);
 }

@@ -6,6 +6,7 @@ import type { UserProfile } from "@/lib/types";
 import { Avatar } from "./Avatar";
 import { FollowButton } from "./FollowButton";
 import { PostGrid } from "./PostGrid";
+import { useT } from "./LocaleProvider";
 import { ImageIcon } from "./icons";
 
 export function ProfileView({
@@ -15,11 +16,12 @@ export function ProfileView({
   profile: UserProfile;
   isMe?: boolean;
 }) {
+  const { t } = useT();
   const posts = profile.posts ?? [];
 
   return (
     <div className="mx-auto w-full max-w-[935px] px-4 py-6">
-      <header className="animate-fade-up flex flex-col gap-6 border-b border-[#efefef] pb-8 sm:flex-row sm:items-start sm:gap-12">
+      <header className="animate-fade-up flex flex-col gap-6 border-b border-[var(--border)] pb-8 sm:flex-row sm:items-start sm:gap-12">
         <div className="flex justify-center sm:justify-start">
           <Avatar
             src={profile.image}
@@ -43,9 +45,9 @@ export function ProfileView({
             {isMe ? (
               <Link
                 href="/settings"
-                className="rounded-lg bg-[#efefef] px-4 py-1.5 text-[14px] font-semibold transition-all duration-200 hover:bg-[#dbdbdb] active:scale-95"
+                className="rounded-lg bg-[var(--hover)] px-4 py-1.5 text-[14px] font-semibold transition-all duration-200 hover:bg-[var(--border)] active:scale-95"
               >
-                Edit profile
+                {t.editProfile}
               </Link>
             ) : (
               <FollowButton
@@ -58,9 +60,9 @@ export function ProfileView({
 
           <ul className="mt-5 flex gap-8 text-[15px]">
             {[
-              { value: profile.postCount, label: "posts" },
-              { value: profile.subscribersCount, label: "followers" },
-              { value: profile.subscriptionsCount, label: "following" },
+              { value: profile.postCount, label: t.posts },
+              { value: profile.subscribersCount, label: t.followers },
+              { value: profile.subscriptionsCount, label: t.followingCount },
             ].map((stat, index) => (
               <li
                 key={stat.label}
@@ -83,11 +85,11 @@ export function ProfileView({
         {posts.length > 0 ? (
           <PostGrid posts={posts} />
         ) : (
-          <div className="animate-fade-up flex flex-col items-center gap-3 py-16 text-center text-[#8e8e8e]">
+          <div className="animate-fade-up flex flex-col items-center gap-3 py-16 text-center text-[var(--muted)]">
             <span className="flex h-20 w-20 items-center justify-center rounded-full bg-[linear-gradient(135deg,#fdf2f8,#eef2ff)] text-[#c084fc]">
               <ImageIcon size={40} />
             </span>
-            <p className="text-[14px]">Постов пока нет.</p>
+            <p className="text-[14px]">{t.noUserPosts}</p>
           </div>
         )}
       </div>

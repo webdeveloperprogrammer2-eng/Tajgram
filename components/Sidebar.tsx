@@ -4,12 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Avatar } from "./Avatar";
-import { logoutEverywhere, readTheme, toggleAppTheme, type AppTheme } from "./appTheme";
+import { logoutEverywhere } from "./appTheme";
+import { LANGS } from "./appLang";
+import { useT } from "./LocaleProvider";
 import { useSession } from "./SessionProvider";
 import {
   BookmarkIcon,
   CameraIcon,
-  CommentIcon,
   CompassIcon,
   CreateIcon,
   HeartIcon,
@@ -32,13 +33,8 @@ type NavItem = {
 export function Sidebar() {
   const pathname = usePathname();
   const { me, unread } = useSession();
+  const { t, lang, setLang, theme, toggleTheme } = useT();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [theme, setTheme] = useState<AppTheme>("dark");
-
-  // Naqli joriro faqat dar browser mekhonem
-  useEffect(() => {
-    queueMicrotask(() => setTheme(readTheme()));
-  }, []);
   const menuRef = useRef<HTMLLIElement>(null);
 
   // Закрываем «More» по клику вне меню.
@@ -57,54 +53,48 @@ export function Sidebar() {
   const items: NavItem[] = [
     {
       href: "/",
-      label: "Home",
+      label: t.navHome,
       render: (active) => <HomeIcon active={active} />,
       mobile: true,
     },
     {
       href: "/search",
-      label: "Search",
+      label: t.navSearch,
       render: () => <SearchIcon />,
       mobile: true,
     },
     {
       href: "/explore",
-      label: "Explore",
+      label: t.navExplore,
       render: () => <CompassIcon />,
     },
     {
       href: "/reels",
-      label: "Reels",
+      label: t.navReels,
       render: () => <ReelsIcon />,
       mobile: true,
     },
     {
-      href: "/messages",
-      label: "Messages",
+      href: "/chats",
+      label: t.navMessages,
       render: () => <MessageIcon />,
       badge: messages,
       mobile: true,
     },
     {
-      // Раздел команды со своим layout и провайдерами.
-      href: "/chats",
-      label: "Chats",
-      render: () => <CommentIcon />,
-    },
-    {
       href: "/notifications",
-      label: "Notifications",
+      label: t.navNotifications,
       render: (active) => <HeartIcon filled={active} />,
       badge: activity,
     },
     {
       href: "/create",
-      label: "Create",
+      label: t.navCreate,
       render: (active) => <CreateIcon active={active} />,
     },
     {
       href: "/profile",
-      label: "Profile",
+      label: t.navProfile,
       render: () => <Avatar src={me?.image} name={me?.fullName ?? me?.userName} size={24} />,
       mobile: true,
     },
@@ -120,7 +110,7 @@ export function Sidebar() {
         <Logo />
         <Link
           href="/notifications"
-          aria-label="Notifications"
+          aria-label={t.navNotifications}
           className="relative p-2 text-[var(--sb-fg)]"
         >
           <HeartIcon />
@@ -184,37 +174,59 @@ export function Sidebar() {
               <span className="flex h-6 w-6 items-center justify-center transition-transform duration-300 group-hover:scale-110">
                 <MoreIcon />
               </span>
-              <span className="text-[15px]">More</span>
+              <span className="text-[15px]">{t.navMore}</span>
             </button>
 
             {menuOpen && (
               <div className="animate-menu-in absolute bottom-[calc(100%+8px)] left-0 w-[266px] origin-bottom-left overflow-hidden rounded-2xl border border-[var(--sb-line)] bg-[var(--sb-bg)] shadow-[0_12px_40px_-8px_rgba(0,0,0,0.22)]">
                 <MenuLink
                   href="/settings"
-                  label="Settings"
+                  label={t.navSettings}
                   icon={<SettingsIcon size={18} />}
                   onSelect={() => setMenuOpen(false)}
                 />
                 <MenuLink
                   href="/saved"
-                  label="Saved"
+                  label={t.navSaved}
                   icon={<BookmarkIcon size={18} />}
                   onSelect={() => setMenuOpen(false)}
                 />
 
                 <button
                   type="button"
-                  onClick={() => {
-                    setTheme(toggleAppTheme());
-                    setMenuOpen(false);
-                  }}
+                  onClick={toggleTheme}
                   className="flex w-full items-center gap-3 px-4 py-3 text-left text-[14px] transition-colors hover:bg-[var(--sb-hover)]"
                 >
                   <span className="flex h-[18px] w-[18px] items-center justify-center text-[13px]">
                     {theme === "dark" ? "☀" : "☽"}
                   </span>
-                  {theme === "dark" ? "Naqli ravshan" : "Naqli torik"}
+                  {theme === "dark" ? t.themeLight : t.themeDark}
                 </button>
+
+                {/* Panel-i zabon: intikhob dar hamai sayt kor mekunad */}
+                <div className="border-t border-[var(--sb-line)] px-4 py-3">
+                  <div className="mb-2 text-[12px] font-semibold uppercase tracking-wide text-[var(--muted)]">
+                    {t.navLanguage}
+                  </div>
+                  <div className="flex gap-1.5">
+                    {LANGS.map((option) => (
+                      <button
+                        key={option.code}
+                        type="button"
+                        onClick={() => setLang(option.code)}
+                        title={option.label}
+                        aria-pressed={lang === option.code}
+                        className={`flex-1 rounded-lg px-2 py-1.5 text-[12px] font-semibold transition-all duration-200 active:scale-95 ${
+                          lang === option.code
+                            ? "bg-[var(--sb-accent)] text-white"
+                            : "bg-[var(--sb-hover)] text-[var(--sb-fg)] hover:opacity-80"
+                        }`}
+                      >
+                        {option.short}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
                 <button
                   type="button"
@@ -224,7 +236,7 @@ export function Sidebar() {
                   <span className="flex h-[18px] w-[18px] items-center justify-center text-[13px]">
                     {"↪"}
                   </span>
-                  Baromadan
+                  {t.logout}
                 </button>
               </div>
             )}
