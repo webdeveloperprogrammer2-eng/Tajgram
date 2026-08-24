@@ -15,7 +15,7 @@
 //    - surathoi ZIYOD yakbora + khurd kardani hajmi surat
 //      (backend yak fayl dar yak so-rov megirad -> yak-yak mefiristem)
 // ============================================================
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   ImagePlus,
@@ -59,7 +59,7 @@ export default function ChatWindow({
   onBack: () => void;
 }) {
   const { token, allowedIds, reloadChats } = useChats();
-  const { callUser, phase } = useCall();
+  const { callUser, phase, notifyChat, onChatEvent } = useCall();
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
@@ -110,6 +110,41 @@ export default function ChatWindow({
       clearInterval(timer);
     };
   }, [token, chat.chatId]);
+
+  // ------------------------------------------------------------
+  //  REAL TIME
+  //  Har bor ki hamsuhbat chize firistad (matn, surat, video,
+  //  ovoz yo tark kardani payom) - FORI az nav mekhonem.
+  //  Interval-i 6 soniya faqat baroi ehtiyot memonad.
+  // ------------------------------------------------------------
+  const refetch = useCallback(async () => {
+    try {
+      const list = await getChatMessages(token, chat.chatId);
+      setMessages(Array.isArray(list) ? list : []);
+    } catch {
+      // khomush - polling khudash ba'd meorad
+    }
+  }, [token, chat.chatId]);
+
+  // reloadChats har render nav mesozad -> dar ref nigoh medorem
+  const reloadRef = useRef(reloadChats);
+  useEffect(() => {
+    reloadRef.current = reloadChats;
+  }, [reloadChats]);
+
+  useEffect(
+    () =>
+      onChatEvent((incomingChatId) => {
+        if (incomingChatId === chat.chatId) void refetch();
+        void reloadRef.current();
+      }),
+    [onChatEvent, refetch, chat.chatId]
+  );
+
+  // Ba hamsuhbat khabar medihem ki chize guzoshtem
+  const ping = useCallback(() => {
+    notifyChat(chat.userId, chat.chatId);
+  }, [notifyChat, chat.userId, chat.chatId]);
 
   // Har bor ki payomi nav omad - ba poyon meravem
   useEffect(() => {
@@ -195,6 +230,7 @@ export default function ChatWindow({
 
       setText("");
       setFiles([]);
+      ping(); // REAL TIME: matn / surat / video
       await reloadChats(); // dar ro-ykhat "payomi okhirin" nav shavad
     } catch (err) {
       setError(errorText(err, "Payom firistoda nashud."));
@@ -223,6 +259,7 @@ export default function ChatWindow({
         if (Array.isArray(list)) setMessages(list);
       }
 
+      ping(); // REAL TIME: payomi ovozi
       await reloadChats();
     } catch (err) {
       setError(errorText(err, "Payomi ovozi firistoda nashud."));
@@ -236,6 +273,7 @@ export default function ChatWindow({
     try {
       await deleteMessage(token, messageId);
       setMessages((old) => old.filter((item) => item.messageId !== messageId));
+      ping(); // REAL TIME: payom tark shud
       await reloadChats();
     } catch (err) {
       setError(errorText(err, "Payom tark nashud."));
@@ -599,7 +637,7 @@ function Bubble({
         )}
 
         {message.messageText !== null && message.messageText !== "" && (
-          <p className="whitespace-pre-wrap break-words text-[14px] leading-relaxed">
+          <p className="whitespace-pre-wrap wrap-break-words text-[14px] leading-relaxed">
             {message.messageText}
           </p>
         )}

@@ -29,6 +29,7 @@
 export type CallMedia = "audio" | "video";
 
 export type SignalKind =
+  | "chat" // "ba tu payomi nav firistodam" (REAL TIME)
   | "ring" // "man ba tu zang mezanam"
   | "accept" // "qabul kardam"
   | "decline" // "rad kardam"
@@ -52,6 +53,7 @@ export type Signal = {
 
   // offer/answer -> RTCSessionDescriptionInit
   // ice          -> RTCIceCandidateInit
+  // chat         -> { kind: "new" | "delete" }
   payload?: unknown;
 
   at: number;

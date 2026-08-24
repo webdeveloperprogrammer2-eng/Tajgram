@@ -4,26 +4,13 @@
 //  ChatsShell - ramkai umumi baroi /chats.
 //  Ayni hamon dizayni /profile: sidebar-i chap (kompyuter),
 //  qatori boloi shishagi (telefon), nurhoi narmi gradient.
+//
+//  REAL TIME: sidebar/ro-ykhati chatho ham fori nav meshavad -
+//  ham vaqte suhbat kushoda ast, ham vaqte digar chat kushoda ast.
 // ============================================================
-import { useEffect } from "react";
-import Link from "next/link";
-import {
-  Bookmark,
-  Compass,
-  Film,
-  Heart,
-  Home,
-  LogOut,
-  Menu,
-  MessageCircle,
-  Moon,
-  PlusSquare,
-  Search,
-  Sun,
-  User,
-} from "lucide-react";
+import { useEffect, useRef } from "react";
 
-import { CallProvider } from "../call/CallProvider";
+import { CallProvider, useCall } from "../call/CallProvider";
 import { ChatsProvider, useChats } from "../providers";
 import styles from "../chats.module.css";
 
@@ -43,18 +30,22 @@ export default function ChatsShell({
   );
 }
 
-// Nuqtahoi navigatsiya - hamai sahifaho hozir mavjudand.
-const NAV = [
-  { key: "home", label: "Asosi", icon: Home, href: "/" },
-  { key: "search", label: "Justuju", icon: Search, href: "/search" },
-  { key: "explore", label: "Kashf", icon: Compass, href: "/explore" },
-  { key: "likes", label: "Bayanho", icon: Heart, href: "/notifications" },
-  { key: "create", label: "Guzoshtan", icon: PlusSquare, href: "/create" },
-  { key: "saved", label: "Saqlshuda", icon: Bookmark, href: "/saved" },
-];
 
 function Frame({ children }: { children: React.ReactNode }) {
-  const { theme, toggleTheme, status, logout, me } = useChats();
+  const { theme, reloadChats } = useChats();
+  const { onChatEvent } = useCall();
+
+  // REAL TIME: har payomi nav -> ro-ykhati chatho fori nav meshavad
+  // (payomi okhirin va tartibi chatho)
+  const reloadRef = useRef(reloadChats);
+  useEffect(() => {
+    reloadRef.current = reloadChats;
+  }, [reloadChats]);
+
+  useEffect(
+    () => onChatEvent(() => void reloadRef.current()),
+    [onChatEvent]
+  );
 
   // Modal-ho ba <body> mekashand - rangho boyad dar <html> ham bosand
   useEffect(() => {
@@ -69,115 +60,10 @@ function Frame({ children }: { children: React.ReactNode }) {
       <span className={styles.aura} aria-hidden />
       <span className={styles.auraLow} aria-hidden />
 
-      {/* ================= SIDEBAR (kompyuter) ================= */}
-      <aside
-        className={`${styles.sidebar} fixed inset-y-0 left-0 z-40 hidden w-[76px] flex-col px-3 py-6 md:flex xl:w-[248px] xl:px-4`}
-      >
-        <Link href="/profile" className="mb-8 flex items-center gap-3 px-2 xl:px-3">
-          <span
-            className={`${styles.gradBg} flex h-9 w-9 shrink-0 items-center justify-center rounded-[12px] text-sm font-black`}
-          >
-            T
-          </span>
-          <span
-            className={`${styles.gradText} hidden text-xl font-black tracking-tight xl:inline`}
-          >
-            Tajgram
-          </span>
-        </Link>
 
-        <nav className="flex flex-1 flex-col gap-1">
-          {NAV.map((item) => (
-            <Link key={item.key} href={item.href} className={styles.navItem}>
-              <item.icon className="h-6 w-6 shrink-0" strokeWidth={1.8} />
-              <span className="hidden text-sm xl:inline">{item.label}</span>
-            </Link>
-          ))}
-
-          <Link href="/reels" className={styles.navItem}>
-            <Film className="h-6 w-6 shrink-0" strokeWidth={1.8} />
-            <span className="hidden text-sm xl:inline">Reels</span>
-          </Link>
-
-          {/* PAYOMHO - hamin sahifa */}
-          <span className={`${styles.navItem} ${styles.navItemActive}`}>
-            <MessageCircle className="h-6 w-6 shrink-0" strokeWidth={2} />
-            <span className="hidden text-sm xl:inline">Payomho</span>
-          </span>
-
-          <Link href="/profile" className={styles.navItem}>
-            <User className="h-6 w-6 shrink-0" strokeWidth={1.8} />
-            <span className="hidden text-sm xl:inline">Profil</span>
-          </Link>
-        </nav>
-
-        <div className="mt-4 flex flex-col gap-1 border-t border-[var(--line)] pt-4">
-          <button type="button" onClick={toggleTheme} className={styles.navItem}>
-            {theme === "dark" ? (
-              <Sun className="h-6 w-6 shrink-0" strokeWidth={1.8} />
-            ) : (
-              <Moon className="h-6 w-6 shrink-0" strokeWidth={1.8} />
-            )}
-            <span className="hidden text-sm xl:inline">
-              {theme === "dark" ? "Naqli ravshan" : "Naqli torik"}
-            </span>
-          </button>
-
-          {status === "ready" && (
-            <button type="button" onClick={logout} className={styles.navItem}>
-              <LogOut className="h-6 w-6 shrink-0" strokeWidth={1.8} />
-              <span className="hidden text-sm xl:inline">Baromadan</span>
-            </button>
-          )}
-
-          <span className={`${styles.navItem} ${styles.navItemSoon}`}>
-            <Menu className="h-6 w-6 shrink-0" strokeWidth={1.8} />
-            <span className="hidden text-sm xl:inline">Boz ham</span>
-          </span>
-        </div>
-      </aside>
-
-      {/* ================= QATORI BOLO (telefon) ================= */}
-      <header
-        className={`${styles.topBar} fixed inset-x-0 top-0 z-30 flex items-center justify-between px-4 py-3 md:hidden`}
-      >
-        <Link href="/profile" className="flex items-center gap-2">
-          <span
-            className={`${styles.gradBg} flex h-7 w-7 items-center justify-center rounded-[10px] text-xs font-black`}
-          >
-            T
-          </span>
-          <span className={`${styles.gradText} text-lg font-black tracking-tight`}>
-            Payomho
-          </span>
-        </Link>
-
-        <div className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={toggleTheme}
-            aria-label="Naqlro ivaz kuned"
-            className={styles.iconBtn}
-          >
-            {theme === "dark" ? (
-              <Sun className="h-5 w-5" strokeWidth={1.8} />
-            ) : (
-              <Moon className="h-5 w-5" strokeWidth={1.8} />
-            )}
-          </button>
-
-          <Link href="/profile" aria-label="Profil" className="p-1.5">
-            <span
-              className={`${styles.gradBg} flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-black`}
-            >
-              {(me?.userName ?? "T").slice(0, 1).toUpperCase()}
-            </span>
-          </Link>
-        </div>
-      </header>
 
       {/* ================= QISMI ASOSI ================= */}
-      <main className="relative z-10 h-full pt-[60px] md:pl-[76px] md:pt-0 xl:pl-[248px]">
+      <main className="relative z-10 h-full pt-[60px] pb-[50px] md:pb-0 md:pl-[245px] md:pt-0">
         {children}
       </main>
 

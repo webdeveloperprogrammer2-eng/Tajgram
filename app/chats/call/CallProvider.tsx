@@ -69,6 +69,14 @@ type CallState = {
   note: string; // sababi tamomshavi yo khato
   signalStatus: SignalingStatus;
 
+  // ---------- REAL TIME baroi payomho ----------
+  // Ba hamsuhbat mego-em: "payomi nav guzoshtam, az nav bikhon"
+  notifyChat: (toUserId: string, chatId: number) => void;
+  // Guş kardan: har bor ki hamsuhbat chize firistad, in sado medihad
+  onChatEvent: (
+    listener: (chatId: number, fromUserId: string) => void
+  ) => () => void;
+
   callUser: (chat: Chat, media: CallMedia) => void;
   accept: () => void;
   decline: () => void;
@@ -111,6 +119,11 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   const ringTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const endTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const ringer = useRef<Ringer | null>(null);
+
+  // Onhoe ki payomhoi navro intizorand (ChatWindow, ChatsShell)
+  const chatListeners = useRef(
+    new Set<(chatId: number, fromUserId: string) => void>()
+  );
 
   const setPhaseSafe = useCallback((next: CallPhase) => {
     phaseRef.current = next;
@@ -259,6 +272,39 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // ------------------------------------------------------------
+  //  REAL TIME: khabar dodan ki payomi nav guzoshtam
+  //  (bе in, tarafi digar to obnovit nakunad chize nameбinad)
+  // ------------------------------------------------------------
+  const notifyChat = useCallback(
+    (toUserId: string, chatId: number) => {
+      if (hub.current === null || me === null) return;
+      if (toUserId === "" || toUserId === me.userId) return;
+
+      hub.current.send({
+        kind: "chat",
+        callId: `chat-${chatId}`, // in signal ba zvanok robita nadorad
+        chatId,
+        media: "audio",
+        from: me.userId,
+        fromName: me.fullName || me.userName,
+        fromImage: me.image,
+        to: toUserId,
+      });
+    },
+    [me]
+  );
+
+  const onChatEvent = useCallback(
+    (listener: (chatId: number, fromUserId: string) => void) => {
+      chatListeners.current.add(listener);
+      return () => {
+        chatListeners.current.delete(listener);
+      };
+    },
+    []
+  );
+
+  // ------------------------------------------------------------
   //  1) MAN zang mezanam
   // ------------------------------------------------------------
   const callUser = useCallback(
@@ -378,6 +424,14 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     const timer = setInterval(() => setSignalStatus(signaling.status), 3000);
 
     const off = signaling.on(async (signal) => {
+      // --- PAYOMI NAV (real time) - pesh az hama ---
+      if (signal.kind === "chat") {
+        for (const listener of chatListeners.current) {
+          listener(signal.chatId, signal.from);
+        }
+        return;
+      }
+
       // --- Zangi nav ---
       if (signal.kind === "ring") {
         if (phaseRef.current !== "idle") {
@@ -563,6 +617,8 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       startedAt,
       note,
       signalStatus,
+      notifyChat,
+      onChatEvent,
       callUser,
       accept,
       decline,
@@ -581,6 +637,8 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       startedAt,
       note,
       signalStatus,
+      notifyChat,
+      onChatEvent,
       callUser,
       accept,
       decline,

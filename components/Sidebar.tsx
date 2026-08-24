@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Avatar } from "./Avatar";
+import { logoutEverywhere, readTheme, toggleAppTheme, type AppTheme } from "./appTheme";
 import { useSession } from "./SessionProvider";
 import {
   BookmarkIcon,
@@ -32,6 +33,12 @@ export function Sidebar() {
   const pathname = usePathname();
   const { me, unread } = useSession();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [theme, setTheme] = useState<AppTheme>("dark");
+
+  // Naqli joriro faqat dar browser mekhonem
+  useEffect(() => {
+    queueMicrotask(() => setTheme(readTheme()));
+  }, []);
   const menuRef = useRef<HTMLLIElement>(null);
 
   // Закрываем «More» по клику вне меню.
@@ -109,12 +116,12 @@ export function Sidebar() {
   return (
     <>
       {/* Мобильная шапка */}
-      <header className="fixed inset-x-0 top-0 z-30 flex h-[60px] items-center justify-between border-b border-[#efefef] bg-white/85 px-4 backdrop-blur-md md:hidden">
+      <header className="fixed inset-x-0 top-0 z-30 flex h-[60px] items-center justify-between border-b border-[var(--sb-line)] bg-[var(--sb-bg)]/85 px-4 backdrop-blur-md md:hidden">
         <Logo />
         <Link
           href="/notifications"
           aria-label="Notifications"
-          className="relative p-2 text-[#262626]"
+          className="relative p-2 text-[var(--sb-fg)]"
         >
           <HeartIcon />
           {activity > 0 && <Dot />}
@@ -122,7 +129,7 @@ export function Sidebar() {
       </header>
 
       {/* Боковая панель */}
-      <nav className="fixed left-0 top-0 z-30 hidden h-dvh w-[245px] flex-col border-r border-[#efefef] bg-white px-3 pb-5 pt-[25px] md:flex">
+      <nav className="fixed left-0 top-0 z-30 hidden h-dvh w-[245px] flex-col border-r border-[var(--sb-line)] bg-[var(--sb-bg)] px-3 pb-5 pt-[25px] md:flex">
         <div className="px-3 pb-6 pt-2">
           <Logo />
         </div>
@@ -137,14 +144,14 @@ export function Sidebar() {
                 className="animate-fade-up relative"
               >
                 {active && (
-                  <span className="animate-scale-in absolute -left-3 top-1/2 h-7 w-[3px] -translate-y-1/2 rounded-r-full bg-[#0095f6]" />
+                  <span className="animate-scale-in absolute -left-3 top-1/2 h-7 w-[3px] -translate-y-1/2 rounded-r-full bg-[var(--sb-accent)]" />
                 )}
                 <Link
                   href={item.href}
                   className={`group flex items-center gap-4 rounded-xl px-3 py-[11px] transition-all duration-200 active:scale-[0.98] ${
                     active
-                      ? "bg-[linear-gradient(90deg,#e8f2fd,#f7fbff)] text-[#0095f6] shadow-[inset_0_0_0_1px_rgba(0,149,246,0.12)]"
-                      : "text-[#262626] hover:bg-[#f5f5f5]"
+                      ? "bg-[var(--sb-activeBg)] text-[var(--sb-accent)] shadow-[inset_0_0_0_1px_rgba(0,149,246,0.12)]"
+                      : "text-[var(--sb-fg)] hover:bg-[var(--sb-hover)]"
                   }`}
                 >
                   <span className="relative flex h-6 w-6 items-center justify-center transition-transform duration-300 ease-out group-hover:scale-110">
@@ -172,7 +179,7 @@ export function Sidebar() {
               type="button"
               onClick={() => setMenuOpen((open) => !open)}
               aria-expanded={menuOpen}
-              className="group flex w-full items-center gap-4 rounded-xl px-3 py-[11px] text-[#262626] transition-all duration-200 hover:bg-[#f5f5f5] active:scale-[0.98]"
+              className="group flex w-full items-center gap-4 rounded-xl px-3 py-[11px] text-[var(--sb-fg)] transition-all duration-200 hover:bg-[#f5f5f5] active:scale-[0.98]"
             >
               <span className="flex h-6 w-6 items-center justify-center transition-transform duration-300 group-hover:scale-110">
                 <MoreIcon />
@@ -181,7 +188,7 @@ export function Sidebar() {
             </button>
 
             {menuOpen && (
-              <div className="animate-menu-in absolute bottom-[calc(100%+8px)] left-0 w-[266px] origin-bottom-left overflow-hidden rounded-2xl border border-[#efefef] bg-white shadow-[0_12px_40px_-8px_rgba(0,0,0,0.22)]">
+              <div className="animate-menu-in absolute bottom-[calc(100%+8px)] left-0 w-[266px] origin-bottom-left overflow-hidden rounded-2xl border border-[var(--sb-line)] bg-[var(--sb-bg)] shadow-[0_12px_40px_-8px_rgba(0,0,0,0.22)]">
                 <MenuLink
                   href="/settings"
                   label="Settings"
@@ -194,6 +201,31 @@ export function Sidebar() {
                   icon={<BookmarkIcon size={18} />}
                   onSelect={() => setMenuOpen(false)}
                 />
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTheme(toggleAppTheme());
+                    setMenuOpen(false);
+                  }}
+                  className="flex w-full items-center gap-3 px-4 py-3 text-left text-[14px] transition-colors hover:bg-[var(--sb-hover)]"
+                >
+                  <span className="flex h-[18px] w-[18px] items-center justify-center text-[13px]">
+                    {theme === "dark" ? "☀" : "☽"}
+                  </span>
+                  {theme === "dark" ? "Naqli ravshan" : "Naqli torik"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={logoutEverywhere}
+                  className="flex w-full items-center gap-3 border-t border-[var(--sb-line)] px-4 py-3 text-left text-[14px] transition-colors hover:bg-[var(--sb-hover)]"
+                >
+                  <span className="flex h-[18px] w-[18px] items-center justify-center text-[13px]">
+                    {"↪"}
+                  </span>
+                  Baromadan
+                </button>
               </div>
             )}
           </li>
@@ -201,7 +233,7 @@ export function Sidebar() {
       </nav>
 
       {/* Мобильная нижняя навигация */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 flex h-[50px] items-center justify-around border-t border-[#efefef] bg-white/90 backdrop-blur-md md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 flex h-[50px] items-center justify-around border-t border-[var(--sb-line)] bg-[var(--sb-bg)]/90 backdrop-blur-md md:hidden">
         {items
           .filter((item) => item.mobile)
           .map((item) => {
@@ -212,7 +244,7 @@ export function Sidebar() {
                 href={item.href}
                 aria-label={item.label}
                 className={`relative flex h-full flex-1 items-center justify-center transition-all duration-200 active:scale-90 ${
-                  active ? "scale-110 text-[#0095f6]" : "text-[#262626]"
+                  active ? "scale-110 text-[var(--sb-accent)]" : "text-[var(--sb-fg)]"
                 }`}
               >
                 {item.render(active)}
@@ -240,7 +272,7 @@ function MenuLink({
     <Link
       href={href}
       onClick={onSelect}
-      className="group flex items-center gap-3 px-4 py-3 text-[14px] transition-colors hover:bg-[#fafafa]"
+      className="group flex items-center gap-3 px-4 py-3 text-[14px] transition-colors hover:bg-[var(--sb-hover)]"
     >
       {icon}
       {label}
@@ -260,7 +292,7 @@ export function Logo() {
       <span className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-[linear-gradient(45deg,#f9ce34,#ee2a7b_45%,#6228d7)] text-white shadow-[0_4px_12px_-4px_rgba(238,42,123,0.6)] transition-transform duration-500 ease-out group-hover:rotate-[8deg] group-hover:scale-110">
         <CameraIcon size={19} />
       </span>
-      <span className="font-logo bg-[linear-gradient(90deg,#262626,#262626)] bg-clip-text text-[28px] leading-none text-[#262626] transition-colors duration-300 group-hover:text-[#ee2a7b]">
+      <span className="font-logo text-[28px] leading-none text-[var(--sb-fg)] transition-colors duration-300 group-hover:text-[#ee2a7b]">
         Tajgram
       </span>
     </Link>

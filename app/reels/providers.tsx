@@ -28,6 +28,7 @@ import {
   type Reel,
 } from "./api";
 import { getToken, isTokenExpired, removeToken } from "./token";
+import { onThemeChange } from "@/components/appTheme";
 
 export type Theme = "dark" | "light";
 export type Feed = "all" | "following" | "saved";
@@ -173,6 +174,9 @@ export function ReelsProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     localStorage.setItem(THEME_KEY, theme);
   }, [theme]);
+
+  // Naql az sidebar-i UMUMI ivaz meshavad -> in jo khabar megirem
+  useEffect(() => onThemeChange(setTheme), []);
 
   const value: ReelsState = {
     theme,

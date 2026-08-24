@@ -7,6 +7,26 @@
   --muted: #8e8e8e;
   --brand: #0095f6;
   --gradient: linear-gradient(45deg, #f9ce34, #ee2a7b 45%, #6228d7);
+
+  /* Sidebar-i UMUMI (components/Sidebar.tsx) - naqli ravshan */
+  --sb-bg: #ffffff;
+  --sb-line: #efefef;
+  --sb-fg: #262626;
+  --sb-hover: #f5f5f5;
+  --sb-accent: #0095f6;
+  --sb-activeBg: linear-gradient(90deg, #e8f2fd, #f7fbff);
+}
+
+/* Modulho naqlro dar <html> menavisand -> sidebar hamon rangro megirad */
+html[data-chats-theme="dark"],
+html[data-profile-theme="dark"],
+html[data-reels-theme="dark"] {
+  --sb-bg: #000000;
+  --sb-line: rgba(255, 255, 255, 0.12);
+  --sb-fg: #f4f4f6;
+  --sb-hover: #15151a;
+  --sb-accent: #ff2e74;
+  --sb-activeBg: linear-gradient(90deg, rgba(255, 46, 116, 0.16), transparent);
 }
 
 @theme inline {
