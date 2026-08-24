@@ -135,7 +135,6 @@
 body {
   background: var(--background);
   color: var(--foreground);
-<<<<<<< HEAD
   font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI",
     Roboto, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -177,7 +176,4 @@ html {
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
-=======
-  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
->>>>>>> fd933bf879ef2a3f263a314d55f78d6c8edf6f33
 }

@@ -8,6 +8,8 @@ import { useSession } from "./SessionProvider";
 import {
   BookmarkIcon,
   CameraIcon,
+  CommentIcon,
+  CompassIcon,
   CreateIcon,
   HeartIcon,
   HomeIcon,
@@ -59,6 +61,11 @@ export function Sidebar() {
       mobile: true,
     },
     {
+      href: "/explore",
+      label: "Explore",
+      render: () => <CompassIcon />,
+    },
+    {
       href: "/reels",
       label: "Reels",
       render: () => <ReelsIcon />,
@@ -70,6 +77,12 @@ export function Sidebar() {
       render: () => <MessageIcon />,
       badge: messages,
       mobile: true,
+    },
+    {
+      // Раздел команды со своим layout и провайдерами.
+      href: "/chats",
+      label: "Chats",
+      render: () => <CommentIcon />,
     },
     {
       href: "/notifications",

@@ -258,6 +258,15 @@ export function CameraIcon(props: IconProps) {
   );
 }
 
+export function CompassIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="m15.5 8.5-2 5-5 2 2-5z" />
+    </Svg>
+  );
+}
+
 export function ImageIcon(props: IconProps) {
   return (
     <Svg {...props}>
