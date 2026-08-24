@@ -42,7 +42,7 @@ export class Ringer {
     osc.type = "sine";
     osc.frequency.value = hz;
 
-    // narm kushodan va narm khomush kardan (bе "klik")
+    // narm kushodan va narm khomush kardan (be "klik")
     gain.gain.setValueAtTime(0, at);
     gain.gain.linearRampToValueAtTime(volume, at + 0.03);
     gain.gain.setValueAtTime(volume, at + seconds - 0.05);

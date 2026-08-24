@@ -10,7 +10,7 @@
 //  HECH endpoint-i zvanok/signaling/socket NEST. Sanjida shud:
 //    /Chat/* -> faqat create-chat, get-chats, get-chat-by-id,
 //               send-message, delete-message, delete-chat.
-//  Barои hamin in jo TRANSPORT-i ivazshavanda soakhta shud:
+//  Baroi hamin in jo TRANSPORT-i ivazshavanda soakhta shud:
 //
 //    1) BroadcastChannel - hamesha kor mekunad, vale FAQAT
 //       daruni yak browser (du tab / du oyna).
@@ -181,7 +181,7 @@ export class Signaling {
     }
   }
 
-  // Payomi daromadaro tekshir mekunem: az MAN naboşad va BA MAN boşad
+  // Payomi daromadaro tekshir mekunem: az MAN naboshad va BA MAN boshad
   private receive(raw: unknown) {
     if (this.closed) return;
     if (raw === null || typeof raw !== "object") return;
@@ -271,7 +271,7 @@ export class Signaling {
 
 // ------------------------------------------------------------
 //  Server-hoi STUN. TURN nest -> agar har du taraf dar
-//  şabakai basta boşand, ulanish nashavad (in mahdudiyati
+//  shabakai basta boshand, ulanish nashavad (in mahdudiyati
 //  backend ast, na kodi mo).
 // ------------------------------------------------------------
 export const ICE_SERVERS: RTCIceServer[] = [

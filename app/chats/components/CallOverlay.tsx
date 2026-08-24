@@ -146,7 +146,7 @@ export default function CallOverlay() {
         </div>
       )}
 
-      {/* ---------- Sarlavha (dar reţimi video) ---------- */}
+      {/* ---------- Sarlavha (dar rejimi video) ---------- */}
       {video && hasRemoteVideo && (
         <div className={styles.callTopBar}>
           <p className="text-[16px] font-semibold">{title}</p>
@@ -184,7 +184,7 @@ export default function CallOverlay() {
         ) : signalStatus === "local" ? (
           <>
             <WifiOff className="h-3.5 w-3.5" strokeWidth={2} />
-            <span>Reţimi mahalli (yak browser)</span>
+            <span>Rejimi mahalli (yak browser)</span>
           </>
         ) : (
           <>

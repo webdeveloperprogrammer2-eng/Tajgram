@@ -196,7 +196,7 @@ export default function VoiceRecorder({ disabled, onReady, onError }: Props) {
 
       raf.current = requestAnimationFrame(loop);
     } catch {
-      // mavjho lozim nestand - bе onho ham kor mekunad
+      // mavjho lozim nestand - be onho ham kor mekunad
     }
   }
 

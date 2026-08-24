@@ -189,7 +189,7 @@ export default function ChatWindow({
         }
       }
 
-      // Baroi boварi - ro-ykhati poyonro az server megirem
+      // Baroi bovari - ro-ykhati poyonro az server megirem
       const list = await getChatMessages(token, chat.chatId).catch(() => null);
       if (Array.isArray(list)) setMessages(list);
 

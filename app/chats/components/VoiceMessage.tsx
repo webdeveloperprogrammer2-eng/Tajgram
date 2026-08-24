@@ -93,7 +93,7 @@ export default function VoiceMessage({ src }: { src: string }) {
       <button
         type="button"
         onClick={toggle}
-        aria-label={playing ? "Istoned" : "Guş kuned"}
+        aria-label={playing ? "Istoned" : "Gush kuned"}
         className={styles.voicePlay}
       >
         {playing ? (

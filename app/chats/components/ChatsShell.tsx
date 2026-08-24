@@ -43,13 +43,14 @@ export default function ChatsShell({
   );
 }
 
-// Nuqtahoi hanuz sahifanadosht
+// Nuqtahoi navigatsiya - hamai sahifaho hozir mavjudand.
 const NAV = [
-  { key: "home", label: "Asosi", icon: Home },
-  { key: "explore", label: "Kashf", icon: Compass },
-  { key: "likes", label: "Bayanho", icon: Heart },
-  { key: "create", label: "Guzoshtan", icon: PlusSquare },
-  { key: "saved", label: "Saqlshuda", icon: Bookmark },
+  { key: "home", label: "Asosi", icon: Home, href: "/" },
+  { key: "search", label: "Justuju", icon: Search, href: "/search" },
+  { key: "explore", label: "Kashf", icon: Compass, href: "/explore" },
+  { key: "likes", label: "Bayanho", icon: Heart, href: "/notifications" },
+  { key: "create", label: "Guzoshtan", icon: PlusSquare, href: "/create" },
+  { key: "saved", label: "Saqlshuda", icon: Bookmark, href: "/saved" },
 ];
 
 function Frame({ children }: { children: React.ReactNode }) {
@@ -87,20 +88,11 @@ function Frame({ children }: { children: React.ReactNode }) {
 
         <nav className="flex flex-1 flex-col gap-1">
           {NAV.map((item) => (
-            <span
-              key={item.key}
-              className={`${styles.navItem} ${styles.navItemSoon}`}
-              title="Ba zudi"
-            >
+            <Link key={item.key} href={item.href} className={styles.navItem}>
               <item.icon className="h-6 w-6 shrink-0" strokeWidth={1.8} />
               <span className="hidden text-sm xl:inline">{item.label}</span>
-            </span>
+            </Link>
           ))}
-
-          <Link href="/search" className={styles.navItem}>
-            <Search className="h-6 w-6 shrink-0" strokeWidth={1.8} />
-            <span className="hidden text-sm xl:inline">Justuju</span>
-          </Link>
 
           <Link href="/reels" className={styles.navItem}>
             <Film className="h-6 w-6 shrink-0" strokeWidth={1.8} />

@@ -5,7 +5,7 @@
 //
 //  CHARO IN LOZIM AST?
 //  Dar swagger-i backend HECH endpoint-i zvanok/socket NEST.
-//  WebRTC bе "signaling" kor namekunad - offer/answer/ICE boyad
+//  WebRTC be "signaling" kor namekunad - offer/answer/ICE boyad
 //  az yak roh guzarand. Baroi hamin roh-i khudamonro dar hamin
 //  ilova soakhtem ("long polling"):
 //
@@ -35,7 +35,7 @@ type Mailbox = {
   touched: number;
 };
 
-// Dar reţimi dev Next modulhoro az nav bor mekunad ->
+// Dar rejimi dev Next modulhoro az nav bor mekunad ->
 // khotiraro dar globalThis nigoh medorem, to gum nashavad.
 type Store = { boxes: Map<string, Mailbox> };
 
@@ -63,7 +63,7 @@ function box(userId: string): Mailbox {
   return fresh;
 }
 
-// Quttihoi kuhna (korbar raftaast) - tozа mekunem
+// Quttihoi kuhna (korbar raftaast) - toza mekunem
 function sweep() {
   const now = Date.now();
 
