@@ -2,12 +2,6 @@
 
 // ============================================================
 //  ChatWindow - sutuni rost: khudi suhbat.
-//    GET  /Chat/get-chat-by-id?chatId=..  -> payomho (har 6 son. nav)
-//    PUT  /Chat/send-message              -> payomi nav (matn + fayl)
-//    DELETE /Chat/delete-message          -> payomi khudam
-//
-//  QOIDA: agar hamsuhbat na ba man podpiska kunad va
-//  na man ba u - maidoni navishtan BASTA ast.
 // ============================================================
 import { useEffect, useRef, useState } from "react";
 import {
@@ -58,10 +52,8 @@ export default function ChatWindow({
   const fileInput = useRef<HTMLInputElement>(null);
   const bottom = useRef<HTMLDivElement>(null);
 
-  // Bo in odam navishtan mumkin ast yo ne?
   const canWrite = allowedIds.has(chat.userId);
 
-  // ---------- Payomho: bori avval + har 6 soniya ----------
   useEffect(() => {
     let alive = true;
 
@@ -78,7 +70,7 @@ export default function ChatWindow({
         setMessages(Array.isArray(list) ? list : []);
       } catch (err) {
         if (!alive || !first) return;
-        setError(errorText(err, "Payomho bor nashudand."));
+        setError(errorText(err, "Паёмҳо бор нашуданд."));
       } finally {
         if (alive && first) setLoading(false);
       }
@@ -93,12 +85,10 @@ export default function ChatWindow({
     };
   }, [token, chat.chatId]);
 
-  // Har bor ki payomi nav omad - ba poyon meravem
   useEffect(() => {
     bottom.current?.scrollIntoView({ block: "end" });
   }, [messages.length, chat.chatId]);
 
-  // Peshnamoishi fayli intikhobshuda (va ozod kardani on)
   useEffect(() => {
     if (file === null) {
       setPreview(null);
@@ -111,7 +101,6 @@ export default function ChatWindow({
     return () => URL.revokeObjectURL(url);
   }, [file]);
 
-  // ---------- Firistodani payom ----------
   async function handleSend(event: React.FormEvent) {
     event.preventDefault();
 
@@ -128,7 +117,6 @@ export default function ChatWindow({
         file,
       });
 
-      // Server payomi soakhtaro bar megardonad -> darhol meguzorem
       if (created) setMessages((old) => [...old, created]);
       else {
         const list = await getChatMessages(token, chat.chatId);
@@ -137,22 +125,21 @@ export default function ChatWindow({
 
       setText("");
       setFile(null);
-      await reloadChats(); // dar ro-ykhat "payomi okhirin" nav shavad
+      await reloadChats();
     } catch (err) {
-      setError(errorText(err, "Payom firistoda nashud."));
+      setError(errorText(err, "Паём фиристода нашуд."));
     } finally {
       setSending(false);
     }
   }
 
-  // ---------- Tark kardani payom ----------
   async function handleDelete(messageId: number) {
     try {
       await deleteMessage(token, messageId);
       setMessages((old) => old.filter((item) => item.messageId !== messageId));
       await reloadChats();
     } catch (err) {
-      setError(errorText(err, "Payom tark nashud."));
+      setError(errorText(err, "Паём нест карда нашуд."));
     }
   }
 
@@ -166,7 +153,7 @@ export default function ChatWindow({
         <button
           type="button"
           onClick={onBack}
-          aria-label="Bozgasht"
+          aria-label="Бозгашт"
           className={`${styles.iconBtn} md:hidden`}
         >
           <ArrowLeft className="h-5 w-5" strokeWidth={1.8} />
@@ -208,7 +195,7 @@ export default function ChatWindow({
             className="py-20 text-center text-[13px]"
             style={{ color: "var(--muted)" }}
           >
-            Hanuz payom nest. Avvalin payomro shumo navised.
+            Ҳанӯз паём нест. Паёми аввалро шумо нависед.
           </p>
         ) : (
           <div className="flex flex-col gap-2">
@@ -256,13 +243,11 @@ export default function ChatWindow({
           >
             <Lock className="h-4 w-4 shrink-0" strokeWidth={1.8} />
             <span>
-              Bo in korbar navishtan mumkin nest: na u ba shumo podpiska
-              kardaast, na shumo ba u.
+              Бо ин корбар навиштан мумкин нест: на ӯ ба шумо обуна шудааст ва на шумо ба ӯ.
             </span>
           </div>
         ) : (
           <form onSubmit={handleSend}>
-            {/* Peshnamoishi fayl */}
             {preview !== null && (
               <div className="mb-2 flex items-center gap-3">
                 <span className="relative">
@@ -284,7 +269,7 @@ export default function ChatWindow({
                   <button
                     type="button"
                     onClick={() => setFile(null)}
-                    aria-label="Faylro tark kuned"
+                    aria-label="Файлро бекор кунед"
                     className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full"
                     style={{ background: "var(--invBg)", color: "var(--invFg)" }}
                   >
@@ -304,20 +289,19 @@ export default function ChatWindow({
                 onFocus={() => setFocused(true)}
                 onBlur={() => setFocused(false)}
                 onKeyDown={(event) => {
-                  // Enter = firistodan, Shift+Enter = satri nav
                   if (event.key === "Enter" && !event.shiftKey) {
                     event.preventDefault();
                     handleSend(event);
                   }
                 }}
-                placeholder="Payom navised..."
+                placeholder="Паём нависед..."
                 className={styles.composerInput}
               />
 
               <button
                 type="button"
                 onClick={() => fileInput.current?.click()}
-                aria-label="Fayl guzored"
+                aria-label="Файл илова кунед"
                 className={styles.iconBtn}
               >
                 <ImagePlus className="h-5 w-5" strokeWidth={1.8} />
@@ -338,7 +322,7 @@ export default function ChatWindow({
               <button
                 type="submit"
                 disabled={sending || (text.trim() === "" && file === null)}
-                aria-label="Firistodan"
+                aria-label="Фиристодан"
                 className={styles.sendBtn}
               >
                 {sending ? (
@@ -359,9 +343,6 @@ export default function ChatWindow({
   );
 }
 
-// ------------------------------------------------------------
-//  Yak payom. Payomhoi KHUDAM - rost va gradient.
-// ------------------------------------------------------------
 function Bubble({
   message,
   onDelete,
@@ -380,7 +361,7 @@ function Bubble({
         <button
           type="button"
           onClick={() => onDelete(message.messageId)}
-          aria-label="Payomro tark kuned"
+          aria-label="Паёмро нест кунед"
           className="mb-1 opacity-0 transition-opacity duration-150 group-hover:opacity-100"
           style={{ color: "var(--muted)" }}
         >

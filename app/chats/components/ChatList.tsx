@@ -2,10 +2,6 @@
 
 // ============================================================
 //  ChatList - sutuni chap: ro-ykhati suhbatho.
-//    - justuju (dar hamin ro-ykhat, be so-rovi zieda)
-//    - tugmai "suhbati nav" -> NewChatModal
-//    - agar hamsuhbat ba man podpiska nadosad va man ham ba u -
-//      dar satr qufl namoyon meshavad (navishtan mumkin nest)
 // ============================================================
 import { useState } from "react";
 import { Lock, PenSquare, Search } from "lucide-react";
@@ -44,13 +40,14 @@ export default function ChatList({
       {/* ---------- Sarlavha ---------- */}
       <div className="flex items-center justify-between px-5 pb-3 pt-5">
         <h1 className="text-xl font-bold tracking-tight">
-          {me?.userName ?? "Payomho"}
+          {me?.userName ?? "Паёмҳо"}
         </h1>
 
         <button
           type="button"
           onClick={onNewChat}
-          aria-label="Suhbati nav"
+          aria-label="Сӯҳбати нав"
+          title="Сӯҳбати нав"
           className={styles.iconBtn}
         >
           <PenSquare className="h-5 w-5" strokeWidth={1.8} />
@@ -67,7 +64,7 @@ export default function ChatList({
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Justuju"
+            placeholder="Ҷустуҷӯ"
             className="w-full bg-transparent text-sm outline-none"
             style={{ color: "var(--fg)" }}
           />
@@ -82,8 +79,8 @@ export default function ChatList({
             style={{ color: "var(--muted)" }}
           >
             {chats.length === 0
-              ? "Hanuz suhbat nest. Tugmai boloro zada bo yak odam suhbat sar kuned."
-              : "Chize yoft nashud."}
+              ? "Ҳанӯз сӯҳбат нест. Тугмаи болоро пахш карда бо як нафар сӯҳбат оғоз кунед."
+              : "Ҳеҷ чиз ёфт нашуд."}
           </p>
         ) : (
           list.map((chat) => {
@@ -123,7 +120,7 @@ export default function ChatList({
                     className="mt-0.5 block truncate text-[13px]"
                     style={{ color: "var(--muted)" }}
                   >
-                    {chat.lastMessage ?? "Hanuz payom nest"}
+                    {chat.lastMessage ?? "Ҳанӯз паём нест"}
                   </span>
                 </span>
 

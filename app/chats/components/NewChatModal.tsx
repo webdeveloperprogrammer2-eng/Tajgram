@@ -2,14 +2,6 @@
 
 // ============================================================
 //  NewChatModal - "suhbati nav".
-//
-//  QOIDAI ASOSI: in jo FAQAT onhoe hastand ki
-//    - ba man podpiska kardaand (get-subscribers), yo
-//    - man ba onho podpiska kardaam (get-subscriptions)
-//  Ro-ykhat dar providers tayyor meshavad (allowed).
-//
-//  Ba'di intikhob: POST /Chat/create-chat?receiverUserId=...
-//  Agar suhbat alakay bosad - server hamon chatId-ro medihad.
 // ============================================================
 import { useState } from "react";
 import { Search, X } from "lucide-react";
@@ -52,7 +44,6 @@ export default function NewChatModal({
     setError("");
 
     try {
-      // Agar suhbat alakay bosad - hamonro mekushoem
       const existing: Chat | undefined = chats.find(
         (chat) => chat.userId === userId
       );
@@ -65,7 +56,7 @@ export default function NewChatModal({
       onCreated(Number(chatId), userId);
       onClose();
     } catch (err) {
-      setError(errorText(err, "Suhbat soakhta nashud."));
+      setError(errorText(err, "Сӯҳбат сохта нашуд."));
     } finally {
       setBusyId(null);
     }
@@ -82,16 +73,16 @@ export default function NewChatModal({
           style={{ borderColor: "var(--line)" }}
         >
           <div>
-            <h2 className="text-base font-bold tracking-tight">Suhbati nav</h2>
+            <h2 className="text-base font-bold tracking-tight">Сӯҳбати нав</h2>
             <p className="mt-0.5 text-[12px]" style={{ color: "var(--muted)" }}>
-              Faqat onhoe ki ba shumo podpiska kardaand yo shumo ba onho
+              Танҳо нафароне, ки ба шумо обуна шудаанд ё шумо ба онҳо
             </p>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            aria-label="Bastan"
+            aria-label="Пӯшидан"
             className={styles.iconBtn}
           >
             <X className="h-4 w-4" strokeWidth={2} />
@@ -113,7 +104,7 @@ export default function NewChatModal({
               autoFocus
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Nomi korbar..."
+              placeholder="Номи корбар..."
               className="w-full bg-transparent text-sm outline-none"
               style={{ color: "var(--fg)" }}
             />
@@ -128,8 +119,8 @@ export default function NewChatModal({
               style={{ color: "var(--muted)" }}
             >
               {allowed.length === 0
-                ? "Hanuz hech kas ba shumo podpiska nakardaast va shumo ham ba kase podpiska nakardaed."
-                : "Chunin korbar yoft nashud."}
+                ? "Ҳанӯз ҳеҷ кас ба шумо обуна нашудааст ва шумо ҳам ба касе обуна нашудаед."
+                : "Чунин корбар ёфт нашуд."}
             </p>
           ) : (
             list.map((user) => (

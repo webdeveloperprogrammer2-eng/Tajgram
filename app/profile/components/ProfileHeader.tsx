@@ -7,14 +7,6 @@
 //    - nomi korbar + tugmahoi Post / Reel
 //    - hisobho: POSTHO / FOLOWERS / FOLOWING
 //    - nomi purra va matni "dar borai man"
-//
-//  DIQQAT (talabi korbar):
-//    ivaz/tozakunii SURATI profil va TAHRIR in jo NESTAND -
-//    onho ba SETTING meravand (ba'dtar dar UI dobavit meshavand).
-//    Email va JINS ham az in jo girifta shudand.
-//
-//  HAMAI raqamho va matnho az server meoyand
-//  (GET /UserProfile/get-my-profile).
 // ============================================================
 import { useRef, useState } from "react";
 import { Film, Plus } from "lucide-react";
@@ -36,14 +28,12 @@ import FollowListModal from "./FollowListModal";
 export default function ProfileHeader() {
   const { profile, token, reload } = useProfile();
 
-  // Kadom modal kushoda ast?
   const [postOpen, setPostOpen] = useState(false);
   const [reelOpen, setReelOpen] = useState(false);
   const [followTab, setFollowTab] = useState<"followers" | "following" | null>(
     null
   );
 
-  // Baroi STORY-i nav
   const fileInput = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -52,11 +42,8 @@ export default function ProfileHeader() {
 
   const avatar = mediaUrl(profile.image);
 
-  // ---------- STORY-i nav (POST /Story/AddStories) ----------
   async function handleStoryPick(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
-
-    // Maidonro toza mekunem - ki ayni hamon faylro dubora intikhob kardan shavad
     event.target.value = "";
     if (!file) return;
 
@@ -64,15 +51,12 @@ export default function ProfileHeader() {
     setBusy(true);
 
     try {
-      // Server ba'ze namudi surat (webp/avif/heic)-ro qabul namekunad.
-      // Baroi hamin dar browser onro ba JPEG meguzaronem.
       const image = await toJpegFile(file);
-
       await addStory(token, image);
-      await reload(); // storyi nav darhol dar qatori story peydo meshavad
+      await reload();
     } catch (err) {
       setError(
-        errorText(err, "Story guzoshta nashud. Surati digarro sanjed.")
+        errorText(err, "Стори гузошта нашуд. Акси дигарро санҷед.")
       );
     } finally {
       setBusy(false);
@@ -85,7 +69,6 @@ export default function ProfileHeader() {
         {/* ================= AVATAR + STORY ================= */}
         <div className="shrink-0">
           <div className="relative">
-            {/* Khalqai gradient dar gird-i avatar */}
             <span className={`${styles.ring} h-[128px] w-[128px] sm:h-[164px] sm:w-[164px]`}>
               <span className={styles.ringInner}>
                 <Avatar className="h-full w-full">
@@ -99,13 +82,12 @@ export default function ProfileHeader() {
               </span>
             </span>
 
-            {/* Tugmai "+" -> STORY-i nav (monandi instagram) */}
             <button
               type="button"
               onClick={() => fileInput.current?.click()}
               disabled={busy}
-              aria-label="Storyi nav guzored"
-              title="Storyi nav"
+              aria-label="Стори нав гузоред"
+              title="Стори нав"
               className={`${styles.gradBg} absolute bottom-1 right-1 flex h-10 w-10 items-center justify-center rounded-full shadow-[var(--shadowSoft)] transition-transform duration-200 hover:scale-110 active:scale-95 disabled:opacity-50 sm:bottom-2 sm:right-2`}
               style={{ border: "3px solid var(--bg)" }}
             >
@@ -126,7 +108,7 @@ export default function ProfileHeader() {
               className="mt-3 text-center text-[12px] font-medium"
               style={{ color: "var(--muted)" }}
             >
-              Story bor karda istodaast...
+              Стори бор шуда истодааст...
             </p>
           )}
         </div>
@@ -142,7 +124,7 @@ export default function ProfileHeader() {
             <div className="flex flex-wrap items-center justify-center gap-2.5">
               <Button size="sm" onClick={() => setPostOpen(true)} className="gap-2">
                 <Plus className="h-4 w-4" strokeWidth={2.4} />
-                Post
+                Пост
               </Button>
 
               <Button
@@ -152,23 +134,23 @@ export default function ProfileHeader() {
                 className="gap-2"
               >
                 <Film className="h-3.5 w-3.5" strokeWidth={2} />
-                Reel
+                Рийлс
               </Button>
             </div>
           </div>
 
           {/* --- HISOBHO: postho / folowers / folowing --- */}
           <div className={`${styles.card} mt-7 grid max-w-lg grid-cols-3 px-2 py-1 sm:mt-8`}>
-            <Stat label="Postho" value={profile.postCount} />
+            <Stat label="Постҳо" value={profile.postCount} />
 
             <Stat
-              label="Folowers"
+              label="Обуначиён"
               value={profile.subscribersCount}
               onClick={() => setFollowTab("followers")}
             />
 
             <Stat
-              label="Folowing"
+              label="Обунаҳо"
               value={profile.subscriptionsCount}
               onClick={() => setFollowTab("following")}
             />
@@ -184,7 +166,7 @@ export default function ProfileHeader() {
               </p>
             ) : (
               <p className="text-[13px] italic" style={{ color: "var(--muted)" }}>
-                Hanuz matni &quot;dar borai man&quot; nest
+                Ҳанӯз матни &quot;дар бораи ман&quot; нест
               </p>
             )}
           </div>
@@ -210,10 +192,6 @@ export default function ProfileHeader() {
   );
 }
 
-// ------------------------------------------------------------
-//  Yak "khonai hisob": raqami kalon + nomi khurd.
-//  Agar onClick bosad -> tugma meshavad (folowers/folowing).
-// ------------------------------------------------------------
 function Stat({
   label,
   value,

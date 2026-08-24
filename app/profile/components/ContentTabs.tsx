@@ -3,10 +3,6 @@
 // ============================================================
 //  ContentTabs - se qism: POSTHO / REELS / SAQLSHUDAHO.
 //  Ayni monandi instagram - dar zeri profil.
-//
-//  POSTHO      -> GET /Post/get-my-posts
-//  REELS       -> GET /Reels/get-my-reels
-//  SAQLSHUDAHO -> GET /UserProfile/get-post-favorites
 // ============================================================
 import { useState } from "react";
 import { Bookmark, Film, Grid3x3 } from "lucide-react";
@@ -20,7 +16,6 @@ import ReelsGrid from "./ReelsGrid";
 export default function ContentTabs() {
   const { posts, reels, token } = useProfile();
 
-  // Saqlshudaho faqat hangomi zadan bor meshavand (ki behuda so-rov naravad)
   const [favorites, setFavorites] = useState<Post[]>([]);
   const [favoritesLoaded, setFavoritesLoaded] = useState(false);
   const [favoritesError, setFavoritesError] = useState("");
@@ -33,7 +28,7 @@ export default function ContentTabs() {
       setFavorites(Array.isArray(data) ? data : []);
     } catch (err) {
       setFavoritesError(
-        errorText(err, "Bor nashud.")
+        errorText(err, "Бор нашуд.")
       );
     } finally {
       setFavoritesLoaded(true);
@@ -46,17 +41,17 @@ export default function ContentTabs() {
         <TabsList>
           <TabsTrigger value="posts">
             <Grid3x3 strokeWidth={1.6} />
-            POSTHO
+            ПОСТҲО
           </TabsTrigger>
 
           <TabsTrigger value="reels">
             <Film strokeWidth={1.6} />
-            REELS
+            РИЙЛС
           </TabsTrigger>
 
           <TabsTrigger value="saved" onClick={loadFavorites}>
             <Bookmark strokeWidth={1.6} />
-            SAQLSHUDA
+            ЗАХИРАШУДАҲО
           </TabsTrigger>
         </TabsList>
 
