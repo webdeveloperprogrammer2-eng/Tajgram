@@ -4,7 +4,6 @@
 //  Logo - wordmark.
 //  Instagram camera icon + Instagram gradient "Tajgram" text.
 // ============================================================
-import { Instagram } from "lucide-react";
 import styles from "../auth.module.css";
 
 export default function Logo({ size = "small" }: { size?: "small" | "big" }) {
@@ -18,7 +17,19 @@ export default function Logo({ size = "small" }: { size?: "small" | "big" }) {
         className={`${styles.gradBg} ${box} flex shrink-0 items-center justify-center rounded-[10px] text-white shadow-sm`}
         aria-hidden
       >
-        <Instagram className={iconSize} strokeWidth={2.2} />
+        <svg
+          className={iconSize}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+          <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+          <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+        </svg>
       </div>
 
       <span className={`${styles.gradText} ${textSize} font-black tracking-tight select-none`}>

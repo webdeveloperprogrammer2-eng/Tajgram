@@ -6,11 +6,28 @@
 //  + nom "Tajgram" ki harf ba harf bolo meoyad
 //  + 2 kalimai kalon.
 // ============================================================
-import { Instagram } from "lucide-react";
 import { useSettings } from "../providers";
 import styles from "../auth.module.css";
 
 const NAME = "Tajgram";
+
+function InstagramIcon({ className = "h-6 w-6" }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+    </svg>
+  );
+}
 
 export default function BrandMark() {
   const { t } = useSettings();
@@ -30,7 +47,7 @@ export default function BrandMark() {
               className="absolute inset-0 grid place-items-center rounded-[14px] border-2 border-white/85 text-white"
               style={{ backfaceVisibility: "hidden" }}
             >
-              <Instagram className="h-6 w-6" strokeWidth={2} />
+              <InstagramIcon className="h-6 w-6" />
             </span>
 
             {/* Tarafi AQIB (vaqte mecharkhad namoyon meshavad) */}
@@ -42,7 +59,7 @@ export default function BrandMark() {
                 background: "linear-gradient(135deg, var(--accentA), var(--accentB))",
               }}
             >
-              <Instagram className="h-6 w-6" strokeWidth={2} />
+              <InstagramIcon className="h-6 w-6" />
             </span>
           </div>
         </div>
