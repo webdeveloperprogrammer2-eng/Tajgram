@@ -19,41 +19,41 @@
 /* ---------- NAQLI TORIK ---------- */
 .shell[data-theme="dark"] {
   --bg: #000000;
-  --panel: #15151a;
-  --panelSoft: #0e0e12;
-  --fg: #f4f4f6;
-  --muted: #8b8b93;
-  --line: rgba(255, 255, 255, 0.10);
-  --lineStrong: rgba(255, 255, 255, 0.22);
-  --accentA: #ff2e74;
-  --accentB: #7a2bff;
-  --signal: #ff2e74;
+  --panel: #1c1c1e;
+  --panelSoft: #121212;
+  --fg: #f5f5f5;
+  --muted: #a8a8a8;
+  --line: rgba(255, 255, 255, 0.15);
+  --lineStrong: rgba(255, 255, 255, 0.28);
+  --accentA: #f09433;
+  --accentB: #dc2743;
+  --signal: #ed4956;
   --onSignal: #ffffff;
-  --invBg: #f4f4f6;
-  --invFg: #0a0a0c;
+  --invBg: #ffffff;
+  --invFg: #000000;
   --shadow: 0 18px 45px -18px rgba(0, 0, 0, 0.9);
   --shadowSoft: 0 8px 24px -12px rgba(0, 0, 0, 0.85);
-  --glass: rgba(10, 10, 12, 0.72);
+  --glass: rgba(18, 18, 18, 0.85);
 }
 
 /* ---------- NAQLI RAVSHAN ---------- */
 .shell[data-theme="light"] {
   --bg: #ffffff;
-  --panel: #f4f4f6;
-  --panelSoft: #fafafa;
-  --fg: #101014;
-  --muted: #74747c;
-  --line: rgba(16, 16, 20, 0.09);
-  --lineStrong: rgba(16, 16, 20, 0.18);
-  --accentA: #ff2e74;
-  --accentB: #7a2bff;
-  --signal: #e01e5a;
+  --panel: #fafafa;
+  --panelSoft: #ffffff;
+  --fg: #000000;
+  --muted: #737373;
+  --line: #dbdbdb;
+  --lineStrong: #c7c7c7;
+  --accentA: #f09433;
+  --accentB: #dc2743;
+  --signal: #ed4956;
   --onSignal: #ffffff;
-  --invBg: #101014;
+  --invBg: #000000;
   --invFg: #ffffff;
-  --shadow: 0 18px 45px -20px rgba(16, 16, 20, 0.35);
-  --shadowSoft: 0 8px 24px -14px rgba(16, 16, 20, 0.28);
-  --glass: rgba(255, 255, 255, 0.78);
+  --shadow: 0 18px 45px -20px rgba(0, 0, 0, 0.15);
+  --shadowSoft: 0 8px 24px -14px rgba(0, 0, 0, 0.1);
+  --glass: rgba(255, 255, 255, 0.85);
 }
 
 /* Rangho ba portal-i modal ham lozimand.
@@ -61,61 +61,61 @@
    Baroi hamin ayni hamon rangho dar :global ham navishta meshavand. */
 :global([data-profile-theme="dark"]) {
   --bg: #000000;
-  --panel: #15151a;
-  --panelSoft: #0e0e12;
-  --fg: #f4f4f6;
-  --muted: #8b8b93;
-  --line: rgba(255, 255, 255, 0.10);
-  --lineStrong: rgba(255, 255, 255, 0.22);
-  --accentA: #ff2e74;
-  --accentB: #7a2bff;
-  --signal: #ff2e74;
+  --panel: #1c1c1e;
+  --panelSoft: #121212;
+  --fg: #f5f5f5;
+  --muted: #a8a8a8;
+  --line: rgba(255, 255, 255, 0.15);
+  --lineStrong: rgba(255, 255, 255, 0.28);
+  --accentA: #f09433;
+  --accentB: #dc2743;
+  --signal: #ed4956;
   --onSignal: #ffffff;
-  --invBg: #f4f4f6;
-  --invFg: #0a0a0c;
+  --invBg: #ffffff;
+  --invFg: #000000;
   --shadow: 0 18px 45px -18px rgba(0, 0, 0, 0.9);
   --shadowSoft: 0 8px 24px -12px rgba(0, 0, 0, 0.85);
-  --glass: rgba(10, 10, 12, 0.72);
+  --glass: rgba(18, 18, 18, 0.85);
 }
 
 :global([data-profile-theme="light"]) {
   --bg: #ffffff;
-  --panel: #f4f4f6;
-  --panelSoft: #fafafa;
-  --fg: #101014;
-  --muted: #74747c;
-  --line: rgba(16, 16, 20, 0.09);
-  --lineStrong: rgba(16, 16, 20, 0.18);
-  --accentA: #ff2e74;
-  --accentB: #7a2bff;
-  --signal: #e01e5a;
+  --panel: #fafafa;
+  --panelSoft: #ffffff;
+  --fg: #000000;
+  --muted: #737373;
+  --line: #dbdbdb;
+  --lineStrong: #c7c7c7;
+  --accentA: #f09433;
+  --accentB: #dc2743;
+  --signal: #ed4956;
   --onSignal: #ffffff;
-  --invBg: #101014;
+  --invBg: #000000;
   --invFg: #ffffff;
-  --shadow: 0 18px 45px -20px rgba(16, 16, 20, 0.35);
-  --shadowSoft: 0 8px 24px -14px rgba(16, 16, 20, 0.28);
-  --glass: rgba(255, 255, 255, 0.78);
+  --shadow: 0 18px 45px -20px rgba(0, 0, 0, 0.15);
+  --shadowSoft: 0 8px 24px -14px rgba(0, 0, 0, 0.1);
+  --glass: rgba(255, 255, 255, 0.85);
 }
 
 .mono {
   font-family: var(--font-geist-mono), ui-monospace, monospace;
 }
 
-/* ---------- YAGONA GRADIENT (2 rang) ---------- */
+/* ---------- YAGONA GRADIENT (Instagram 5-color) ---------- */
 .gradText {
-  background: linear-gradient(115deg, var(--accentA), var(--accentB));
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
 .gradBg {
-  background: linear-gradient(135deg, var(--accentA), var(--accentB));
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
   color: #ffffff;
 }
 
 .gradBar {
-  background: linear-gradient(90deg, var(--accentA), var(--accentB));
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
 }
 
 /* Nuri narmi gradient dar fon */
