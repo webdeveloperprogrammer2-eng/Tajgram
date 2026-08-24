@@ -1,0 +1,62 @@
+{
+  "auth": {
+    "login": {
+      "title": "Tajgram",
+      "subtitle": "Log in to see photos and videos from your friends.",
+      "username_placeholder": "Username or email",
+      "password_placeholder": "Password",
+      "button": "Log In",
+      "forgot_password": "Forgot password?",
+      "no_account": "Don't have an account?",
+      "sign_up": "Sign up",
+      "logging_in": "Logging in..."
+    },
+    "register": {
+      "title": "Tajgram",
+      "subtitle": "Sign up to see photos and videos from your friends.",
+      "username_placeholder": "Username",
+      "fullname_placeholder": "Full Name",
+      "email_placeholder": "Email Address",
+      "password_placeholder": "Password",
+      "confirm_password_placeholder": "Confirm Password",
+      "button": "Sign Up",
+      "have_account": "Have an account?",
+      "log_in": "Log in",
+      "signing_up": "Signing up..."
+    },
+    "validation": {
+      "username_required": "Username is required.",
+      "fullname_required": "Full Name is required.",
+      "email_required": "Email is required.",
+      "email_invalid": "Please enter a valid email address.",
+      "password_required": "Password is required.",
+      "password_short": "Password must be at least 6 characters.",
+      "confirm_password_required": "Confirm Password is required.",
+      "passwords_match": "Passwords do not match."
+    },
+    "errors": {
+      "unknown": "An unexpected error occurred. Please try again.",
+      "unauthorized": "Invalid username or password.",
+      "conflict_user": "Username or email already exists.",
+      "validation_failed": "Please check the entered values."
+    },
+    "logout": "Log Out",
+    "theme": {
+      "label": "Theme",
+      "light": "Light",
+      "dark": "Dark"
+    },
+    "language": {
+      "label": "Language",
+      "en": "English",
+      "ru": "Русский",
+      "tj": "Тоҷикӣ"
+    },
+    "welcome": "Welcome, {{name}}!",
+    "profile": {
+      "posts": "posts",
+      "followers": "followers",
+      "following": "following"
+    }
+  }
+}
