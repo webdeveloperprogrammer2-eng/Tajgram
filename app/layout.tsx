@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Tajgram",
-  description: "Instagram-style social network",
+  description: "Tajgram — веб-приложение на Next.js",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
