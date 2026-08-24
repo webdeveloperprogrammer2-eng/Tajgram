@@ -6,6 +6,7 @@
 //  + nom "Tajgram" ki harf ba harf bolo meoyad
 //  + 2 kalimai kalon.
 // ============================================================
+import { Instagram } from "lucide-react";
 import { useSettings } from "../providers";
 import styles from "../auth.module.css";
 
@@ -26,28 +27,22 @@ export default function BrandMark() {
           <div className={`${styles.logo3d} relative h-12 w-12`}>
             {/* Tarafi PESH */}
             <span
-              className="absolute inset-0 grid place-items-center rounded-[14px] border-2 border-white/85"
+              className="absolute inset-0 grid place-items-center rounded-[14px] border-2 border-white/85 text-white"
               style={{ backfaceVisibility: "hidden" }}
             >
-              <span className="h-[18px] w-[18px] rounded-full border-2 border-white/85" />
-              <span className="absolute right-[9px] top-[9px] h-[3px] w-[3px] rounded-full bg-white/85" />
+              <Instagram className="h-6 w-6" strokeWidth={2} />
             </span>
 
             {/* Tarafi AQIB (vaqte mecharkhad namoyon meshavad) */}
             <span
-              className="absolute inset-0 grid place-items-center rounded-[14px]"
+              className="absolute inset-0 grid place-items-center rounded-[14px] text-white"
               style={{
                 transform: "rotateY(180deg)",
                 backfaceVisibility: "hidden",
                 background: "linear-gradient(135deg, var(--accentA), var(--accentB))",
               }}
             >
-              <span
-                className={`${styles.display} text-xl`}
-                style={{ color: "var(--invFg)" }}
-              >
-                T
-              </span>
+              <Instagram className="h-6 w-6" strokeWidth={2} />
             </span>
           </div>
         </div>
