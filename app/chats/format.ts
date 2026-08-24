@@ -23,7 +23,7 @@ export function clockTime(iso: string | null | undefined): string {
   return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
-// Baroi ro-ykhati chatho: "14:35" / "Dina" / "22.08"
+// Baroi ro-ykhati chatho: "14:35" / "Дирӯз" / "22.08"
 export function chatTime(iso: string | null | undefined): string {
   if (!iso) return "";
 
@@ -36,12 +36,12 @@ export function chatTime(iso: string | null | undefined): string {
 
   const yesterday = new Date(now);
   yesterday.setDate(now.getDate() - 1);
-  if (date.toDateString() === yesterday.toDateString()) return "Dina";
+  if (date.toDateString() === yesterday.toDateString()) return "Дирӯз";
 
   return date.toLocaleDateString([], { day: "2-digit", month: "2-digit" });
 }
 
-// Sarlavhai ruz dar daruni chat: "Imruz" / "Dina" / "22.08.2026"
+// Sarlavhai ruz dar daruni chat: "Имрӯз" / "Дирӯз" / "22.08.2026"
 export function dayLabel(iso: string | null | undefined): string {
   if (!iso) return "";
 
@@ -49,11 +49,11 @@ export function dayLabel(iso: string | null | undefined): string {
   if (Number.isNaN(date.getTime())) return "";
 
   const now = new Date();
-  if (date.toDateString() === now.toDateString()) return "Imruz";
+  if (date.toDateString() === now.toDateString()) return "Имрӯз";
 
   const yesterday = new Date(now);
   yesterday.setDate(now.getDate() - 1);
-  if (date.toDateString() === yesterday.toDateString()) return "Dina";
+  if (date.toDateString() === yesterday.toDateString()) return "Дирӯз";
 
   return date.toLocaleDateString([], {
     day: "2-digit",

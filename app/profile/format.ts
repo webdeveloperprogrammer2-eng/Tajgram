@@ -18,7 +18,7 @@ export function shortNumber(value: number | null | undefined): string {
     .toUpperCase();
 }
 
-// "2026-08-22T09:00:55.188Z" -> "3 SOAT PESH"
+// "2026-08-22T09:00:55.188Z" -> "3 СОАТ ПЕШ"
 export function timeAgo(iso: string | null | undefined): string {
   if (!iso) return "";
 
@@ -27,24 +27,24 @@ export function timeAgo(iso: string | null | undefined): string {
 
   const seconds = Math.max(0, Math.floor((Date.now() - time) / 1000));
 
-  if (seconds < 60) return "HOZIR";
+  if (seconds < 60) return "ҲОЗИР";
 
   const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes} DAQ PESH`;
+  if (minutes < 60) return `${minutes} ДАҚ ПЕШ`;
 
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours} SOAT PESH`;
+  if (hours < 24) return `${hours} СОАТ ПЕШ`;
 
   const days = Math.floor(hours / 24);
-  if (days < 7) return `${days} RUZ PESH`;
+  if (days < 7) return `${days} РӮЗ ПЕШ`;
 
   const weeks = Math.floor(days / 7);
-  if (weeks < 5) return `${weeks} HAFTA PESH`;
+  if (weeks < 5) return `${weeks} ҲАФТА ПЕШ`;
 
   const months = Math.floor(days / 30);
-  if (months < 12) return `${months} MOH PESH`;
+  if (months < 12) return `${months} МОҲ ПЕШ`;
 
-  return `${Math.floor(days / 365)} SOL PESH`;
+  return `${Math.floor(days / 365)} СОЛ ПЕШ`;
 }
 
 // "2026-08-22T09:00:55.188Z" -> "22.08.2026"
@@ -71,7 +71,7 @@ export function initials(name: string | null | undefined): string {
 
 // gender: 0 | 1 | null  ->  matni khonda
 export function genderLabel(gender: number | null | undefined): string {
-  if (gender === 0) return "MARD";
-  if (gender === 1) return "ZAN";
-  return "NOMA'LUM";
+  if (gender === 0) return "МАРД";
+  if (gender === 1) return "ЗАН";
+  return "НОМАЪЛУМ";
 }
