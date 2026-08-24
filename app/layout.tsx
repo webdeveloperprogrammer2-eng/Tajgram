@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from "./Auth/context/AuthContext";
+import { AuthProvider } from "./Auth/providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,7 +18,11 @@ export const metadata: Metadata = {
   description: "Tajgram — веб-приложение на Next.js",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html
       lang="en"
@@ -31,7 +35,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             __html: `
               (function() {
                 try {
-                  const storedTheme = localStorage.getItem('theme');
+                  const storedTheme = localStorage.getItem('tajgram_theme');
                   const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
                   if (storedTheme === 'dark' || (!storedTheme && systemPrefersDark)) {
                     document.documentElement.classList.add('dark');

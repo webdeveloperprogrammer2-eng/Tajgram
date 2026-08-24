@@ -314,3 +314,4 @@ const ru: Dict = {
   };
 
 export const dictionary: Record<Lang, Dict> = { tj, ru, en };
+export default dictionary;

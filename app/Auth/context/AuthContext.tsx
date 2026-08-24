@@ -4,7 +4,6 @@ import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { UserProfile } from '../types/auth.types';
 import { authService } from '../services/authService';
-import i18n from '../i18n';
 
 interface AuthContextType {
   user: UserProfile | null;
@@ -51,7 +50,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const storedLang = localStorage.getItem('language') as 'en' | 'ru' | 'tj' | null;
       if (storedLang) {
         setLanguage(storedLang);
-        i18n.changeLanguage(storedLang);
       }
 
       // 3. Auth Token verification
@@ -155,7 +153,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const changeLanguage = (lng: 'en' | 'ru' | 'tj') => {
     setLanguage(lng);
     localStorage.setItem('language', lng);
-    i18n.changeLanguage(lng);
   };
 
   const clearError = () => {
