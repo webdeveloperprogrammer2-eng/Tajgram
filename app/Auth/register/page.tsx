@@ -1,7 +1,7 @@
 "use client";
 
 // ============================================================
-//  /Auth/Register
+//  /Auth/register
 //  Sanjishhoi mo AYNAN qoidahoi server hastand (RULES az api.ts).
 // ============================================================
 import { useState } from "react";

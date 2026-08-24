@@ -16,11 +16,11 @@ export default function RouteTabs() {
 
   const tabs = [
     { href: "/Auth/login", label: t.tabLogin },
-    { href: "/Auth/Register", label: t.tabRegister },
+    { href: "/Auth/register", label: t.tabRegister },
   ];
 
   // Kadom tab faol ast: 0 yo 1
-  const activeIndex = pathname === "/Auth/Register" ? 1 : 0;
+  const activeIndex = pathname?.toLowerCase() === "/auth/register" ? 1 : 0;
 
   return (
     <nav
