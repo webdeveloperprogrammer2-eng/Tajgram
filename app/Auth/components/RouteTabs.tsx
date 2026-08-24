@@ -8,8 +8,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { useSettings } from "../providers";
-import styles from "../auth.module.css";
-
 export default function RouteTabs() {
   const pathname = usePathname();
   const { t } = useSettings();
@@ -29,7 +27,7 @@ export default function RouteTabs() {
     >
       {/* Bloki lagzanda - oram az yak tab ba digare meravad */}
       <span
-        className={`${styles.gradBg} absolute inset-y-1 w-[calc(50%-0.25rem)] rounded-full transition-transform duration-500`}
+        className="absolute inset-y-1 w-[calc(50%-0.25rem)] rounded-full bg-[var(--surface)] shadow-sm transition-transform duration-150"
         style={{ transform: `translateX(${activeIndex * 100}%)` }}
         aria-hidden
       />
@@ -40,7 +38,7 @@ export default function RouteTabs() {
           href={tab.href}
           className="relative z-10 w-32 py-2 text-center text-[13px] font-semibold transition-colors duration-300"
           style={{
-            color: i === activeIndex ? "#ffffff" : "var(--muted)",
+            color: i === activeIndex ? "var(--fg)" : "var(--muted)",
           }}
         >
           {tab.label}

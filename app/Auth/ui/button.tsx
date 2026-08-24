@@ -10,13 +10,13 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "./utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-full whitespace-nowrap font-semibold transition-all duration-200 outline-none active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 rounded-full whitespace-nowrap font-semibold transition-colors duration-150 outline-none active:opacity-80 disabled:pointer-events-none disabled:opacity-40 [&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
     variants: {
       variant: {
         // asosi: yagona gradient (2 rang)
         default:
-          "bg-[linear-gradient(135deg,var(--accentA),var(--accentB))] text-white shadow-[var(--shadowSoft)] hover:brightness-110",
+          "bg-[var(--accentA)] text-white shadow-[var(--shadowSoft)] hover:brightness-110",
         // khokistari - amalhoi duyumdaraja
         soft: "bg-[var(--panel)] text-[var(--fg)] hover:brightness-95",
         // hamon "gold"-i kuhna -> aknun rangi asosi (violet)

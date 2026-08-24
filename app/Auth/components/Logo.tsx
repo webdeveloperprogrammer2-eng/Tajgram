@@ -4,8 +4,6 @@
 //  Logo - wordmark.
 //  Instagram camera icon + Instagram gradient "Tajgram" text.
 // ============================================================
-import styles from "../auth.module.css";
-
 export default function Logo({ size = "small" }: { size?: "small" | "big" }) {
   const box = size === "big" ? "h-9 w-9 p-1.5" : "h-7 w-7 p-1";
   const iconSize = size === "big" ? "h-5 w-5" : "h-4 w-4";
@@ -14,7 +12,8 @@ export default function Logo({ size = "small" }: { size?: "small" | "big" }) {
   return (
     <div className="flex items-center gap-2.5">
       <div
-        className={`${styles.gradBg} ${box} flex shrink-0 items-center justify-center rounded-[10px] text-white shadow-sm`}
+        className={`${box} flex shrink-0 items-center justify-center rounded-[10px] text-white shadow-sm`}
+        style={{ background: "var(--accentA)" }}
         aria-hidden
       >
         <svg
@@ -32,7 +31,7 @@ export default function Logo({ size = "small" }: { size?: "small" | "big" }) {
         </svg>
       </div>
 
-      <span className={`${styles.gradText} ${textSize} font-black tracking-tight select-none`}>
+      <span className={`${textSize} font-bold tracking-tight select-none`}>
         Tajgram
       </span>
     </div>

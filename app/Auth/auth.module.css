@@ -1,340 +1,161 @@
-/* ============================================================
-   app/Auth/auth.module.css
-   Chap: swiper-i 3D bo 10 surat.  Rost: forma.
-   Hama chiz dar YAK ekran - sahifa scroll namekunad.
-
-   Sabk: AYNI HAMON sabki /profile -
-   neytral (siyoh/safed/khokistari) + YAK gradient az DU rang
-   (--accentA -> --accentB). Kunjhoi gird, soyahoi narm.
-   ============================================================ */
-
 .shell {
   font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
-  background: var(--bg);
+  min-height: 100dvh;
+  position: relative;
+  background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.65)), url("https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=80");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   color: var(--fg);
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* ---------- NAQLI TORIK ---------- */
+.shell[data-theme="light"] {
+  --bg: #ffffff;
+  --surface: rgba(255, 255, 255, 0.72);
+  --panel: rgba(255, 255, 255, 0.65);
+  --panelSoft: rgba(255, 255, 255, 0.82);
+  --fg: #0f172a;
+  --muted: #64748b;
+  --line: rgba(255, 255, 255, 0.45);
+  --lineStrong: rgba(0, 0, 0, 0.15);
+  --accentA: #f09433;
+  --accentB: #dc2743;
+  --danger: #ef4444;
+  --dangerSoft: rgba(239, 68, 68, 0.15);
+  --ok: #10b981;
+  --okSoft: rgba(16, 185, 129, 0.15);
+  --invBg: #0f172a;
+  --invFg: #ffffff;
+  --shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.35);
+  --shadowSoft: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+  --glassBg: rgba(255, 255, 255, 0.68);
+  --glassBorder: rgba(255, 255, 255, 0.6);
+}
+
 .shell[data-theme="dark"] {
   --bg: #000000;
-  --surface: #121212;
-  --panel: #1c1c1e;
-  --panelSoft: #121212;
-  --fg: #f5f5f5;
-  --muted: #a8a8a8;
-  --line: rgba(255, 255, 255, 0.15);
+  --surface: rgba(18, 18, 22, 0.75);
+  --panel: rgba(24, 24, 28, 0.7);
+  --panelSoft: rgba(18, 18, 22, 0.85);
+  --fg: #f8fafc;
+  --muted: #94a3b8;
+  --line: rgba(255, 255, 255, 0.16);
   --lineStrong: rgba(255, 255, 255, 0.28);
   --accentA: #f09433;
   --accentB: #dc2743;
-  --gold: #e6683c;
-  --goldSoft: rgba(230, 104, 60, 0.16);
-  --danger: #ed4956;
-  --dangerSoft: rgba(237, 73, 86, 0.14);
-  --ok: #0095f6;
-  --okSoft: rgba(0, 149, 246, 0.14);
-  --invBg: #ffffff;
-  --invFg: #000000;
-  --shadow: 0 18px 45px -18px rgba(0, 0, 0, 0.9);
-  --shadowSoft: 0 8px 24px -12px rgba(0, 0, 0, 0.85);
-  --glass: rgba(18, 18, 18, 0.85);
+  --danger: #f87171;
+  --dangerSoft: rgba(248, 113, 113, 0.18);
+  --ok: #34d399;
+  --okSoft: rgba(52, 211, 153, 0.18);
+  --invBg: #f8fafc;
+  --invFg: #0f172a;
+  --shadow: 0 35px 90px -20px rgba(0, 0, 0, 0.75);
+  --shadowSoft: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+  --glassBg: rgba(18, 18, 22, 0.75);
+  --glassBorder: rgba(255, 255, 255, 0.18);
 }
 
-/* ---------- NAQLI RAVSHAN ---------- */
-.shell[data-theme="light"] {
-  --bg: #ffffff;
-  --surface: #ffffff;
-  --panel: #fafafa;
-  --panelSoft: #ffffff;
-  --fg: #000000;
-  --muted: #737373;
-  --line: #dbdbdb;
-  --lineStrong: #c7c7c7;
-  --accentA: #f09433;
-  --accentB: #dc2743;
-  --gold: #e6683c;
-  --goldSoft: rgba(230, 104, 60, 0.12);
-  --danger: #ed4956;
-  --dangerSoft: rgba(237, 73, 86, 0.10);
-  --ok: #0095f6;
-  --okSoft: rgba(0, 149, 246, 0.10);
-  --invBg: #000000;
-  --invFg: #ffffff;
-  --shadow: 0 18px 45px -20px rgba(0, 0, 0, 0.15);
-  --shadowSoft: 0 8px 24px -14px rgba(0, 0, 0, 0.1);
-  --glass: rgba(255, 255, 255, 0.85);
-}
-
-/* Sarlavhaho - aknun sans-serif va ghafs (monandi /profile) */
-.serif,
 .display {
-  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  font-family: var(--font-geist-sans), ui-serif, Georgia, serif;
   font-weight: 700;
-}
-.display {
-  line-height: 1.05;
-  letter-spacing: -0.03em;
-}
-.mono {
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
-}
-
-/* Kalimai ta'kidi - bo gradient rang meshavad */
-.accentWord {
-  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-/* ---------- YAGONA GRADIENT (Instagram 5-color) ---------- */
-.gradText {
-  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-.gradBg {
-  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
-  color: #ffffff;
-}
-
-/* Nurhoi narmi gradient dar fon */
-.aura {
-  position: absolute;
-  top: -20rem;
-  right: -14rem;
-  z-index: 0;
-  width: 42rem;
-  height: 42rem;
-  pointer-events: none;
-  border-radius: 50%;
-  opacity: 0.16;
-  background: radial-gradient(circle at center, var(--accentB) 0%, transparent 68%);
-}
-
-.auraLow {
-  position: absolute;
-  bottom: -24rem;
-  left: -14rem;
-  z-index: 0;
-  width: 36rem;
-  height: 36rem;
-  pointer-events: none;
-  border-radius: 50%;
-  opacity: 0.13;
-  background: radial-gradient(circle at center, var(--accentA) 0%, transparent 68%);
-}
-
-/* Kartai forma */
-.card {
-  background: var(--panelSoft);
-  border: 1px solid var(--line);
-  border-radius: 28px;
-  box-shadow: var(--shadow);
-}
-
-.glass {
-  background: var(--glass);
-  backdrop-filter: blur(18px) saturate(140%);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
-}
-
-/* ============================================================
-   1. SAHNAI 3D - swiper
-   ============================================================ */
-
-/* Container - "chuqurii" 3D-ro medihad */
-.stage {
-  perspective: 1500px;
-  perspective-origin: 50% 50%;
-  border-radius: 32px;
-  overflow: hidden;
-}
-
-/* Har surat - yak qabat */
-.slide {
-  position: absolute;
-  inset: 0;
-  transform-style: preserve-3d;
-  backface-visibility: hidden;
-  transition:
-    opacity 1s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 1.15s cubic-bezier(0.22, 1, 0.36, 1),
-    filter 1s ease;
-  will-change: transform, opacity;
-}
-
-/* Surati faol */
-.slideActive {
-  opacity: 1;
-  transform: none;
-  filter: blur(0);
-  z-index: 2;
-}
-
-/* Surate ki ba tarafi CHAP meravad */
-.slideOutLeft {
-  opacity: 0;
-  transform: translateX(-14%) translateZ(-320px) rotateY(16deg) scale(1.06);
-  filter: blur(6px);
-  z-index: 1;
-}
-
-/* Surate ki ba tarafi ROST meravad */
-.slideOutRight {
-  opacity: 0;
-  transform: translateX(14%) translateZ(-320px) rotateY(-16deg) scale(1.06);
-  filter: blur(6px);
-  z-index: 1;
-}
-
-/* Ken Burns: surat oram kalon meshavad - "zinda" menamoyad */
-.kenburns {
-  animation: kenburns 7.5s ease-out both;
-}
-@keyframes kenburns {
-  from { transform: scale(1.02) translate3d(0, 0, 0); }
-  to   { transform: scale(1.16) translate3d(-1.5%, -1.5%, 0); }
-}
-
-/* ============================================================
-   2. LOGO-i 3D (kamerai Instagram)
-   ============================================================ */
-.logo3d {
-  transform-style: preserve-3d;
-  animation: logoSpin 9s cubic-bezier(0.65, 0, 0.35, 1) infinite;
-}
-@keyframes logoSpin {
-  0%,  55%  { transform: rotateY(0deg) rotateX(0deg); }
-  70%       { transform: rotateY(180deg) rotateX(6deg); }
-  85%, 100% { transform: rotateY(360deg) rotateX(0deg); }
-}
-
-/* Kushodashavii avvali - az chuqurii 3D meoyad */
-.logoEnter {
-  animation: logoEnter 1.1s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-@keyframes logoEnter {
-  from { opacity: 0; transform: translateZ(-260px) rotateX(45deg); }
-  to   { opacity: 1; transform: translateZ(0) rotateX(0); }
-}
-
-/* ============================================================
-   3. Matn: harf ba harf bolo meoyad
-   ============================================================ */
-.letter {
-  display: inline-block;
-  animation: letterUp 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-@keyframes letterUp {
-  from { opacity: 0; transform: translateY(60%) rotateX(-70deg); }
-  to   { opacity: 1; transform: translateY(0) rotateX(0); }
+  letter-spacing: -0.02em;
+  line-height: 1.15;
 }
 
 .fadeUp {
-  animation: fadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
+  animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Matni zeri surat - har bor ki surat ivaz shud, az nav meoyad */
-.captionIn {
-  animation: captionIn 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-@keyframes captionIn {
-  from { opacity: 0; transform: translateY(22px); filter: blur(4px); }
-  to   { opacity: 1; transform: translateY(0); filter: blur(0); }
-}
-
-/* ============================================================
-   4. Khathoi peshraft (progress) - misli story
-   ============================================================ */
-.barFill {
-  transform-origin: left center;
-  animation: barFill linear both;
-}
-@keyframes barFill {
-  from { transform: scaleX(0); }
-  to   { transform: scaleX(1); }
-}
-
-/* ============================================================
-   5. Formai tarafi rost
-   ============================================================ */
-.ruleIn {
-  animation: ruleIn 1s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
-  transform-origin: left center;
-}
-@keyframes ruleIn {
-  from { transform: scaleX(0); }
-  to   { transform: scaleX(1); }
-}
-
-.nudge {
-  animation: nudge 0.42s cubic-bezier(0.36, 0.07, 0.19, 0.97);
-}
-@keyframes nudge {
-  10%, 90% { transform: translateX(-2px); }
-  20%, 80% { transform: translateX(3px); }
-  30%, 50%, 70% { transform: translateX(-5px); }
-  40%, 60% { transform: translateX(5px); }
-}
-
-/* Darakhshish dar tugmai asosi */
-.sheen {
-  position: relative;
-  overflow: hidden;
-}
-.sheen::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    100deg,
-    transparent 20%,
-    rgba(255, 255, 255, 0.28) 50%,
-    transparent 80%
-  );
-  transform: translateX(-101%);
-  transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.sheen:hover::after {
-  transform: translateX(101%);
-}
-
-.dots i {
-  display: inline-block;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: currentColor;
-  opacity: 0.3;
-  animation: dot 1.2s ease-in-out infinite;
-}
-@keyframes dot {
-  0%, 100% { opacity: 0.25; transform: translateY(0); }
-  40%      { opacity: 1;    transform: translateY(-3px); }
-}
-
-.menuIn {
-  animation: menuIn 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
-  transform-origin: top right;
-}
-@keyframes menuIn {
-  from { opacity: 0; transform: translateY(-6px) scale(0.97); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-/* Agar korbar animatsiya nakhohad - hamaash khomush */
-@media (prefers-reduced-motion: reduce) {
-  .kenburns, .logo3d, .logoEnter, .letter, .fadeUp,
-  .captionIn, .barFill, .ruleIn, .nudge, .dots i, .menuIn {
-    animation: none !important;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
   }
-  .slide { transition: opacity 0.3s linear; }
-  .sheen::after { transition: none; }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
+
+.glassCard {
+  background: var(--glassBg);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid var(--glassBorder);
+  border-radius: 36px;
+  box-shadow: var(--shadow);
+}
+
+.leftCard {
+  background: rgba(20, 20, 25, 0.55);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 28px;
+  color: #ffffff;
+}
+
+.pillBadge {
+  background: #000000;
+  color: #ffffff;
+  border-radius: 9999px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.inputBox {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  color: var(--fg);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.inputBox:focus-within {
+  border-color: var(--fg);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.08);
+}
+
+.primaryBtn {
+  background: #09090b;
+  color: #ffffff;
+  border-radius: 16px;
+  font-weight: 600;
+  transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.primaryBtn:hover {
+  background: #000000;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+}
+
+.primaryBtn:active {
+  transform: translateY(0);
+}
+
+.socialBtn {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  color: var(--fg);
+  font-size: 13px;
+  font-weight: 500;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.socialBtn:hover {
+  background: var(--panelSoft);
+  border-color: var(--lineStrong);
+}
+
+.nudge { animation: none; }
+.sheen { position: relative; overflow: hidden; }
+
+@media (prefers-reduced-motion: reduce) {
+  .shell *, .shell *::before, .shell *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+

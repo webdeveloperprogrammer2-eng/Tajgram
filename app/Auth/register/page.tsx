@@ -2,9 +2,10 @@
 
 // ============================================================
 //  /Auth/register
-//  Sanjishhoi mo AYNAN qoidahoi server hastand (RULES az api.ts).
+//  Dizayn: ayni hamon rasmi reference (New Account)
 // ============================================================
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { ApiError, RULES, loginUser, registerUser } from "../api";
@@ -16,7 +17,6 @@ import Field from "../components/Field";
 import Submit from "../components/Submit";
 import { Alert } from "../ui/alert";
 
-// Quvvati parol: 0..4
 function checkPasswordPower(password: string): number {
   let power = 0;
   if (password.length >= RULES.passwordMin) power++;
@@ -54,7 +54,6 @@ export default function RegisterPage() {
     setErrors([]);
     setSuccess("");
 
-    // ---- Sanjishho: aynan misli server ----
     if (userName.trim().length < RULES.userNameMin) {
       setErrors([t.errUserShort]);
       return;
@@ -91,10 +90,6 @@ export default function RegisterPage() {
         confirmPassword,
       });
 
-      // Account sokhta shud. Server hangomi register TOKEN NAMEDIHAD,
-      // baroi hamin mo DARHOL khudamon login mekunem - bo ayni
-      // hamon userName va parole ki korbar navisht.
-      // Ba'd korbar rost ba sahifai PROFIL meravad (na ba login).
       const token = await loginUser({ userName, password });
       saveToken(token);
 
@@ -113,23 +108,22 @@ export default function RegisterPage() {
 
   return (
     <div className={styles.fadeUp}>
-      <h2
-        className={styles.display}
-        style={{ fontSize: "clamp(1.9rem, 3.4vw, 2.4rem)" }}
-      >
-        {t.registerTitle}
-      </h2>
+      <div className="text-center">
+        <h2 className="font-serif text-2xl font-bold tracking-tight sm:text-3xl">
+          {t.registerTitle}
+        </h2>
+        <p className="mt-1.5 text-xs font-medium opacity-75" style={{ color: "var(--muted)" }}>
+          {t.registerSubtitle}
+        </p>
+      </div>
 
-      <p className="mt-3 text-[14px]" style={{ color: "var(--muted)" }}>
-        {t.registerSubtitle}
-      </p>
-
-      <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+      <form onSubmit={handleSubmit} className="mt-6 space-y-3.5">
         <Field
           label={t.fieldUsername}
           name="userName"
           value={userName}
           onChange={setUserName}
+          placeholder="Номи корбарро ворид кунед..."
           autoComplete="username"
           autoFocus
           hint={t.hintUserName}
@@ -140,6 +134,7 @@ export default function RegisterPage() {
           name="fullName"
           value={fullName}
           onChange={setFullName}
+          placeholder="Номи пурраи худро ворид кунед..."
           autoComplete="name"
         />
 
@@ -149,6 +144,7 @@ export default function RegisterPage() {
           type="email"
           value={email}
           onChange={setEmail}
+          placeholder="Почтаи электронии худро ворид кунед..."
           autoComplete="email"
         />
 
@@ -158,30 +154,30 @@ export default function RegisterPage() {
           type="password"
           value={password}
           onChange={setPassword}
+          placeholder="Паролро ворид кунед..."
           autoComplete="new-password"
           hint={t.hintPassword}
         />
 
-        {/* Quvvati parol - 4 khati tunuk */}
         {password !== "" && (
-          <div className="flex items-center justify-between gap-6">
+          <div className="flex items-center justify-between gap-4 pt-1">
             <div className="flex flex-1 gap-1.5">
               {[0, 1, 2, 3].map((i) => (
                 <span
                   key={i}
-                  className="h-1.5 flex-1 rounded-full transition-all duration-500"
+                  className="h-1.5 flex-1 rounded-full transition-colors duration-150"
                   style={{
                     background:
                       i < power
-                        ? "linear-gradient(90deg, var(--accentA), var(--accentB))"
-                        : "var(--panel)",
+                        ? "var(--fg)"
+                        : "var(--line)",
                   }}
                 />
               ))}
             </div>
 
             <span
-              className="text-[12px] font-medium"
+              className="text-[11px] font-medium opacity-80"
               style={{ color: "var(--muted)" }}
             >
               {powerNames[power]}
@@ -195,12 +191,13 @@ export default function RegisterPage() {
           type="password"
           value={confirmPassword}
           onChange={setConfirmPassword}
+          placeholder="Такрори паролро ворид кунед..."
           autoComplete="new-password"
         />
 
         {errors.length > 0 && (
           <Alert variant="destructive" className={styles.nudge}>
-            <span className="space-y-1">
+            <span className="space-y-1 text-xs">
               {errors.map((message) => (
                 <span key={message} className="block">
                   {message}
@@ -212,23 +209,30 @@ export default function RegisterPage() {
 
         {success !== "" && (
           <Alert variant="success">
-            <span>{success}</span>
+            <span className="text-xs">{success}</span>
           </Alert>
         )}
 
-        <Submit
-          label={t.registerSubmit}
-          loadingLabel={t.registerLoading}
-          loading={loading}
-        />
-
-        <p
-          className="text-[12px] leading-relaxed"
-          style={{ color: "var(--muted)" }}
-        >
-          {t.terms}
-        </p>
+        <div className="pt-2">
+          <Submit
+            label={t.registerSubmit}
+            loadingLabel={t.registerLoading}
+            loading={loading}
+          />
+        </div>
       </form>
+
+      {/* Обуна шудан / Даромадан link */}
+      <p className="mt-5 text-center text-xs font-medium opacity-85">
+        <span>Аллакай аккаунт доред? </span>
+        <Link
+          href="/Auth/login"
+          className="font-semibold underline hover:opacity-100 transition-opacity"
+          style={{ color: "var(--fg)" }}
+        >
+          {t.tabLogin}
+        </Link>
+      </p>
     </div>
   );
 }
