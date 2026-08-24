@@ -42,14 +42,14 @@ export default function ProfileShell({
   );
 }
 
-// Ro-ykhati navigatsiya. "soon" = hanuz sahifaash nest.
+// Nuqtahoi navigatsiya - hamai sahifaho hozir mavjudand.
 const NAV = [
-  { key: "home", label: "Asosi", icon: Home, soon: true },
-  { key: "search", label: "Justuju", icon: Search, soon: true },
-  { key: "explore", label: "Kashf", icon: Compass, soon: true },
-  { key: "likes", label: "Bayanho", icon: Heart, soon: true },
-  { key: "create", label: "Guzoshtan", icon: PlusSquare, soon: true },
-  { key: "saved", label: "Saqlshuda", icon: Bookmark, soon: true },
+  { key: "home", label: "Asosi", icon: Home, href: "/" },
+  { key: "search", label: "Justuju", icon: Search, href: "/search" },
+  { key: "explore", label: "Kashf", icon: Compass, href: "/explore" },
+  { key: "likes", label: "Bayanho", icon: Heart, href: "/notifications" },
+  { key: "create", label: "Guzoshtan", icon: PlusSquare, href: "/create" },
+  { key: "saved", label: "Saqlshuda", icon: Bookmark, href: "/saved" },
 ];
 
 function Frame({ children }: { children: React.ReactNode }) {
@@ -97,7 +97,12 @@ function Frame({ children }: { children: React.ReactNode }) {
         {/* --- Nav --- */}
         <nav className="flex flex-1 flex-col gap-1">
           {NAV.map((item) => (
-            <SideItem key={item.key} label={item.label} icon={item.icon} />
+            <SideItem
+              key={item.key}
+              label={item.label}
+              icon={item.icon}
+              href={item.href}
+            />
           ))}
 
           {/* REELS - sahifai haqiqi (/reels) */}
@@ -187,10 +192,14 @@ function Frame({ children }: { children: React.ReactNode }) {
       <nav
         className={`${styles.bottomBar} fixed inset-x-0 bottom-0 z-40 flex items-center justify-around px-2 py-2.5 md:hidden`}
       >
-        {[Home, Search, PlusSquare].map((Icon, i) => (
-          <span key={i} className="p-2 opacity-40">
+        {[
+          { Icon: Home, href: "/", label: "Asosi" },
+          { Icon: Search, href: "/search", label: "Justuju" },
+          { Icon: PlusSquare, href: "/create", label: "Guzoshtan" },
+        ].map(({ Icon, href, label }) => (
+          <Link key={href} href={href} aria-label={label} className="p-2">
             <Icon className="h-6 w-6" strokeWidth={1.8} />
-          </span>
+          </Link>
         ))}
 
         <Link href="/chats" aria-label="Payomho" className="p-2">
@@ -213,18 +222,17 @@ function Frame({ children }: { children: React.ReactNode }) {
 function SideItem({
   label,
   icon: Icon,
+  href,
 }: {
   label: string;
   icon: typeof Home;
+  href: string;
 }) {
   return (
-    <span
-      className={`${styles.navItem} ${styles.navItemSoon}`}
-      title="Ba zudi"
-    >
+    <Link href={href} className={styles.navItem}>
       <Icon className="h-6 w-6 shrink-0" strokeWidth={1.8} />
       <span className="hidden text-sm xl:inline">{label}</span>
-    </span>
+    </Link>
   );
 }
 
