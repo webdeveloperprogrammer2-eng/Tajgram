@@ -43,7 +43,6 @@ export default function ReelsShell({
 // Nuqtahoi hanuz sahifanadosht
 const NAV = [
   { key: "home", label: "Asosi", icon: Home },
-  { key: "search", label: "Justuju", icon: Search },
   { key: "explore", label: "Kashf", icon: Compass },
   { key: "likes", label: "Bayanho", icon: Heart },
   { key: "create", label: "Guzoshtan", icon: PlusSquare },
@@ -93,6 +92,11 @@ function Frame({ children }: { children: React.ReactNode }) {
               <span className="hidden text-sm xl:inline">{item.label}</span>
             </span>
           ))}
+
+          <Link href="/search" className={styles.navItem}>
+            <Search className="h-6 w-6 shrink-0" strokeWidth={1.8} />
+            <span className="hidden text-sm xl:inline">Justuju</span>
+          </Link>
 
           {/* REELS - hamin sahifa */}
           <span className={`${styles.navItem} ${styles.navItemActive}`}>

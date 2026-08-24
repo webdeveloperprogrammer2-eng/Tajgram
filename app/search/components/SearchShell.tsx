@@ -1,11 +1,11 @@
 "use client";
 
 // ============================================================
-//  ChatsShell - ramkai umumi baroi /chats.
-//  Ayni hamon dizayni /profile: sidebar-i chap (kompyuter),
-//  qatori boloi shishagi (telefon), nurhoi narmi gradient.
+//  SearchShell - ramkai umumi baroi /search.
+//  Ayni hamon dizayni /profile: sidebar-i chap + qatori boloi telefon.
+//  Naql (dark/light) az localStorage girifta meshavad.
 // ============================================================
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Bookmark,
@@ -13,8 +13,6 @@ import {
   Film,
   Heart,
   Home,
-  LogOut,
-  Menu,
   MessageCircle,
   Moon,
   PlusSquare,
@@ -23,25 +21,9 @@ import {
   User,
 } from "lucide-react";
 
-import { CallProvider } from "../call/CallProvider";
-import { ChatsProvider, useChats } from "../providers";
-import styles from "../chats.module.css";
+import styles from "../search.module.css";
 
-import CallOverlay from "./CallOverlay";
-
-export default function ChatsShell({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <ChatsProvider>
-      <CallProvider>
-        <Frame>{children}</Frame>
-      </CallProvider>
-    </ChatsProvider>
-  );
-}
+const THEME_KEY = "tajgram_theme";
 
 // Nuqtahoi hanuz sahifanadosht
 const NAV = [
@@ -52,19 +34,26 @@ const NAV = [
   { key: "saved", label: "Saqlshuda", icon: Bookmark },
 ];
 
-function Frame({ children }: { children: React.ReactNode }) {
-  const { theme, toggleTheme, status, logout, me } = useChats();
+export default function SearchShell({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
 
-  // Modal-ho ba <body> mekashand - rangho boyad dar <html> ham bosand
   useEffect(() => {
-    document.documentElement.setAttribute("data-chats-theme", theme);
-    return () => {
-      document.documentElement.removeAttribute("data-chats-theme");
-    };
-  }, [theme]);
+    const saved = localStorage.getItem(THEME_KEY);
+    if (saved === "dark" || saved === "light") setTheme(saved);
+  }, []);
+
+  function toggleTheme() {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    localStorage.setItem(THEME_KEY, next);
+  }
 
   return (
-    <div data-theme={theme} className={`${styles.shell} relative h-screen`}>
+    <div data-theme={theme} className={`${styles.shell} relative min-h-screen`}>
       <span className={styles.aura} aria-hidden />
       <span className={styles.auraLow} aria-hidden />
 
@@ -86,6 +75,12 @@ function Frame({ children }: { children: React.ReactNode }) {
         </Link>
 
         <nav className="flex flex-1 flex-col gap-1">
+          {/* JUSTUJU - hamin sahifa */}
+          <span className={`${styles.navItem} ${styles.navItemActive}`}>
+            <Search className="h-6 w-6 shrink-0" strokeWidth={2} />
+            <span className="hidden text-sm xl:inline">Justuju</span>
+          </span>
+
           {NAV.map((item) => (
             <span
               key={item.key}
@@ -97,21 +92,15 @@ function Frame({ children }: { children: React.ReactNode }) {
             </span>
           ))}
 
-          <Link href="/search" className={styles.navItem}>
-            <Search className="h-6 w-6 shrink-0" strokeWidth={1.8} />
-            <span className="hidden text-sm xl:inline">Justuju</span>
-          </Link>
-
           <Link href="/reels" className={styles.navItem}>
             <Film className="h-6 w-6 shrink-0" strokeWidth={1.8} />
             <span className="hidden text-sm xl:inline">Reels</span>
           </Link>
 
-          {/* PAYOMHO - hamin sahifa */}
-          <span className={`${styles.navItem} ${styles.navItemActive}`}>
-            <MessageCircle className="h-6 w-6 shrink-0" strokeWidth={2} />
+          <Link href="/chats" className={styles.navItem}>
+            <MessageCircle className="h-6 w-6 shrink-0" strokeWidth={1.8} />
             <span className="hidden text-sm xl:inline">Payomho</span>
-          </span>
+          </Link>
 
           <Link href="/profile" className={styles.navItem}>
             <User className="h-6 w-6 shrink-0" strokeWidth={1.8} />
@@ -119,7 +108,7 @@ function Frame({ children }: { children: React.ReactNode }) {
           </Link>
         </nav>
 
-        <div className="mt-4 flex flex-col gap-1 border-t border-[var(--line)] pt-4">
+        <div className="mt-4 border-t border-[var(--line)] pt-4">
           <button type="button" onClick={toggleTheme} className={styles.navItem}>
             {theme === "dark" ? (
               <Sun className="h-6 w-6 shrink-0" strokeWidth={1.8} />
@@ -130,24 +119,12 @@ function Frame({ children }: { children: React.ReactNode }) {
               {theme === "dark" ? "Naqli ravshan" : "Naqli torik"}
             </span>
           </button>
-
-          {status === "ready" && (
-            <button type="button" onClick={logout} className={styles.navItem}>
-              <LogOut className="h-6 w-6 shrink-0" strokeWidth={1.8} />
-              <span className="hidden text-sm xl:inline">Baromadan</span>
-            </button>
-          )}
-
-          <span className={`${styles.navItem} ${styles.navItemSoon}`}>
-            <Menu className="h-6 w-6 shrink-0" strokeWidth={1.8} />
-            <span className="hidden text-sm xl:inline">Boz ham</span>
-          </span>
         </div>
       </aside>
 
       {/* ================= QATORI BOLO (telefon) ================= */}
       <header
-        className={`${styles.topBar} fixed inset-x-0 top-0 z-30 flex items-center justify-between px-4 py-3 md:hidden`}
+        className={`${styles.topBar} sticky top-0 z-30 flex items-center justify-between px-4 py-3 md:hidden`}
       >
         <Link href="/profile" className="flex items-center gap-2">
           <span
@@ -156,41 +133,28 @@ function Frame({ children }: { children: React.ReactNode }) {
             T
           </span>
           <span className={`${styles.gradText} text-lg font-black tracking-tight`}>
-            Payomho
+            Justuju
           </span>
         </Link>
 
-        <div className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={toggleTheme}
-            aria-label="Naqlro ivaz kuned"
-            className={styles.iconBtn}
-          >
-            {theme === "dark" ? (
-              <Sun className="h-5 w-5" strokeWidth={1.8} />
-            ) : (
-              <Moon className="h-5 w-5" strokeWidth={1.8} />
-            )}
-          </button>
-
-          <Link href="/profile" aria-label="Profil" className="p-1.5">
-            <span
-              className={`${styles.gradBg} flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-black`}
-            >
-              {(me?.userName ?? "T").slice(0, 1).toUpperCase()}
-            </span>
-          </Link>
-        </div>
+        <button
+          type="button"
+          onClick={toggleTheme}
+          aria-label="Naqlro ivaz kuned"
+          className={styles.iconBtn}
+        >
+          {theme === "dark" ? (
+            <Sun className="h-5 w-5" strokeWidth={1.8} />
+          ) : (
+            <Moon className="h-5 w-5" strokeWidth={1.8} />
+          )}
+        </button>
       </header>
 
       {/* ================= QISMI ASOSI ================= */}
-      <main className="relative z-10 h-full pt-[60px] md:pl-[76px] md:pt-0 xl:pl-[248px]">
+      <main className="relative z-10 mx-auto w-full max-w-[720px] px-4 pb-20 md:pl-[100px] xl:pl-[280px]">
         {children}
       </main>
-
-      {/* ================= ZVANOK (boloi hama) ================= */}
-      <CallOverlay />
     </div>
   );
 }

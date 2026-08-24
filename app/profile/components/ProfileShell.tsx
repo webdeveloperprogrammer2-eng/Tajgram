@@ -45,7 +45,6 @@ export default function ProfileShell({
 // Ro-ykhati navigatsiya. "soon" = hanuz sahifaash nest.
 const NAV = [
   { key: "home", label: "Asosi", icon: Home, soon: true },
-  { key: "search", label: "Justuju", icon: Search, soon: true },
   { key: "explore", label: "Kashf", icon: Compass, soon: true },
   { key: "likes", label: "Bayanho", icon: Heart, soon: true },
   { key: "create", label: "Guzoshtan", icon: PlusSquare, soon: true },
@@ -99,6 +98,11 @@ function Frame({ children }: { children: React.ReactNode }) {
           {NAV.map((item) => (
             <SideItem key={item.key} label={item.label} icon={item.icon} />
           ))}
+
+          <Link href="/search" className={styles.navItem}>
+            <Search className="h-6 w-6 shrink-0" strokeWidth={1.8} />
+            <span className="hidden text-sm xl:inline">Justuju</span>
+          </Link>
 
           {/* REELS - sahifai haqiqi (/reels) */}
           <Link href="/reels" className={styles.navItem}>
@@ -187,11 +191,15 @@ function Frame({ children }: { children: React.ReactNode }) {
       <nav
         className={`${styles.bottomBar} fixed inset-x-0 bottom-0 z-40 flex items-center justify-around px-2 py-2.5 md:hidden`}
       >
-        {[Home, Search, PlusSquare].map((Icon, i) => (
+        {[Home, PlusSquare].map((Icon, i) => (
           <span key={i} className="p-2 opacity-40">
             <Icon className="h-6 w-6" strokeWidth={1.8} />
           </span>
         ))}
+
+        <Link href="/search" aria-label="Justuju" className="p-2">
+          <Search className="h-6 w-6" strokeWidth={1.8} />
+        </Link>
 
         <Link href="/chats" aria-label="Payomho" className="p-2">
           <MessageCircle className="h-6 w-6" strokeWidth={1.8} />
