@@ -1,10 +1,9 @@
 // ============================================================
-//  app/page.tsx  ->  sahifai asosi "/"
-//  Holo hanuz feed nadorem, baroi hamin korbarro
-//  darhol ba sahifai daromadan mefiristem.
+//  app/Auth/page.tsx  ->  adres: /Auth
+//  Agar kase faqat "/Auth"-ro kushoyad, uro ba login mefiristem.
 // ============================================================
 import { redirect } from "next/navigation";
 
-export default function HomePage() {
+export default function AuthPage() {
   redirect("/Auth/login");
 }
