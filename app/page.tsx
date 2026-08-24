@@ -67,9 +67,7 @@ function Dashboard() {
               </div>
             </div>
           </div>
-
-          {/* User Details */}
-          <div className="flex-1 flex flex-col gap-4 text-center sm:text-left">
+                    <div className="flex-1 flex flex-col gap-4 text-center sm:text-left">
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-center sm:justify-start">
               <h2 className="text-xl sm:text-2xl font-light">{user?.userName}</h2>
               <div className="flex items-center gap-2 justify-center sm:justify-start">
@@ -79,7 +77,6 @@ function Dashboard() {
               </div>
             </div>
 
-            {/* Profile Statistics */}
             <div className="flex items-center gap-8 justify-center sm:justify-start text-sm sm:text-base">
               <div>
                 <span className="font-semibold">{user?.postCount ?? 0}</span>{' '}
