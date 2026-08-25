@@ -14,7 +14,6 @@ import {
   ChevronRightIcon,
   CommentIcon,
   DotsIcon,
-  EmojiIcon,
   HeartIcon,
   ShareIcon,
 } from "./icons";
@@ -36,11 +35,22 @@ export function PostCard({
   const [following, setFollowing] = useState(false);
   const [comments, setComments] = useState<PostComment[]>(post.comments ?? []);
   const [commentCount, setCommentCount] = useState(post.commentCount);
-  const [allLoaded, setAllLoaded] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [slide, setSlide] = useState(0);
   const [burst, setBurst] = useState(false);
+
+  // Nisbati qutti-i media. To surat naomadaast 4/5 (monandi instagram),
+  // ba'd az omadan - nisbati TABI'II, vale mahdud: az 4/5 to 16/9.
+  // Bе in suratkhoi pahn (screenshot-ho) bad burida meshudand.
+  const [ratio, setRatio] = useState<number | null>(null);
+
+  // Slaidi nav -> nisbati kuhna ba kor namebarem
+  useEffect(() => {
+    setRatio(null);
+  }, [slide]);
+
+  const boxRatio = ratio === null ? 4 / 5 : Math.min(Math.max(ratio, 4 / 5), 16 / 9);
   const [pulse, setPulse] = useState(0);
 
   const cardRef = useRef<HTMLElement>(null);
@@ -104,13 +114,14 @@ export function PostCard({
     }
   };
 
-  // Vaqte oyna pushida meshavad - se komenti okhirin dar zeri
-  // post nav memonand, ki lenta bo ruykhati kuhna namonad.
+  // Vaqte oyna pushida meshavad - ruykhati kommenthoro nav mekunem,
+  // to bori digar kusodani oyna ma'lumoti kuhnaro nanishonad.
+  // (Dar zeri post kommentho digar nishon doda NAMESHAVAND -
+  //  onho faqat daruni <CommentsModal> hastand.)
   const syncPreview = async () => {
     try {
       const response = await api.postComments(post.postId, { page: 1, pageSize: 50 });
       setComments(response.data ?? []);
-      setAllLoaded(true);
     } catch {
       /* оставляем превью из ленты */
     }
@@ -124,7 +135,6 @@ export function PostCard({
   const slides = post.images?.length ? post.images : [{ id: 0, imageName: null }];
   const caption = post.content ?? post.title ?? "";
   const clipped = !expanded && caption.length > CAPTION_LIMIT;
-  const preview = comments.slice(0, allLoaded ? 3 : 2);
 
   return (
     <article
@@ -178,12 +188,14 @@ export function PostCard({
 
       <div
         onDoubleClick={doubleTapLike}
-        className="group/media relative aspect-[4/5] w-full select-none overflow-hidden rounded-xl bg-[var(--panelSoft)]"
+        style={{ aspectRatio: String(boxRatio) }}
+        className="group/media relative w-full select-none overflow-hidden rounded-xl bg-[var(--panelSoft)] transition-[aspect-ratio] duration-300"
       >
         <PostMedia
           key={slides[slide]?.id ?? slide}
           fileName={slides[slide]?.imageName ?? null}
           alt={post.title ?? `Post by ${post.userName}`}
+          onRatio={setRatio}
           zoom
         />
 
@@ -297,45 +309,9 @@ export function PostCard({
         </p>
       )}
 
-      {commentCount > preview.length && (
-        <button
-          type="button"
-          onClick={() => setCommentsOpen(true)}
-          className="mt-1 block px-1.5 text-[14px] text-[var(--muted)] transition-colors hover:text-[var(--fg)]"
-        >
-          Hamai {formatCount(commentCount)} komentro dided
-        </button>
-      )}
-
-      {preview.length > 0 && (
-        <ul className="mt-1 space-y-0.5 px-1.5">
-          {preview.map((comment, position) => (
-            <li
-              key={comment.commentId}
-              style={{ animationDelay: `${position * 60}ms` }}
-              className="animate-fade-in text-[14px] leading-[19px]"
-            >
-              <Link href={`/profile/${comment.userId}`} className="font-semibold">
-                {comment.userName}
-              </Link>{" "}
-              {comment.comment}
-            </li>
-          ))}
-        </ul>
-      )}
-
       <div className="mt-1.5 px-1.5 text-[11px] uppercase tracking-wide text-[#a8a8a8]">
         {timeAgo(post.datePublished)}
       </div>
-
-      <button
-        type="button"
-        onClick={() => setCommentsOpen(true)}
-        className="mt-2 flex w-full items-center gap-2 rounded-xl bg-[var(--panelSoft)] px-3 py-2.5 text-left transition-colors duration-200 hover:bg-[var(--panel)]"
-      >
-        <span className="flex-1 text-[14px] text-[var(--muted)]">Koment navised...</span>
-        <EmojiIcon size={20} className="text-[var(--muted)]" />
-      </button>
 
       <CommentsModal
         postId={post.postId}

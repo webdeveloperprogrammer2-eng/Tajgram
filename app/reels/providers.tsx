@@ -129,7 +129,7 @@ export function ReelsProvider({ children }: { children: React.ReactNode }) {
   //  Sahifai navbati (hangomi ba akhiri lenta rasidan)
   // ------------------------------------------------------------
   async function loadMore() {
-    if (loadingMore || !hasMore || token === "" || status !== "ready") return;
+    if (loadingMore || !hasMore || status !== "ready") return;
 
     setLoadingMore(true);
 
@@ -154,21 +154,25 @@ export function ReelsProvider({ children }: { children: React.ReactNode }) {
   }
 
   // ---------- Yakum bor: naql va token ----------
+  // Holatro daruni queueMicrotask meguzorem - to render-i joriro
+  // az nav nakashad (hamon usuli components/Sidebar.tsx).
   useEffect(() => {
-    const saved = localStorage.getItem(THEME_KEY);
-    if (saved === "dark" || saved === "light") setTheme(saved);
+    queueMicrotask(() => {
+      const saved = localStorage.getItem(THEME_KEY);
+      if (saved === "dark" || saved === "light") setTheme(saved);
 
-    const stored = getToken();
+      // Token-i KHUDI korbar. Agar naboshad yo guzashta bosad -
+      // "guest" NAMESHAVEM: proxy khudash bo akkaunti khizmati medarod,
+      // aynan hamon tavr ki lentai asosi (/api/backend) kor mekunad.
+      // "Avval daroed" faqat on vaqt paydo meshavad, ki server-i
+      // haqiqi 401 dihad (dar catch-i loadFirst).
+      const stored = getToken();
+      const mine = stored !== null && !isTokenExpired(stored) ? stored : "";
+      if (stored !== null && mine === "") removeToken();
 
-    if (stored === null || isTokenExpired(stored)) {
-      if (stored !== null) removeToken();
-      setStatus("guest");
-      return;
-    }
-
-    setToken(stored);
-    loadFirst(stored, "all");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+      setToken(mine);
+      void loadFirst(mine, "all");
+    });
   }, []);
 
   useEffect(() => {

@@ -13,11 +13,14 @@ export function PostMedia({
   alt,
   className = "",
   zoom = false,
+  onRatio,
 }: {
   fileName: string | null;
   alt: string;
   className?: string;
   zoom?: boolean;
+  /** Nisbati tabi'ii media (bar / balandi) - to qutti khudro moslonad. */
+  onRatio?: (ratio: number) => void;
 }) {
   const [broken, setBroken] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -52,18 +55,33 @@ export function PostMedia({
     };
 
     return (
-      <div className={`relative h-full w-full bg-black ${className}`}>
+      <div className={`relative h-full w-full overflow-hidden bg-black ${className}`}>
+        {/* Foni khira - to dar tarafho navori siyohi murda namonad */}
+        <video
+          src={url}
+          aria-hidden
+          className="pointer-events-none absolute inset-0 h-full w-full scale-110 object-cover opacity-45 blur-2xl"
+          muted
+          playsInline
+        />
+
         <video
           ref={videoRef}
           src={url}
-          className={`h-full w-full object-cover transition-opacity duration-700 ${
+          className={`relative h-full w-full object-contain transition-opacity duration-700 ${
             loaded ? "opacity-100" : "opacity-0"
           }`}
           loop
           muted={muted}
           playsInline
           onClick={toggle}
-          onLoadedData={() => setLoaded(true)}
+          onLoadedData={(event) => {
+            const el = event.currentTarget;
+            if (el.videoWidth > 0 && el.videoHeight > 0) {
+              onRatio?.(el.videoWidth / el.videoHeight);
+            }
+            setLoaded(true);
+          }}
           onError={() => setBroken(true)}
           onPlay={() => setPlaying(true)}
           onPause={() => setPlaying(false)}
@@ -97,14 +115,33 @@ export function PostMedia({
   return (
     <>
       {!loaded && <span className="skeleton absolute inset-0" />}
+
+      {/* Foni khira: hamon surat, kalonkarda va khira. Bе in dar
+          suratkhoi pahn/amudi navorhoi siyohi murda memonand. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={url}
+        alt=""
+        aria-hidden
+        className={`pointer-events-none absolute inset-0 h-full w-full scale-110 object-cover blur-2xl transition-opacity duration-700 ${
+          loaded ? "opacity-45" : "opacity-0"
+        }`}
+      />
+
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={url}
         alt={alt}
-        className={`h-full w-full object-cover transition-all duration-700 ease-out ${
+        className={`relative h-full w-full object-contain transition-all duration-700 ease-out ${
           loaded ? "scale-100 opacity-100 blur-0" : "scale-105 opacity-0 blur-sm"
         } ${zoom ? "group-hover/media:scale-[1.03]" : ""} ${className}`}
-        onLoad={() => setLoaded(true)}
+        onLoad={(event) => {
+          const el = event.currentTarget;
+          if (el.naturalWidth > 0 && el.naturalHeight > 0) {
+            onRatio?.(el.naturalWidth / el.naturalHeight);
+          }
+          setLoaded(true);
+        }}
         onError={() => setBroken(true)}
       />
     </>

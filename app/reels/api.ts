@@ -168,9 +168,11 @@ async function request<T>(path: string, options: RequestOptions): Promise<T> {
   }
   const tail = search.toString() === "" ? "" : `?${search.toString()}`;
 
-  const headers: Record<string, string> = {
-    Authorization: `Bearer ${token}`,
-  };
+  // Agar token-i khudi korbar naboshad - sarlavharo UMUMAN
+  // NAMEGUZOREM. On vaqt proxy khudash bo akkaunti khizmati
+  // medarod. (Peshtar "Bearer " KHOLI merafт -> 401 -> "Avval daroed".)
+  const headers: Record<string, string> = {};
+  if (token !== "") headers.Authorization = `Bearer ${token}`;
   if (json !== undefined) headers["Content-Type"] = "application/json";
 
   let response: Response;
