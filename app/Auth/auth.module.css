@@ -152,10 +152,42 @@
 .nudge { animation: none; }
 .sheen { position: relative; overflow: hidden; }
 
+/* ---------- SURATI PROFIL dar registratsiya ---------- */
+.avatarPick {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  flex: 0 0 72px;
+  border-radius: 999px;
+  overflow: hidden;
+  cursor: pointer;
+  background: color-mix(in srgb, var(--muted, #888) 12%, transparent);
+  border: 2px dashed color-mix(in srgb, var(--muted, #888) 45%, transparent);
+  transition: border-color 0.18s ease, transform 0.18s ease;
+}
+
+.avatarPick:hover {
+  transform: scale(1.04);
+  border-color: var(--brand, #d946ef);
+}
+
+.avatarPickPlus {
+  font-size: 26px;
+  line-height: 1;
+  color: var(--muted, #888);
+}
+
+.avatarPickImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .shell *, .shell *::before, .shell *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
 }
-

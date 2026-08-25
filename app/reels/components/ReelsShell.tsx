@@ -2,8 +2,6 @@
 
 // ============================================================
 //  ReelsShell - ramkai umumi baroi /reels.
-//  Ayni hamon dizayni /profile va /chats:
-//  sidebar-i chap (kompyuter) + qatori boloi shishagi (telefon).
 // ============================================================
 import { useEffect } from "react";
 import Link from "next/link";
@@ -93,7 +91,6 @@ function Frame({ children }: { children: React.ReactNode }) {
             </span>
           ))}
 
-          {/* REELS - hamin sahifa */}
           <span className={`${styles.navItem} ${styles.navItemActive}`}>
             <Film className="h-6 w-6 shrink-0" strokeWidth={2} />
             <span className="hidden text-sm xl:inline">Reels</span>
@@ -136,7 +133,7 @@ function Frame({ children }: { children: React.ReactNode }) {
           {status === "ready" && (
             <button type="button" onClick={logout} className={styles.navItem}>
               <LogOut className="h-6 w-6 shrink-0" strokeWidth={1.8} />
-              <span className="hidden text-sm xl:inline">Баромадан</span>
+              <span className="hidden text-sm xl:inline">Барамадан</span>
             </button>
           )}
 

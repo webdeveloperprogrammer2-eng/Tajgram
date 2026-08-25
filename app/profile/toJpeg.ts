@@ -16,9 +16,6 @@ const MAX_SIDE = 1600; // tarafi kalontarin (piksel)
 const QUALITY = 0.9;
 
 export async function toJpegFile(file: File): Promise<File> {
-  // Agar alakay JPEG bosad - hech chiz ivaz namekunem
-  if (file.type === "image/jpeg" || file.type === "image/jpg") return file;
-
   try {
     const bitmap = await createImageBitmap(file);
 
@@ -47,9 +44,13 @@ export async function toJpegFile(file: File): Promise<File> {
     if (blob === null) return file;
 
     // Nomi nav - hatman bo ".jpg" (ba'ze serverho ba nomi fayl nigoh mekunand)
-    const name = file.name.replace(/\.[^.]+$/, "") || "image";
+    // Faqat harfhoi lotini va raqam - ba'ze serverho nomi rusi/tojikiro
+    // qabul namekunand.
+    const name =
+      file.name.replace(/\.[^.]+$/, "").replace(/[^a-zA-Z0-9-_]/g, "") ||
+      "image";
 
-    return new File([blob], `${name}.jpg`, {
+    return new File([blob], `${name}-${Date.now()}.jpg`, {
       type: "image/jpeg",
       lastModified: Date.now(),
     });

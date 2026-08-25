@@ -28,6 +28,7 @@ import {
   type UserProfile,
 } from "./api";
 import { getToken, isTokenExpired, removeToken } from "./token";
+import { onThemeChange } from "@/components/appTheme";
 
 export type Theme = "dark" | "light";
 
@@ -145,6 +146,9 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     setTheme(next);
     localStorage.setItem(THEME_KEY, next);
   }
+
+  // Naql az sidebar-i UMUMI ivaz meshavad -> in jo khabar megirem
+  useEffect(() => onThemeChange(setTheme), []);
 
   // Ma'lumotro az server az nav megirem
   async function reload() {

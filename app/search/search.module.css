@@ -1,0 +1,305 @@
+/* ============================================================
+   app/chats/chats.module.css
+   Sabk: AYNI HAMON sabki /profile va /Auth -
+   neytral (siyoh/safed/khokistari) + YAK gradient az DU rang
+   (--accentA -> --accentB). Kunjhoi gird, soyahoi narm.
+   ============================================================ */
+
+.shell {
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+
+
+/* ---------- Gradient (2 rang) ---------- */
+.gradText {
+  background: linear-gradient(115deg, var(--accentA), var(--accentB));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.gradBg {
+  background: linear-gradient(135deg, var(--accentA), var(--accentB));
+  color: #ffffff;
+}
+
+.aura {
+  position: fixed;
+  top: -22rem;
+  right: -14rem;
+  z-index: 0;
+  width: 46rem;
+  height: 46rem;
+  pointer-events: none;
+  border-radius: 50%;
+  opacity: 0.14;
+  background: radial-gradient(circle at center, var(--accentB) 0%, transparent 68%);
+}
+
+.auraLow {
+  position: fixed;
+  bottom: -26rem;
+  left: -12rem;
+  z-index: 0;
+  width: 40rem;
+  height: 40rem;
+  pointer-events: none;
+  border-radius: 50%;
+  opacity: 0.10;
+  background: radial-gradient(circle at center, var(--accentA) 0%, transparent 68%);
+}
+
+/* ---------- Karta ---------- */
+.card {
+  background: var(--panelSoft);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  box-shadow: var(--shadowSoft);
+}
+
+/* ---------- Satri chat dar ro-ykhat ---------- */
+.chatRow {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.85rem;
+  border-radius: 18px;
+  padding: 0.7rem 0.75rem;
+  text-align: left;
+  transition: background-color 0.18s ease, transform 0.18s ease;
+}
+.chatRow:hover {
+  background: var(--panel);
+}
+.chatRow:active {
+  transform: scale(0.99);
+}
+.chatRowActive {
+  background: var(--panel);
+}
+
+/* ---------- Avatar bo khalqai gradient ---------- */
+.ring {
+  display: block;
+  padding: 2px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accentA), var(--accentB));
+}
+.ringInner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 50%;
+  border: 2px solid var(--bg);
+  background: var(--panel);
+  color: var(--muted);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+/* ---------- Payomho ---------- */
+.bubbleMine {
+  background: linear-gradient(135deg, var(--accentA), var(--accentB));
+  color: #ffffff;
+  border-radius: 22px 22px 6px 22px;
+}
+.bubbleTheirs {
+  background: var(--panel);
+  color: var(--fg);
+  border-radius: 22px 22px 22px 6px;
+}
+
+.dayChip {
+  align-self: center;
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--muted);
+  padding: 0.25rem 0.85rem;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* ---------- Maidoni navishtan ---------- */
+.composer {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  border-radius: 24px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  padding: 0.45rem 0.45rem 0.45rem 1rem;
+  transition: border-color 0.2s ease;
+}
+.composerFocus {
+  border-color: var(--accentB);
+}
+.composerInput {
+  flex: 1;
+  max-height: 7rem;
+  resize: none;
+  border: 0;
+  background: transparent;
+  outline: none;
+  color: var(--fg);
+  font-size: 15px;
+  line-height: 1.5;
+  padding: 0.5rem 0;
+}
+.composerInput::placeholder {
+  color: var(--muted);
+}
+
+.sendBtn {
+  display: flex;
+  height: 40px;
+  width: 40px;
+  shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accentA), var(--accentB));
+  color: #ffffff;
+  transition: transform 0.18s ease, filter 0.18s ease;
+}
+.sendBtn:hover {
+  filter: brightness(1.1);
+}
+.sendBtn:active {
+  transform: scale(0.94);
+}
+.sendBtn:disabled {
+  opacity: 0.4;
+  filter: none;
+  transform: none;
+}
+
+.iconBtn {
+  display: flex;
+  height: 40px;
+  width: 40px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: var(--muted);
+  transition: background-color 0.18s ease, color 0.18s ease;
+}
+.iconBtn:hover {
+  background: var(--panelSoft);
+  color: var(--fg);
+}
+
+/* ---------- Modal (korbari nav) ---------- */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: fadeIn 0.2s ease both;
+}
+.modal {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  z-index: 71;
+  width: calc(100vw - 2rem);
+  max-width: 28rem;
+  transform: translate(-50%, -50%);
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  animation: pop 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes pop {
+  from { opacity: 0; transform: translate(-50%, -46%) scale(0.96); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+/* ---------- Animatsiyaho ---------- */
+.rise {
+  animation: rise 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.fade {
+  animation: fadeIn 0.3s ease both;
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.snap {
+  animation: snap 0.42s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+@keyframes snap {
+  10%, 90% { transform: translateX(-2px); }
+  20%, 80% { transform: translateX(3px); }
+  30%, 50%, 70% { transform: translateX(-5px); }
+  40%, 60% { transform: translateX(5px); }
+}
+
+.blocks {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+.blocks i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: bounce 0.9s ease-in-out infinite;
+}
+.blocks i:nth-child(2) { animation-delay: 0.15s; }
+.blocks i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes bounce {
+  0%, 100% { opacity: 0.25; transform: translateY(0); }
+  50%      { opacity: 1; transform: translateY(-3px); }
+}
+
+.skeleton {
+  background: var(--panel);
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, var(--lineStrong), transparent);
+  transform: translateX(-100%);
+  animation: sweep 1.4s ease-in-out infinite;
+}
+@keyframes sweep {
+  to { transform: translateX(100%); }
+}
+
+/* ---------- Scrollbar-i tunuk ---------- */
+.scroll {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--lineStrong) transparent;
+}
+.scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.scroll::-webkit-scrollbar-thumb {
+  background: var(--lineStrong);
+  border-radius: 999px;
+}

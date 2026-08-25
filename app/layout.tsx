@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { cookies } from "next/headers";
+import { Geist, Geist_Mono, Grand_Hotel } from "next/font/google";
 import "./globals.css";
+
 import { AuthProvider } from "./Auth/providers";
+import { THEME_KEY, type AppTheme } from "@/components/themeKeys";
+import { ThemeSync } from "@/components/ThemeSync";
+import GlobalCall from "./chats/call/GlobalCall";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,6 +18,12 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const grandHotel = Grand_Hotel({
+  variable: "--font-grand-hotel",
+  weight: "400",
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
   title: "Tajgram",
   description: "Tajgram — веб-приложение на Next.js",
@@ -21,39 +32,26 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const cookieStore = await cookies();
+  const theme: AppTheme =
+    cookieStore.get(THEME_KEY)?.value === "light" ? "light" : "dark";
+
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      data-theme={theme}
       suppressHydrationWarning
+      className={`${geistSans.variable} ${geistMono.variable} ${grandHotel.variable} h-full antialiased`}
     >
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  const storedTheme = localStorage.getItem('tajgram_theme');
-                  const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                  if (storedTheme === 'dark' || (!storedTheme && systemPrefersDark)) {
-                    document.documentElement.classList.add('dark');
-                  } else {
-                    document.documentElement.classList.remove('dark');
-                  }
-                } catch (_) {}
-              })();
-            `
-          }}
-        />
-      </head>
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full bg-[var(--bg)] text-[var(--fg)] transition-colors duration-300">
+        <ThemeSync />
         <AuthProvider>
-          {children}
+          <GlobalCall>{children}</GlobalCall>
         </AuthProvider>
       </body>
     </html>

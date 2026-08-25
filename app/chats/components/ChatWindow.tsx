@@ -3,13 +3,15 @@
 // ============================================================
 //  ChatWindow - sutuni rost: khudi suhbat.
 // ============================================================
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   ImagePlus,
   Lock,
+  Phone,
   Send,
   Trash2,
+  Video,
   X,
 } from "lucide-react";
 
@@ -17,6 +19,7 @@ import {
   deleteMessage,
   errorText,
   getChatMessages,
+  isAudioFile,
   isImageFile,
   isVideoFile,
   mediaUrl,
@@ -24,11 +27,16 @@ import {
   type Chat,
   type Message,
 } from "../api";
+import { useCall } from "../call/CallProvider";
 import { clockTime, dayLabel } from "../format";
 import { useChats } from "../providers";
 import styles from "../chats.module.css";
 
 import Avatar from "./Avatar";
+import VoiceMessage from "./VoiceMessage";
+import VoiceRecorder from "./VoiceRecorder";
+
+const MAX_FILES = 6;
 
 export default function ChatWindow({
   chat,
@@ -38,21 +46,31 @@ export default function ChatWindow({
   onBack: () => void;
 }) {
   const { token, allowedIds, reloadChats } = useChats();
+  const { callUser, phase, notifyChat, onChatEvent, notifyTyping, onTypingEvent } =
+    useCall();
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const [text, setText] = useState("");
-  const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [sending, setSending] = useState(false);
   const [focused, setFocused] = useState(false);
+
+  const [typingChatId, setTypingChatId] = useState<number | null>(null);
 
   const fileInput = useRef<HTMLInputElement>(null);
   const bottom = useRef<HTMLDivElement>(null);
 
+  const typingOn = useRef(false);
+  const typingSentAt = useRef(0);
+  const typingStop = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const peerTypingOff = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const canWrite = allowedIds.has(chat.userId);
+  const busy = phase !== "idle" && phase !== "ended";
+  const peerTyping = typingChatId === chat.chatId;
 
   useEffect(() => {
     let alive = true;
@@ -77,7 +95,7 @@ export default function ChatWindow({
     }
 
     load(true);
-    const timer = setInterval(() => load(false), 6000);
+    const timer = setInterval(() => load(false), 2500);
 
     return () => {
       alive = false;
@@ -85,27 +103,174 @@ export default function ChatWindow({
     };
   }, [token, chat.chatId]);
 
+  const refetch = useCallback(async () => {
+    try {
+      const list = await getChatMessages(token, chat.chatId);
+      setMessages(Array.isArray(list) ? list : []);
+    } catch {
+      // ignore
+    }
+  }, [token, chat.chatId]);
+
+  const reloadRef = useRef(reloadChats);
+  useEffect(() => {
+    reloadRef.current = reloadChats;
+  }, [reloadChats]);
+
+  useEffect(
+    () =>
+      onChatEvent((incomingChatId) => {
+        if (incomingChatId === chat.chatId) {
+          setTypingChatId(null);
+          if (peerTypingOff.current !== null) {
+            clearTimeout(peerTypingOff.current);
+          }
+          void refetch();
+        }
+        void reloadRef.current();
+      }),
+    [onChatEvent, refetch, chat.chatId]
+  );
+
+  const ping = useCallback(() => {
+    notifyChat(chat.userId, chat.chatId);
+  }, [notifyChat, chat.userId, chat.chatId]);
+
+  const stopTyping = useCallback(() => {
+    if (typingStop.current !== null) {
+      clearTimeout(typingStop.current);
+      typingStop.current = null;
+    }
+    if (!typingOn.current) return;
+
+    typingOn.current = false;
+    notifyTyping(chat.userId, chat.chatId, false);
+  }, [notifyTyping, chat.userId, chat.chatId]);
+
+  const beatTyping = useCallback(() => {
+    const now = Date.now();
+
+    if (!typingOn.current || now - typingSentAt.current > 2500) {
+      typingOn.current = true;
+      typingSentAt.current = now;
+      notifyTyping(chat.userId, chat.chatId, true);
+    }
+
+    if (typingStop.current !== null) clearTimeout(typingStop.current);
+    typingStop.current = setTimeout(stopTyping, 3000);
+  }, [notifyTyping, stopTyping, chat.userId, chat.chatId]);
+
+  useEffect(
+    () =>
+      onTypingEvent((incomingChatId, _fromUserId, on) => {
+        if (incomingChatId !== chat.chatId) return;
+
+        setTypingChatId(on ? incomingChatId : null);
+
+        if (peerTypingOff.current !== null) clearTimeout(peerTypingOff.current);
+        if (on) {
+          peerTypingOff.current = setTimeout(() => setTypingChatId(null), 4000);
+        }
+      }),
+    [onTypingEvent, chat.chatId]
+  );
+
+  useEffect(
+    () => () => {
+      stopTyping();
+      if (peerTypingOff.current !== null) clearTimeout(peerTypingOff.current);
+    },
+    [chat.chatId, stopTyping]
+  );
+
   useEffect(() => {
     bottom.current?.scrollIntoView({ block: "end" });
   }, [messages.length, chat.chatId]);
 
-  useEffect(() => {
-    if (file === null) {
-      setPreview(null);
-      return;
+  function addFiles(picked: File[]) {
+    if (picked.length === 0) return;
+
+    const clean: File[] = [];
+
+    for (const item of picked) {
+      const ok =
+        item.type.startsWith("image/") ||
+        item.type.startsWith("video/") ||
+        item.type.startsWith("audio/");
+
+      if (!ok) {
+        setError(`"${item.name}" акс ё видео нест.`);
+        continue;
+      }
+
+      if (item.type.startsWith("video/") && item.size > 40 * 1024 * 1024) {
+        setError(`"${item.name}" муҳити хеле калон аст (аз 40 МБ зиёд).`);
+        continue;
+      }
+
+      clean.push(item);
     }
 
-    const url = URL.createObjectURL(file);
-    setPreview(url);
+    if (clean.length === 0) return;
 
-    return () => URL.revokeObjectURL(url);
-  }, [file]);
+    setFiles((old) => [...old, ...clean].slice(0, MAX_FILES));
+  }
 
-  async function handleSend(event: React.FormEvent) {
-    event.preventDefault();
+  function dropFile(index: number) {
+    setFiles((old) => old.filter((_, position) => position !== index));
+  }
 
-    if (!canWrite) return;
-    if (text.trim() === "" && file === null) return;
+  async function handleSend(event?: React.FormEvent) {
+    event?.preventDefault();
+
+    if (!canWrite || sending) return;
+    if (text.trim() === "" && files.length === 0) return;
+
+    setSending(true);
+    setError("");
+
+    const body = text;
+    const queue = files;
+
+    try {
+      if (queue.length === 0) {
+        const created = await sendMessage(token, {
+          chatId: chat.chatId,
+          text: body,
+          file: null,
+        });
+        if (created) setMessages((old) => [...old, created]);
+      } else {
+        for (let index = 0; index < queue.length; index += 1) {
+          const ready = await shrinkImage(queue[index]);
+
+          const created = await sendMessage(token, {
+            chatId: chat.chatId,
+            text: index === 0 ? body : "",
+            file: ready,
+          });
+
+          if (created) setMessages((old) => [...old, created]);
+        }
+      }
+
+      const list = await getChatMessages(token, chat.chatId).catch(() => null);
+      if (Array.isArray(list)) setMessages(list);
+
+      setText("");
+      setFiles([]);
+      stopTyping();
+      ping();
+      await reloadChats();
+    } catch (err) {
+      setError(errorText(err, "Паём фиристода нашуд."));
+    } finally {
+      setSending(false);
+    }
+  }
+
+  async function sendVoice(voice: File) {
+    if (!canWrite || sending) return;
 
     setSending(true);
     setError("");
@@ -113,21 +278,21 @@ export default function ChatWindow({
     try {
       const created = await sendMessage(token, {
         chatId: chat.chatId,
-        text,
-        file,
+        text: "",
+        file: voice,
       });
 
       if (created) setMessages((old) => [...old, created]);
       else {
         const list = await getChatMessages(token, chat.chatId);
-        setMessages(Array.isArray(list) ? list : []);
+        if (Array.isArray(list)) setMessages(list);
       }
 
-      setText("");
-      setFile(null);
+      stopTyping();
+      ping();
       await reloadChats();
     } catch (err) {
-      setError(errorText(err, "Паём фиристода нашуд."));
+      setError(errorText(err, "Паёми овозӣ фиристода нашуд."));
     } finally {
       setSending(false);
     }
@@ -137,6 +302,8 @@ export default function ChatWindow({
     try {
       await deleteMessage(token, messageId);
       setMessages((old) => old.filter((item) => item.messageId !== messageId));
+      stopTyping();
+      ping();
       await reloadChats();
     } catch (err) {
       setError(errorText(err, "Паём нест карда нашуд."));
@@ -168,9 +335,50 @@ export default function ChatWindow({
 
         <div className="min-w-0 flex-1">
           <p className="truncate text-[15px] font-semibold">{chat.userName}</p>
-          <p className="truncate text-[12px]" style={{ color: "var(--muted)" }}>
-            {chat.fullName}
-          </p>
+
+          {peerTyping ? (
+            <p
+              className={`${styles.typing} truncate text-[12px]`}
+              aria-live="polite"
+            >
+              менависад
+              <span className={styles.typingDot} />
+              <span className={styles.typingDot} />
+              <span className={styles.typingDot} />
+            </p>
+          ) : (
+            <p
+              className="truncate text-[12px]"
+              style={{ color: "var(--muted)" }}
+            >
+              {chat.fullName}
+            </p>
+          )}
+        </div>
+
+        {/* ---------- ZVANOKHO ---------- */}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => callUser(chat, "audio")}
+            disabled={!canWrite || busy}
+            aria-label="Занги садоӣ"
+            title={canWrite ? "Занги садоӣ" : "Бо ин корбар занг задан мумкин нест"}
+            className={styles.headBtn}
+          >
+            <Phone className="h-5 w-5" strokeWidth={1.8} />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => callUser(chat, "video")}
+            disabled={!canWrite || busy}
+            aria-label="Занги видеоӣ"
+            title={canWrite ? "Занги видеоӣ" : "Бо ин корбар занг задан мумкин нест"}
+            className={styles.headBtn}
+          >
+            <Video className="h-5 w-5" strokeWidth={1.8} />
+          </button>
         </div>
       </header>
 
@@ -248,50 +456,64 @@ export default function ChatWindow({
           </div>
         ) : (
           <form onSubmit={handleSend}>
-            {preview !== null && (
-              <div className="mb-2 flex items-center gap-3">
-                <span className="relative">
-                  {file !== null && file.type.startsWith("video") ? (
-                    <video
-                      src={preview}
-                      className="h-16 w-16 rounded-2xl object-cover"
-                      muted
-                    />
-                  ) : (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={preview}
-                      alt=""
-                      className="h-16 w-16 rounded-2xl object-cover"
-                    />
-                  )}
+            {files.length > 0 && (
+              <div className={`${styles.shotGrid} mb-2`}>
+                {files.map((item, index) => (
+                  <Shot
+                    key={`${item.name}-${index}`}
+                    file={item}
+                    busy={sending}
+                    onKill={() => dropFile(index)}
+                  />
+                ))}
 
+                {files.length < MAX_FILES && (
                   <button
                     type="button"
-                    onClick={() => setFile(null)}
-                    aria-label="Файлро бекор кунед"
-                    className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full"
-                    style={{ background: "var(--invBg)", color: "var(--invFg)" }}
+                    onClick={() => fileInput.current?.click()}
+                    className={`${styles.shot} flex items-center justify-center`}
+                    style={{ color: "var(--muted)" }}
+                    aria-label="Боз акс илова кунед"
                   >
-                    <X className="h-3 w-3" strokeWidth={2.4} />
+                    <ImagePlus className="h-5 w-5" strokeWidth={1.8} />
                   </button>
-                </span>
+                )}
               </div>
             )}
 
             <div
               className={`${styles.composer} ${focused ? styles.composerFocus : ""}`}
             >
+              <VoiceRecorder
+                disabled={sending}
+                onReady={sendVoice}
+                onError={setError}
+              />
+
               <textarea
                 rows={1}
                 value={text}
-                onChange={(event) => setText(event.target.value)}
+                onChange={(event) => {
+                  setText(event.target.value);
+                  if (event.target.value === "") stopTyping();
+                  else beatTyping();
+                }}
                 onFocus={() => setFocused(true)}
-                onBlur={() => setFocused(false)}
+                onBlur={() => {
+                  setFocused(false);
+                  stopTyping();
+                }}
+                onPaste={(event) => {
+                  const pasted = Array.from(event.clipboardData.files);
+                  if (pasted.length > 0) {
+                    event.preventDefault();
+                    addFiles(pasted);
+                  }
+                }}
                 onKeyDown={(event) => {
                   if (event.key === "Enter" && !event.shiftKey) {
                     event.preventDefault();
-                    handleSend(event);
+                    void handleSend();
                   }
                 }}
                 placeholder="Паём нависед..."
@@ -301,7 +523,9 @@ export default function ChatWindow({
               <button
                 type="button"
                 onClick={() => fileInput.current?.click()}
-                aria-label="Файл илова кунед"
+                disabled={files.length >= MAX_FILES}
+                aria-label="Акс ё видео илова кунед"
+                title="Акс ё видео"
                 className={styles.iconBtn}
               >
                 <ImagePlus className="h-5 w-5" strokeWidth={1.8} />
@@ -311,17 +535,20 @@ export default function ChatWindow({
                 ref={fileInput}
                 type="file"
                 accept="image/*,video/*"
+                multiple
                 hidden
                 onChange={(event) => {
-                  const picked = event.target.files?.[0] ?? null;
+                  const picked = Array.from(event.target.files ?? []);
                   event.target.value = "";
-                  if (picked) setFile(picked);
+                  addFiles(picked);
                 }}
               />
 
               <button
                 type="submit"
-                disabled={sending || (text.trim() === "" && file === null)}
+                disabled={
+                  sending || (text.trim() === "" && files.length === 0)
+                }
                 aria-label="Фиристодан"
                 className={styles.sendBtn}
               >
@@ -343,6 +570,48 @@ export default function ChatWindow({
   );
 }
 
+function Shot({
+  file,
+  busy,
+  onKill,
+}: {
+  file: File;
+  busy: boolean;
+  onKill: () => void;
+}) {
+  const url = useMemo(() => URL.createObjectURL(file), [file]);
+
+  useEffect(() => () => URL.revokeObjectURL(url), [url]);
+
+  const video = file.type.startsWith("video/");
+
+  return (
+    <span className={styles.shot}>
+      {video ? (
+        <video src={url} className="h-full w-full object-cover" muted />
+      ) : (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={url} alt="" className="h-full w-full object-cover" />
+      )}
+
+      <span className={styles.shotSize}>{sizeText(file.size)}</span>
+
+      {busy ? (
+        <span className={styles.shotBusy}>...</span>
+      ) : (
+        <button
+          type="button"
+          onClick={onKill}
+          aria-label="Файлро бекор кунед"
+          className={styles.shotKill}
+        >
+          <X className="h-3 w-3" strokeWidth={2.6} />
+        </button>
+      )}
+    </span>
+  );
+}
+
 function Bubble({
   message,
   onDelete,
@@ -352,6 +621,10 @@ function Bubble({
 }) {
   const mine = message.isMine;
   const src = mediaUrl(message.fileName);
+
+  const audio = isAudioFile(message.fileName);
+  const image = isImageFile(message.fileName);
+  const video = isVideoFile(message.fileName);
 
   return (
     <div
@@ -372,17 +645,21 @@ function Bubble({
       <div
         className={`${mine ? styles.bubbleMine : styles.bubbleTheirs} max-w-[78%] px-4 py-2.5 sm:max-w-[65%]`}
       >
-        {src !== null && isImageFile(message.fileName) && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={src}
-            alt=""
-            className="mb-2 max-h-72 w-full rounded-2xl object-cover"
-            loading="lazy"
-          />
+        {src !== null && audio && <VoiceMessage src={src} />}
+
+        {src !== null && !audio && image && (
+          <a href={src} target="_blank" rel="noreferrer">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={src}
+              alt=""
+              className="mb-2 max-h-72 w-full rounded-2xl object-cover"
+              loading="lazy"
+            />
+          </a>
         )}
 
-        {src !== null && isVideoFile(message.fileName) && (
+        {src !== null && !audio && video && (
           <video
             src={src}
             controls
@@ -390,21 +667,19 @@ function Bubble({
           />
         )}
 
-        {src !== null &&
-          !isImageFile(message.fileName) &&
-          !isVideoFile(message.fileName) && (
-            <a
-              href={src}
-              target="_blank"
-              rel="noreferrer"
-              className="mb-1 block text-[13px] underline"
-            >
-              {message.fileName}
-            </a>
-          )}
+        {src !== null && !audio && !image && !video && (
+          <a
+            href={src}
+            target="_blank"
+            rel="noreferrer"
+            className="mb-1 block text-[13px] underline"
+          >
+            {message.fileName}
+          </a>
+        )}
 
         {message.messageText !== null && message.messageText !== "" && (
-          <p className="whitespace-pre-wrap break-words text-[14px] leading-relaxed">
+          <p className="whitespace-pre-wrap wrap-break-words text-[14px] leading-relaxed">
             {message.messageText}
           </p>
         )}
@@ -418,4 +693,73 @@ function Bubble({
       </div>
     </div>
   );
+}
+
+async function shrinkImage(file: File): Promise<File> {
+  if (!file.type.startsWith("image/")) return file;
+  if (file.type === "image/gif") return file;
+  if (typeof document === "undefined") return file;
+
+  const LIMIT = 1600;
+  const SOFT = 900 * 1024;
+
+  try {
+    const bitmap = await loadBitmap(file);
+
+    const scale = Math.min(1, LIMIT / Math.max(bitmap.width, bitmap.height));
+    if (scale === 1 && file.size <= SOFT) return file;
+
+    const width = Math.round(bitmap.width * scale);
+    const height = Math.round(bitmap.height * scale);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+
+    const ctx = canvas.getContext("2d");
+    if (ctx === null) return file;
+
+    ctx.drawImage(bitmap, 0, 0, width, height);
+
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, "image/jpeg", 0.82)
+    );
+
+    if (blob === null || blob.size >= file.size) return file;
+
+    const name = file.name.replace(/\.[^.]+$/, "") + ".jpg";
+    return new File([blob], name, { type: "image/jpeg" });
+  } catch {
+    return file;
+  }
+}
+
+function loadBitmap(
+  file: File
+): Promise<ImageBitmap | HTMLImageElement> {
+  if (typeof createImageBitmap === "function") {
+    return createImageBitmap(file);
+  }
+
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const image = new Image();
+
+    image.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(image);
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("surat kushoda nashud"));
+    };
+
+    image.src = url;
+  });
+}
+
+function sizeText(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }

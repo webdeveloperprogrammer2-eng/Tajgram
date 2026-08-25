@@ -1,10 +1,5 @@
-// ============================================================
-//  app/reels/layout.tsx
-//  Ramkai umumi baroi hamai sahifahoi /reels.
-//  Hamai dizayn dar <ReelsShell> ast.
-// ============================================================
 import ReelsShell from "./components/ReelsShell";
 
-export default function ReelsLayout({ children }: LayoutProps<"/reels">) {
+export default function ReelsLayout({ children }: { children: React.ReactNode }) {
   return <ReelsShell>{children}</ReelsShell>;
 }

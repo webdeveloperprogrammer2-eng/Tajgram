@@ -93,7 +93,18 @@ export function isImageFile(name: string | null | undefined): boolean {
 
 export function isVideoFile(name: string | null | undefined): boolean {
   if (!name) return false;
-  return /\.(mp4|webm|mov|m4v)$/i.test(name);
+  // DIQQAT: .webm ham baroi video, ham baroi OVOZ istifoda meshavad.
+  // Payomhoi ovozi mo hamesha bo "voice-" oghoz meshavand -> on jo audio.
+  if (isAudioFile(name)) return false;
+  return /\.(mp4|webm|mov|m4v|mkv|avi)$/i.test(name);
+}
+
+// Payomi ovozi (golosovoy) - fayli sadoi
+export function isAudioFile(name: string | null | undefined): boolean {
+  if (!name) return false;
+  const clean = name.split("/").pop() ?? name;
+  if (/^voice-/i.test(clean)) return true;
+  return /\.(mp3|wav|ogg|oga|opus|m4a|aac|weba)$/i.test(clean);
 }
 
 // ------------------------------------------------------------

@@ -16,6 +16,7 @@
   transition: background-color 0.25s ease, color 0.25s ease;
 }
 
+<<<<<<< HEAD
 /* ---------- NAQLI TORIK ---------- */
 .shell[data-theme="dark"] {
   --bg: #000000;
@@ -96,6 +97,11 @@
   --shadowSoft: 0 8px 24px -14px rgba(0, 0, 0, 0.1);
   --glass: rgba(255, 255, 255, 0.85);
 }
+=======
+
+
+
+>>>>>>> 1bb84642499ef0b980c88e4e287f136d22835c2f
 
 .mono {
   font-family: var(--font-geist-mono), ui-monospace, monospace;
@@ -393,6 +399,10 @@
   top: 50%;
   z-index: 71;
   transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  /* Bе in modal az ekran berun mezad va sari on burida meshud */
+  max-height: calc(100dvh - 2rem);
   background: var(--bg);
   color: var(--fg);
   border: 1px solid var(--line);
@@ -400,6 +410,91 @@
   box-shadow: var(--shadow);
   overflow: hidden;
   animation: pop 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ---------- Sahnai story: surat har andoza bosad ham "sozgor" ----------
+   Suratho gohe amudi, gohe uftoda meshavand. Peshtar quti 9:16 QAT'I bud
+   va girdi surati uftoda navori siyohi kalon memond. Hozir hamon surat
+   dar pasazamina mahv (blur) karda meshavad - joi kholi por meshavad. */
+.stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 320px;
+  max-height: min(70dvh, 640px);
+  overflow: hidden;
+  background: #000;
+}
+.stageBlur {
+  position: absolute;
+  inset: -12%;
+  width: 124%;
+  height: 124%;
+  object-fit: cover;
+  filter: blur(28px) saturate(1.3) brightness(0.5);
+  transform: scale(1.04);
+}
+.stageMedia {
+  position: relative;
+  max-width: 100%;
+  max-height: min(70dvh, 640px);
+  object-fit: contain;
+}
+
+/* Scrim-i bolo va poyon - to matni safed dar surati ravshan hono bosad */
+.stageTopScrim {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 96px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.65), transparent);
+  pointer-events: none;
+}
+
+/* Navori pesharaft (kadom story) */
+.track {
+  height: 3px;
+  flex: 1;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.28);
+  overflow: hidden;
+}
+.trackOn {
+  background: linear-gradient(90deg, var(--accentA), var(--accentB));
+}
+
+/* Tugmahoi chap/rost - faqat vaqte mush nazdik oyad namoyon meshavand */
+.navSide {
+  position: absolute;
+  top: 0;
+  display: flex;
+  height: 100%;
+  width: 64px;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+.stage:hover .navSide,
+.navSide:focus-visible {
+  opacity: 1;
+}
+.navSide > span {
+  display: flex;
+  height: 34px;
+  width: 34px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  transition: transform 0.18s ease, background 0.18s ease;
+}
+.navSide:hover > span {
+  background: rgba(0, 0, 0, 0.75);
+  transform: scale(1.08);
 }
 @keyframes pop {
   from { opacity: 0; transform: translate(-50%, -46%) scale(0.96); }
@@ -447,4 +542,161 @@
 @keyframes grow {
   from { width: 0%; }
   to   { width: 100%; }
+}
+
+/* ============================================================
+   MUQOVAI PROFIL - qismi nav
+   Ghoya: bolo-i sahifa "zinda" boshad - surati profil mavhum
+   shuda fon meshavad, doghhoi rangin ohista shino mekunand,
+   va kartai shishagin ba on medaroyad.
+   ============================================================ */
+
+.cover {
+  position: relative;
+  height: 168px;
+  overflow: hidden;
+  pointer-events: none;
+}
+@media (min-width: 640px) {
+  .cover {
+    height: 210px;
+  }
+}
+
+/* Surati profil - kalon, mavhum, purrang: fon-i shakhsi */
+.coverImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.3);
+  filter: blur(58px) saturate(170%);
+  opacity: 0.5;
+}
+
+/* Poyon-i muqova narm ba rangi sahifa meguzarad */
+.coverFade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 18%, var(--bg) 100%);
+}
+
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(64px);
+}
+.blobA {
+  width: 25rem;
+  height: 25rem;
+  top: -9rem;
+  left: -6rem;
+  opacity: 0.5;
+  background: radial-gradient(circle, var(--accentA), transparent 66%);
+  animation: drift 18s ease-in-out infinite alternate;
+}
+.blobB {
+  width: 29rem;
+  height: 29rem;
+  top: -12rem;
+  right: -5rem;
+  opacity: 0.45;
+  background: radial-gradient(circle, var(--accentB), transparent 66%);
+  animation: drift 26s ease-in-out infinite alternate-reverse;
+}
+.blobC {
+  width: 19rem;
+  height: 19rem;
+  top: -5rem;
+  left: 40%;
+  opacity: 0.24;
+  background: radial-gradient(circle, #29d0ff, transparent 70%);
+  animation: floaty 9s ease-in-out infinite;
+}
+
+@keyframes drift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(7%, -9%, 0) scale(1.18);
+  }
+  100% {
+    transform: translate3d(-8%, 6%, 0) scale(1.06);
+  }
+}
+
+@keyframes floaty {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+/* ---------- Kartai shishagin ---------- */
+.glass {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: 30px;
+  background: var(--glass);
+  backdrop-filter: blur(26px) saturate(150%);
+  -webkit-backdrop-filter: blur(26px) saturate(150%);
+  box-shadow: var(--shadow);
+}
+
+/* ---------- Halqai gardishkunanda gird-i avatar ---------- */
+.spinRing {
+  position: absolute;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    var(--accentA),
+    #ffb84d,
+    var(--accentB),
+    #29d0ff,
+    var(--accentA)
+  );
+  animation: spin 7s linear infinite;
+}
+.spinGlow {
+  filter: blur(14px);
+  opacity: 0.6;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- Khonai omor ---------- */
+.statCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 14px 8px;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  background: var(--panelSoft);
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.28s ease, border-color 0.28s ease;
+}
+.statCard:hover {
+  transform: translateY(-4px);
+  border-color: var(--lineStrong);
+  box-shadow: var(--shadowSoft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blobA,
+  .blobB,
+  .blobC,
+  .spinRing {
+    animation: none !important;
+  }
 }

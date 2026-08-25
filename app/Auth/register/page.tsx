@@ -2,13 +2,13 @@
 
 // ============================================================
 //  /Auth/register
-//  Dizayn: ayni hamon rasmi reference (New Account)
+//  Dizayn: ayni hamon rasmi reference (New Account) + surati profil
 // ============================================================
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { ApiError, RULES, loginUser, registerUser } from "../api";
+import { ApiError, RULES, loginUser, registerUser, uploadAvatar } from "../api";
 import { saveToken } from "../token";
 import { useSettings } from "../providers";
 import styles from "../auth.module.css";
@@ -36,9 +36,37 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  const [avatar, setAvatar] = useState<{ file: File; url: string } | null>(null);
+  const avatarInput = useRef<HTMLInputElement>(null);
+
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
   const [success, setSuccess] = useState("");
+
+  useEffect(() => {
+    const url = avatar?.url;
+    if (url === undefined) return;
+    return () => URL.revokeObjectURL(url);
+  }, [avatar]);
+
+  function clearAvatar() {
+    setAvatar(null);
+    if (avatarInput.current !== null) avatarInput.current.value = "";
+  }
+
+  function pickAvatar(file: File | undefined) {
+    if (file === undefined) return;
+    if (!file.type.startsWith("image/")) {
+      setErrors(["Фақат акс гузоштан мумкин аст."]);
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setErrors(["Акос аз 5 МБ калон аст."]);
+      return;
+    }
+    setErrors([]);
+    setAvatar({ file, url: URL.createObjectURL(file) });
+  }
 
   const power = checkPasswordPower(password);
   const powerNames = [
@@ -93,6 +121,14 @@ export default function RegisterPage() {
       const token = await loginUser({ userName, password });
       saveToken(token);
 
+      if (avatar !== null) {
+        try {
+          await uploadAvatar(token, avatar.file);
+        } catch {
+          // Surati profilро баъдтар дар саҳифаи профил иваз кардан мумкин аст
+        }
+      }
+
       setSuccess(t.okCreated);
       router.push("/profile");
     } catch (err) {
@@ -117,7 +153,50 @@ export default function RegisterPage() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="mt-6 space-y-3.5">
+      <form onSubmit={handleSubmit} className="mt-5 space-y-3">
+        {/* Акси профил (ихтиёрӣ) */}
+        <div className="flex items-center gap-4 py-1">
+          <button
+            type="button"
+            onClick={() => avatarInput.current?.click()}
+            className={styles.avatarPick}
+            aria-label="Сурати профил гузоред"
+          >
+            {avatar === null ? (
+              <span className={styles.avatarPickPlus}>+</span>
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={avatar.url} alt="" className={styles.avatarPickImg} />
+            )}
+          </button>
+
+          <div className="min-w-0">
+            <p className="text-[13px] font-semibold">Сурати профил</p>
+            <p className="text-[11px]" style={{ color: "var(--muted)" }}>
+              Ихтиёрӣ — баъд ҳам иваз кардан мумкин аст
+            </p>
+
+            {avatar !== null && (
+              <button
+                type="button"
+                onClick={clearAvatar}
+                className="mt-1 text-[11px] underline"
+                style={{ color: "var(--muted)" }}
+              >
+                Тоза кардан
+              </button>
+            )}
+          </div>
+
+          <input
+            ref={avatarInput}
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={(event) => pickAvatar(event.target.files?.[0])}
+          />
+        </div>
+
         <Field
           label={t.fieldUsername}
           name="userName"
@@ -222,8 +301,7 @@ export default function RegisterPage() {
         </div>
       </form>
 
-      {/* Обуна шудан / Даромадан link */}
-      <p className="mt-5 text-center text-xs font-medium opacity-85">
+      <p className="mt-4 text-center text-xs font-medium opacity-85">
         <span>Аллакай аккаунт доред? </span>
         <Link
           href="/Auth/login"

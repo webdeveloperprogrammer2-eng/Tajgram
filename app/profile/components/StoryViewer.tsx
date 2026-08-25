@@ -10,7 +10,7 @@
 //   4. tugmai tark kardan (DELETE /Story/DeleteStory)
 // ============================================================
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, Eye, Heart, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Eye, Heart, Trash2, X } from "lucide-react";
 
 import {
   ApiError,
@@ -19,13 +19,15 @@ import {
   viewStory,
   type Story,
 } from "../api";
-import { shortDate } from "../format";
+import { initials, shortDate } from "../format";
 import { useProfile } from "../providers";
 import styles from "../profile.module.css";
 
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogTitle,
 } from "../ui/dialog";
@@ -41,7 +43,7 @@ export default function StoryViewer({
   onChangeIndex: (next: number) => void;
   onClose: () => void;
 }) {
-  const { token, reload } = useProfile();
+  const { token, reload, profile } = useProfile();
   const [busy, setBusy] = useState(false);
 
   // Story-i hozira. Agar index nabosad -> null.
@@ -58,6 +60,8 @@ export default function StoryViewer({
   if (story === null || index === null) return null;
 
   const src = mediaUrl(story.fileName);
+  const avatar = mediaUrl(story.userAvatar) ?? mediaUrl(profile?.image);
+  const userName = profile?.userName ?? "STORY";
   const views = story.viewerDto?.viewCount ?? 0;
   const likes = story.viewerDto?.viewLike ?? 0;
 
@@ -95,38 +99,76 @@ export default function StoryViewer({
         if (!next) onClose();
       }}
     >
-      <DialogContent className="max-w-[420px] p-0">
+      <DialogContent className="max-w-[440px] p-0" showClose={false}>
         <DialogTitle className="sr-only">STORY</DialogTitle>
 
-        {/* ---------- Khathoi bolo (kadom story) ---------- */}
-        <div className="flex gap-1 p-3">
-          {stories.map((item, i) => (
-            <span
-              key={item.id}
-              className="h-[2px] flex-1"
-              style={{
-                background: i <= index ? "var(--signal)" : "var(--lineStrong)",
-              }}
-            />
-          ))}
-        </div>
-
-        {/* ---------- Surat ---------- */}
-        <div className={`${styles.cellTall} max-h-[70vh]`}>
+        {/* ================= SAHNA ================= */}
+        <div className={styles.stage}>
+          {/* Pasazaminai mahv - joi kholiro por mekunad (na navori siyoh) */}
           {src !== null && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={src} alt="Story" className="h-full w-full object-contain" />
+            <img src={src} alt="" aria-hidden className={styles.stageBlur} />
           )}
 
-          {/* Tugmahoi chap va rost */}
+          {src !== null && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={src} alt="Story" className={styles.stageMedia} />
+          )}
+
+          <div className={styles.stageTopScrim} />
+
+          {/* ---------- Bolo: navorho + korbar + bastan ---------- */}
+          <div className="absolute inset-x-0 top-0 z-10 px-3 pt-3">
+            <div className="flex gap-1.5">
+              {stories.map((item, i) => (
+                <span
+                  key={item.id}
+                  className={`${styles.track} ${i <= index ? styles.trackOn : ""}`}
+                />
+              ))}
+            </div>
+
+            <div className="mt-3 flex items-center gap-2.5">
+              <span className={styles.ring}>
+                <Avatar className="h-8 w-8 border-2 border-[var(--bg)]">
+                  {avatar !== null && <AvatarImage src={avatar} alt={userName} />}
+                  <AvatarFallback className="text-[10px]">
+                    {initials(userName)}
+                  </AvatarFallback>
+                </Avatar>
+              </span>
+
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[12px] font-bold uppercase tracking-[0.14em] text-white">
+                  {userName}
+                </p>
+                <p
+                  className={`${styles.mono} text-[9px] uppercase tracking-[0.2em] text-white/60`}
+                >
+                  {shortDate(story.createAt)}
+                </p>
+              </div>
+
+              <DialogClose
+                aria-label="Bastan"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur transition-all duration-200 hover:bg-black/70 active:scale-95"
+              >
+                <X className="h-4 w-4" strokeWidth={2} />
+              </DialogClose>
+            </div>
+          </div>
+
+          {/* ---------- Tugmahoi chap va rost ---------- */}
           {index > 0 && (
             <button
               type="button"
               onClick={goPrev}
               aria-label="Peshina"
-              className="absolute left-0 top-0 flex h-full w-14 items-center justify-center text-white/70 hover:text-white"
+              className={`${styles.navSide} left-0`}
             >
-              <ChevronLeft className="h-6 w-6" strokeWidth={1.4} />
+              <span>
+                <ChevronLeft className="h-5 w-5" strokeWidth={1.8} />
+              </span>
             </button>
           )}
 
@@ -135,34 +177,42 @@ export default function StoryViewer({
               type="button"
               onClick={goNext}
               aria-label="Oyanda"
-              className="absolute right-0 top-0 flex h-full w-14 items-center justify-center text-white/70 hover:text-white"
+              className={`${styles.navSide} right-0`}
             >
-              <ChevronRight className="h-6 w-6" strokeWidth={1.4} />
+              <span>
+                <ChevronRight className="h-5 w-5" strokeWidth={1.8} />
+              </span>
             </button>
           )}
         </div>
 
-        {/* ---------- Poyon: hisobho ---------- */}
+        {/* ================= POYON: hisobho ================= */}
         <div
-          className="flex items-center justify-between border-t px-4 py-3"
+          className="flex items-center justify-between gap-4 border-t px-4 py-3"
           style={{ borderColor: "var(--line)" }}
         >
-          <div className="flex items-center gap-5">
-            <span className="flex items-center gap-1.5 text-xs tabular-nums">
+          <div className="flex items-center gap-4">
+            <span
+              className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs tabular-nums"
+              style={{ background: "var(--panel)" }}
+            >
               <Eye className="h-3.5 w-3.5" strokeWidth={1.6} />
               {views}
             </span>
 
-            <span className="flex items-center gap-1.5 text-xs tabular-nums">
+            <span
+              className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs tabular-nums"
+              style={{ background: "var(--panel)" }}
+            >
               <Heart className="h-3.5 w-3.5" strokeWidth={1.6} />
               {likes}
             </span>
 
             <span
-              className={`${styles.mono} text-[10px] uppercase tracking-[0.2em]`}
+              className={`${styles.mono} text-[10px] uppercase tracking-[0.18em]`}
               style={{ color: "var(--muted)" }}
             >
-              {shortDate(story.createAt)}
+              {index + 1} / {stories.length}
             </span>
           </div>
 
@@ -171,9 +221,9 @@ export default function StoryViewer({
             variant="ghost"
             onClick={handleDelete}
             disabled={busy}
-            className="gap-1.5"
+            className="gap-1.5 text-[#ed4956] hover:bg-[#ed4956]/10 hover:text-[#ed4956]"
           >
-            <Trash2 className="h-3 w-3" strokeWidth={1.6} />
+            <Trash2 className="h-3.5 w-3.5" strokeWidth={1.8} />
             TARK
           </Button>
         </div>

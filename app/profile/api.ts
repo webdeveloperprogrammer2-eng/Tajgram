@@ -465,11 +465,45 @@ export function getMyStories(token: string) {
 }
 
 // POST /Story/AddStories  -> surat, yo havola ba post, yo har du
-export function addStory(token: string, image: File) {
-  const form = new FormData();
-  form.append("Image", image);
+export async function addStory(token: string, image: File) {
+  // MUAMMO: server javob medod "Unexpected field (Image: unsupported file type)".
+  // Sabab: nomi maidon (field) yo namudi fayl ba u nameforad.
+  // Baroi hamin nomhoi mumkinro yak-yak mesanjem - kadomash kor kunad.
+  const fields = ["Image", "Images", "File", "file", "imageFile"];
 
-  return request<string>("/Story/AddStories", { method: "POST", token, form });
+  // Nomi fayl faqat az harfhoi lotini - ba'ze serverho nomi rusi/tojikiro
+  // qabul namekunand.
+  const safe = new File([image], `story-${Date.now()}.jpg`, {
+    type: image.type === "" ? "image/jpeg" : image.type,
+  });
+
+  let last: unknown = null;
+
+  for (const field of fields) {
+    const form = new FormData();
+    form.append(field, safe);
+
+    try {
+      return await request<string>("/Story/AddStories", {
+        method: "POST",
+        token,
+        form,
+      });
+    } catch (err) {
+      last = err;
+
+      // Agar khato "maidoni nodurust" bosad - nomi digarro mesanjem.
+      // Agar khatoi digar bosad (masalan 401) - darhol ist mekunem.
+      const text = err instanceof ApiError ? err.messages.join(" ") : "";
+      const wrongField =
+        text.includes("Unexpected field") ||
+        text.toLowerCase().includes("unsupported file type");
+
+      if (!wrongField) throw err;
+    }
+  }
+
+  throw last;
 }
 
 // DELETE /Story/DeleteStory

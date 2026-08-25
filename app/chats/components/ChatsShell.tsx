@@ -2,8 +2,6 @@
 
 // ============================================================
 //  ChatsShell - ramkai umumi baroi /chats.
-//  Ayni hamon dizayni /profile: sidebar-i chap (kompyuter),
-//  qatori boloi shishagi (telefon), nurhoi narmi gradient.
 // ============================================================
 import { useEffect } from "react";
 import Link from "next/link";
@@ -96,7 +94,6 @@ function Frame({ children }: { children: React.ReactNode }) {
             <span className="hidden text-sm xl:inline">Reels</span>
           </Link>
 
-          {/* PAYOMHO - hamin sahifa */}
           <span className={`${styles.navItem} ${styles.navItemActive}`}>
             <MessageCircle className="h-6 w-6 shrink-0" strokeWidth={2} />
             <span className="hidden text-sm xl:inline">Паёмҳо</span>
@@ -123,7 +120,7 @@ function Frame({ children }: { children: React.ReactNode }) {
           {status === "ready" && (
             <button type="button" onClick={logout} className={styles.navItem}>
               <LogOut className="h-6 w-6 shrink-0" strokeWidth={1.8} />
-              <span className="hidden text-sm xl:inline">Баромадан</span>
+              <span className="hidden text-sm xl:inline">Барамадан</span>
             </button>
           )}
 

@@ -2,16 +2,13 @@
 
 // ============================================================
 //  ProfileShell - "ramkai" umumi baroi sahifai profil.
-//  Dizayn: monandi instagram -
-//    - SIDEBAR-i chap (kompyuter)
-//    - qatori poyoni (telefon)
-//    - qatori boloi bo logo (telefon)
 // ============================================================
 import { useEffect } from "react";
 import Link from "next/link";
 import {
   Bookmark,
   Compass,
+  Film,
   Heart,
   Home,
   LogOut,
@@ -22,7 +19,6 @@ import {
   Search,
   Sun,
   User,
-  Film,
 } from "lucide-react";
 
 import { ProfileProvider, useProfile } from "../providers";
@@ -72,7 +68,6 @@ function Frame({ children }: { children: React.ReactNode }) {
       <aside
         className={`${styles.sidebar} fixed inset-y-0 left-0 z-40 hidden w-[76px] flex-col px-3 py-6 md:flex xl:w-[248px] xl:px-4`}
       >
-        {/* --- Logo --- */}
         <Link
           href="/profile"
           className="mb-8 flex items-center gap-3 px-2 xl:px-3"
@@ -89,32 +84,27 @@ function Frame({ children }: { children: React.ReactNode }) {
           </span>
         </Link>
 
-        {/* --- Nav --- */}
         <nav className="flex flex-1 flex-col gap-1">
           {NAV.map((item) => (
             <SideItem key={item.key} label={item.label} icon={item.icon} />
           ))}
 
-          {/* REELS - sahifai haqiqi (/reels) */}
           <Link href="/reels" className={styles.navItem}>
             <Film className="h-6 w-6 shrink-0" strokeWidth={1.8} />
             <span className="hidden text-sm xl:inline">Reels</span>
           </Link>
 
-          {/* PAYOMHO - sahifai haqiqi (/chats) */}
           <Link href="/chats" className={styles.navItem}>
             <MessageCircle className="h-6 w-6 shrink-0" strokeWidth={1.8} />
             <span className="hidden text-sm xl:inline">Паёмҳо</span>
           </Link>
 
-          {/* Profil - sahifai hozira */}
           <Link href="/profile" className={`${styles.navItem} ${styles.navItemActive}`}>
             <User className="h-6 w-6 shrink-0" strokeWidth={2} />
             <span className="hidden text-sm xl:inline">Профил</span>
           </Link>
         </nav>
 
-        {/* --- Poyoni sidebar --- */}
         <div className="mt-4 flex flex-col gap-1 border-t border-[var(--line)] pt-4">
           <button type="button" onClick={toggleTheme} className={styles.navItem}>
             {theme === "dark" ? (
@@ -130,7 +120,7 @@ function Frame({ children }: { children: React.ReactNode }) {
           {status === "ready" && (
             <button type="button" onClick={logout} className={styles.navItem}>
               <LogOut className="h-6 w-6 shrink-0" strokeWidth={1.8} />
-              <span className="hidden text-sm xl:inline">Баромадан</span>
+              <span className="hidden text-sm xl:inline">Барамадан</span>
             </button>
           )}
 
@@ -157,24 +147,34 @@ function Frame({ children }: { children: React.ReactNode }) {
         </Link>
 
         <div className="flex items-center gap-1">
-          <IconBtn onClick={toggleTheme} label="Мавзӯъро иваз кунед">
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label="Мавзӯъро иваз кунед"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-[var(--fg)] hover:bg-[var(--panel)]"
+          >
             {theme === "dark" ? (
               <Sun className="h-5 w-5" strokeWidth={1.8} />
             ) : (
               <Moon className="h-5 w-5" strokeWidth={1.8} />
             )}
-          </IconBtn>
+          </button>
 
           {status === "ready" && (
-            <IconBtn onClick={logout} label="Баромадан">
+            <button
+              type="button"
+              onClick={logout}
+              aria-label="Барамадан"
+              className="flex h-9 w-9 items-center justify-center rounded-full text-[var(--fg)] hover:bg-[var(--panel)]"
+            >
               <LogOut className="h-5 w-5" strokeWidth={1.8} />
-            </IconBtn>
+            </button>
           )}
         </div>
       </header>
 
       {/* ================= QISMI ASOSI ================= */}
-      <main className="relative z-10 mx-auto w-full max-w-[935px] px-4 pb-28 md:pl-[100px] md:pr-6 md:pb-16 xl:pl-[280px]">
+      <main className="relative z-10 mx-auto w-full max-w-[935px] px-4 pt-[60px] pb-28 md:pl-[100px] md:pr-6 md:pt-6 md:pb-16 xl:pl-[280px]">
         {children}
       </main>
 
@@ -219,26 +219,5 @@ function SideItem({
       <Icon className="h-6 w-6 shrink-0" strokeWidth={1.8} />
       <span className="hidden text-sm xl:inline">{label}</span>
     </span>
-  );
-}
-
-function IconBtn({
-  children,
-  onClick,
-  label,
-}: {
-  children: React.ReactNode;
-  onClick: () => void;
-  label: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={label}
-      className="flex h-9 w-9 items-center justify-center rounded-full text-[var(--fg)] transition-colors duration-150 hover:bg-[var(--panel)]"
-    >
-      {children}
-    </button>
   );
 }

@@ -1,10 +1,5 @@
-// ============================================================
-//  app/profile/layout.tsx
-//  Ramkai umumi baroi hamai sahifahoi /profile.
-//  Hamai dizayn dar <ProfileShell> ast.
-// ============================================================
 import ProfileShell from "./components/ProfileShell";
 
-export default function ProfileLayout({ children }: LayoutProps<"/profile">) {
+export default function ProfileLayout({ children }: { children: React.ReactNode }) {
   return <ProfileShell>{children}</ProfileShell>;
 }

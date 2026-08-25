@@ -12,7 +12,8 @@
 //
 //  Holatho: loading / guest / error / ready
 // ============================================================
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { LockKeyhole, MessagesSquare, TriangleAlert } from "lucide-react";
 
@@ -25,9 +26,26 @@ import ChatWindow from "./components/ChatWindow";
 import NewChatModal from "./components/NewChatModal";
 
 export default function ChatsPage() {
+  // useSearchParams -> Suspense talab mekunad
+  return (
+    <Suspense fallback={<LoadingView />}>
+      <ChatsView />
+    </Suspense>
+  );
+}
+
+function ChatsView() {
   const { status, error, reload, chats, reloadChats } = useChats();
+  const params = useSearchParams();
 
   const [activeId, setActiveId] = useState<number | null>(null);
+
+  // Agar az sahifai digar bo /chats?chatId=12 omada bosem -
+  // hamon suhbatro darhol mekushoem.
+  useEffect(() => {
+    const fromUrl = Number(params.get("chatId"));
+    if (Number.isFinite(fromUrl) && fromUrl > 0) setActiveId(fromUrl);
+  }, [params]);
   const [newChatOpen, setNewChatOpen] = useState(false);
 
   // ---------- 1. Hanuz bor meshavad ----------
