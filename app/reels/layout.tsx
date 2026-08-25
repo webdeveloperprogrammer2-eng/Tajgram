@@ -1,18 +1,15 @@
 // ============================================================
 //  app/reels/layout.tsx
-//  Ramkai umumi. Sidebar YAKTOST baroi hamai sayt
-//  (components/Sidebar.tsx) - dizayni daruni sahifa dar <ReelsShell>.
+//  Ramkai umumi baroi /reels.
+//
+//  DIQQAT: <Sidebar /> va <SessionProvider> in jo NESTAND!
+//  Onho YAK JOI hastand - dar app/layout.tsx (components/AppFrame.tsx)
+//  va ba HAMAI sayt kor mekunand. Agar in jo takror kuni,
+//  DU sidebar va DU so-rovi profil paydo meshavad.
+//  Dizayni daruni sahifa dar <ReelsShell> ast.
 // ============================================================
-import { Sidebar } from "@/components/Sidebar";
-import { SessionProvider } from "@/components/SessionProvider";
-
 import ReelsShell from "./components/ReelsShell";
 
 export default function Layout({ children }: LayoutProps<"/reels">) {
-  return (
-    <SessionProvider>
-      <Sidebar />
-      <ReelsShell>{children}</ReelsShell>
-    </SessionProvider>
-  );
+  return <ReelsShell>{children}</ReelsShell>;
 }

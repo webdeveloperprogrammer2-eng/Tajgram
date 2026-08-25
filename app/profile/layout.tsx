@@ -1,18 +1,15 @@
 // ============================================================
 //  app/profile/layout.tsx
-//  Ramkai umumi. Sidebar YAKTOST baroi hamai sayt
-//  (components/Sidebar.tsx) - dizayni daruni sahifa dar <ProfileShell>.
+//  Ramkai umumi baroi /profile.
+//
+//  DIQQAT: <Sidebar /> va <SessionProvider> in jo NESTAND!
+//  Onho YAK JOI hastand - dar app/layout.tsx (components/AppFrame.tsx)
+//  va ba HAMAI sayt kor mekunand. Agar in jo takror kuni,
+//  DU sidebar va DU so-rovi profil paydo meshavad.
+//  Dizayni daruni sahifa dar <ProfileShell> ast.
 // ============================================================
-import { Sidebar } from "@/components/Sidebar";
-import { SessionProvider } from "@/components/SessionProvider";
-
 import ProfileShell from "./components/ProfileShell";
 
 export default function Layout({ children }: LayoutProps<"/profile">) {
-  return (
-    <SessionProvider>
-      <Sidebar />
-      <ProfileShell>{children}</ProfileShell>
-    </SessionProvider>
-  );
+  return <ProfileShell>{children}</ProfileShell>;
 }

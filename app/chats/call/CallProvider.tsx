@@ -273,7 +273,15 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       typeof navigator === "undefined" ||
       navigator.mediaDevices === undefined
     ) {
-      throw new Error("In browser mikrofon/kameraro dastgiri namekunad.");
+      // Sababi ASOSI: sahifa az rohi HTTP kushoda shudaast.
+      // Browser getUserMedia-ro FAQAT dar https:// yo localhost medihad.
+      // Agar telefonro bo http://192.168.x.x:3000 pay vast kuned,
+      // navigator.mediaDevices tamoman NEST -> zvanok nameshavad.
+      throw new Error(
+        typeof window !== "undefined" && !window.isSecureContext
+          ? "Zvanok faqat dar https:// (yo localhost) kor mekunad. Sahifaro bo https kushoed."
+          : "In browser mikrofon/kameraro dastgiri namekunad."
+      );
     }
 
     const stream = await navigator.mediaDevices.getUserMedia({
@@ -383,18 +391,28 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         chatId: chat.chatId,
       };
 
-      // ADRESI HAMSUHBAT — in jo zvanok bestar gum meshud.
-      // Backend dar /Chat/get-chats gohe ba joyi hamsuhbat ID-i
-      // KHUDI moro medihad. On vaqt signal "ba khudam" meraft,
-      // signaling onro hamchun "sadoi khudam" mepartoft va ba
-      // hamsuhbat HECH CHIZ namerasid (payomho kor mekardand,
-      // chunki onho az rohi backend meravand, na az signaling).
-      // Hozir inro ochiq mego-em, na ki khomush mepartoem.
+
+      // ------------------------------------------------------------
+      //  ADRESI HAMSUHBAT - in jo zvanok bestar gum meshud.
+      //  Du hol:
+      //   1) Backend dar /Chat/get-chats gohe ba joyi hamsuhbat
+      //      ID-i KHUDI moro medihad.
+      //   2) Har du taraf BE voridshavi kor mekunand -> ba har du
+      //      akkaunti KHIZMATI doda meshavad, yane yak GUID.
+      //  Dar har du hol signal "ba khudam" meraft va signaling onro
+      //  hamchun "sadoi khudam" mepartoft: ba hamsuhbat HECH CHIZ
+      //  namerasid (payomho kor mekardand - onho az rohi backend
+      //  meravand, na az signaling). Peshtar korbar 40 soniya
+      //  "Zang mezanad..."-ro medid. Hozir fori va OSHKORO mego-em.
+      // ------------------------------------------------------------
       if (target.userId.trim() === "" || sameId(target.userId, me.userId)) {
         setPeer(target);
         peerRef.current = null;
         setMedia(kind);
-        setNote("Adresi hamsuhbat yofta nashud. Sahifaro nav kuned.");
+        setNote(
+          "Adresi hamsuhbat yofta nashud yo har du bo YAK akkaunt " +
+            "daromadaed. Bo akkaunti KHUDATON daroed (/Auth/login)."
+        );
         setPhaseSafe("ended");
 
         endTimer.current = setTimeout(() => {
@@ -463,7 +481,9 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       finish(
         err instanceof Error && err.name === "NotAllowedError"
           ? "Ijozati mikrofon/kamera doda nashud."
-          : "Mikrofon yo kamera kushoda nashud."
+          : err instanceof Error && err.message !== ""
+            ? err.message
+            : "Mikrofon yo kamera kushoda nashud."
       );
     }
   }, [buildPeerConnection, emit, finish, openDevices, setPhaseSafe]);
@@ -644,7 +664,9 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
           finish(
             err instanceof Error && err.name === "NotAllowedError"
               ? "Ijozati mikrofon/kamera doda nashud."
-              : "Mikrofon yo kamera kushoda nashud."
+              : err instanceof Error && err.message !== ""
+                ? err.message
+                : "Mikrofon yo kamera kushoda nashud."
           );
         }
         return;
