@@ -32,12 +32,9 @@ import {
   type MyProfile,
 } from "./api";
 import { getToken, isTokenExpired, removeToken } from "./token";
-import { onThemeChange } from "@/components/appTheme";
+import { onThemeChange, readTheme, toggleAppTheme } from "@/components/appTheme";
 
 export type Theme = "dark" | "light";
-
-// Ayni kalidi Auth va profile - naql dar hamai sayt yakkhela
-const THEME_KEY = "tajgram_theme";
 
 export type Status = "loading" | "guest" | "ready" | "error";
 
@@ -134,33 +131,34 @@ export function ChatsProvider({ children }: { children: React.ReactNode }) {
   }
 
   // ---------- Yakum bor: naql va token ----------
+  // Holatro daruni queueMicrotask meguzorem - to render-i joriro
+  // az nav nakashad (hamon usuli components/Sidebar.tsx).
   useEffect(() => {
-    const saved = localStorage.getItem(THEME_KEY);
-    if (saved === "dark" || saved === "light") setTheme(saved);
+    queueMicrotask(() => {
+      setTheme(readTheme());
 
-    const stored = getToken();
+      const stored = getToken();
 
-    if (stored === null || isTokenExpired(stored)) {
-      if (stored !== null) removeToken();
-      setStatus("guest");
-      return;
-    }
+      if (stored === null || isTokenExpired(stored)) {
+        if (stored !== null) removeToken();
+        setStatus("guest");
+        return;
+      }
 
-    setToken(stored);
-    loadEverything(stored);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+      setToken(stored);
+      void loadEverything(stored);
+    });
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem(THEME_KEY, theme);
-  }, [theme]);
-
-  // Naql az sidebar-i UMUMI ivaz meshavad -> in jo khabar megirem
+  // Naql az sidebar-i UMUMI ivaz meshavad -> in jo khabar megirem.
+  // DIQQAT: in jo ba localStorage HECH CHIZ NAMENAVISEM - navishtan
+  // faqat dar components/appTheme.ts (writeTheme) ast. Peshtar in jo
+  // hangomi bor shudan "dark"-ro menavisht va naqli ravshanro mekusht.
   useEffect(() => onThemeChange(setTheme), []);
 
   const value: ChatsState = {
     theme,
-    toggleTheme: () => setTheme(theme === "dark" ? "light" : "dark"),
+    toggleTheme: () => setTheme(toggleAppTheme()),
 
     status,
     error,

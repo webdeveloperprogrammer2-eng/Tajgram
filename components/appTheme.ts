@@ -1,3 +1,5 @@
+"use client";
+
 // ============================================================
 //  components/appTheme.ts
 //
@@ -12,13 +14,12 @@
 //  Kalidho ayni hamonhoe ki Auth va modulho istifoda mebarand.
 // ============================================================
 
-export type AppTheme = "dark" | "light";
+// Konstantaho dar themeKeys.ts hastand (server ham az hamon jo mekhonad),
+// in jo faqat bar megardonem - to importhoi kuhna nashikanand.
+import { THEME_EVENT, THEME_KEY, TOKEN_KEY, type AppTheme } from "./themeKeys";
 
-export const THEME_KEY = "tajgram_theme";
-export const TOKEN_KEY = "tajgram_token";
-
-// Har bor ki naql ivaz shavad - hamai provider-ho khabar megirand
-export const THEME_EVENT = "tajgram-theme";
+export { THEME_EVENT, THEME_KEY, TOKEN_KEY };
+export type { AppTheme };
 
 export function readTheme(): AppTheme {
   if (typeof localStorage === "undefined") return "dark";
@@ -27,10 +28,18 @@ export function readTheme(): AppTheme {
   return saved === "light" ? "light" : "dark";
 }
 
+// Cookie-ro server dar aввали render mekhonad -> foni safed "chashmak" namezanad
+export function syncThemeCookie(theme: AppTheme) {
+  if (typeof document === "undefined") return;
+
+  document.cookie = `${THEME_KEY}=${theme}; path=/; max-age=31536000; samesite=lax`;
+}
+
 export function writeTheme(theme: AppTheme) {
   if (typeof localStorage === "undefined") return;
 
   localStorage.setItem(THEME_KEY, theme);
+  syncThemeCookie(theme);
   window.dispatchEvent(new CustomEvent<AppTheme>(THEME_EVENT, { detail: theme }));
 }
 

@@ -30,6 +30,7 @@ export type CallMedia = "audio" | "video";
 
 export type SignalKind =
   | "chat" // "ba tu payomi nav firistodam" (REAL TIME)
+  | "typing" // "man hozir navishta istodaam"
   | "ring" // "man ba tu zang mezanam"
   | "accept" // "qabul kardam"
   | "decline" // "rad kardam"
@@ -54,6 +55,7 @@ export type Signal = {
   // offer/answer -> RTCSessionDescriptionInit
   // ice          -> RTCIceCandidateInit
   // chat         -> { kind: "new" | "delete" }
+  // typing       -> { on: boolean }
   payload?: unknown;
 
   at: number;
@@ -71,6 +73,15 @@ export const SIGNALING_URL: string =
 // Roh ba server-i signaling-i khudi mo (app/chats/signal/route.ts)
 const POLL_URL = "/chats/signal";
 
+// GUID-i yak odam az endpoint-hoi gunogun gohe bo harfi kalon,
+// gohe bo harfi khurd meoyad. Agar mo onhoro "hamon khel" muqoisa
+// kunem, signal partofta meshavad va zvanok NAMERASAD.
+// Baroi hamin hamesha ba yak shakl meorem.
+export function sameId(a: string | null | undefined, b: string | null | undefined): boolean {
+  if (!a || !b) return false;
+  return a.trim().toLowerCase() === b.trim().toLowerCase();
+}
+
 // ------------------------------------------------------------
 //  Yak "hub" - hamai transportho-ro yakjo mekunad
 // ------------------------------------------------------------
@@ -82,6 +93,9 @@ export class Signaling {
   private seen = new Set<string>();
   private closed = false;
   private poller: AbortController | null = null;
+  // Raqami oakhirin signali giriftashuda. Server az hamin ba'd
+  // meguzorad -> hech signal gum nameshavad va du bor nameoyad.
+  private cursor: number | null = null;
 
   status: SignalingStatus = "off";
 
@@ -120,16 +134,24 @@ export class Signaling {
       this.poller = controller;
 
       try {
+        const after =
+          this.cursor === null ? "" : `&after=${this.cursor}`;
+
         const response = await fetch(
-          `${POLL_URL}?userId=${encodeURIComponent(this.selfId)}`,
+          `${POLL_URL}?userId=${encodeURIComponent(this.selfId)}${after}`,
           { signal: controller.signal, cache: "no-store" }
         );
 
         if (!response.ok) throw new Error(String(response.status));
 
-        const body = (await response.json()) as { items?: unknown[] };
+        const body = (await response.json()) as {
+          items?: unknown[];
+          cursor?: number;
+        };
         fails = 0;
         this.status = "online";
+
+        if (typeof body.cursor === "number") this.cursor = body.cursor;
 
         for (const item of body.items ?? []) this.receive(item);
       } catch {
@@ -192,8 +214,8 @@ export class Signaling {
     if (typeof signal.kind !== "string" || typeof signal.callId !== "string") {
       return;
     }
-    if (signal.from === this.selfId) return; // sadoi khudam
-    if (signal.to !== this.selfId) return; // ba digar kas
+    if (sameId(signal.from, this.selfId)) return; // sadoi khudam
+    if (!sameId(signal.to, this.selfId)) return; // ba digar kas
 
     // Yak payom du transport -> du bor naoyad
     const key = `${signal.callId}|${signal.kind}|${signal.at}|${JSON.stringify(
@@ -220,22 +242,38 @@ export class Signaling {
     if (this.socket !== null && this.socket.readyState === WebSocket.OPEN) {
       try {
         this.socket.send(JSON.stringify(full));
+        return;
       } catch {
-        // guzoshtan
+        // socket shikast - poyontar az rohi HTTP mefiristem
       }
-      return;
     }
 
-    // Rohi asosi: server-i khudi mo
-    if (SIGNALING_URL === "") {
-      void fetch(POLL_URL, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(full),
-        cache: "no-store",
-      }).catch(() => {
-        // guzoshtan - tarafi digar khudas hangup mekunad
-      });
+    // Rohi asosi: server-i khudi mo.
+    // DIQQAT: peshtar in jo `if (SIGNALING_URL === "")` bud - yane
+    // agar URL-i socket doda shuda bosad, vale socket kusoda NAsuda
+    // bosad (hanuz mepayvandad yo shikast), signal ba HECH KUJO
+    // namerafт va zang gum meshud. Hozir hamesha rohi HTTP hast.
+    void this.post(full);
+  }
+
+  // Firistodan bo takror: shabaka gohe yak so-rovro mepartoyad,
+  // vale zang naboyad gum shavad.
+  private async post(full: Signal, tries = 3) {
+    for (let i = 0; i < tries; i += 1) {
+      try {
+        const response = await fetch(POLL_URL, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(full),
+          cache: "no-store",
+          keepalive: true,
+        });
+        if (response.ok) return;
+      } catch {
+        // poyontar boz mesanjem
+      }
+      if (this.closed) return;
+      await new Promise((resolve) => setTimeout(resolve, 400 * (i + 1)));
     }
   }
 

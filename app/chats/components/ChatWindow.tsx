@@ -59,7 +59,8 @@ export default function ChatWindow({
   onBack: () => void;
 }) {
   const { token, allowedIds, reloadChats } = useChats();
-  const { callUser, phase, notifyChat, onChatEvent } = useCall();
+  const { callUser, phase, notifyChat, onChatEvent, notifyTyping, onTypingEvent } =
+    useCall();
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,14 +71,31 @@ export default function ChatWindow({
   const [sending, setSending] = useState(false);
   const [focused, setFocused] = useState(false);
 
+  // Hamsuhbat dar KADOM suhbat navishta istodaast?
+  // (raqami suhbat nigoh medorem, na "ha/ne" - to hangomi guzashtan
+  //  ba suhbati digar khudash khomush shavad, be effect-i zieda)
+  const [typingChatId, setTypingChatId] = useState<number | null>(null);
+
   const fileInput = useRef<HTMLInputElement>(null);
   const bottom = useRef<HTMLDivElement>(null);
+
+  // ---------- Baroi "pechatayet" ----------
+  // Har harf yak signal nafiristem - faqat vaqte holat ivaz shavad,
+  // va har 2.5 soniya yak bor "hanuz menavisam" mego-em.
+  const typingOn = useRef(false);
+  const typingSentAt = useRef(0);
+  const typingStop = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Agar hamsuhbat naghz qat' kunad - khudaman ba'di 4 soniya khomush mekunem
+  const peerTypingOff = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Bo in odam navishtan mumkin ast yo ne?
   const canWrite = allowedIds.has(chat.userId);
 
   // Zvanok hozir jori ast? -> tugmahoro band mekunem
   const busy = phase !== "idle" && phase !== "ended";
+
+  // "menavisad" faqat baroi HAMIN suhbat namoyon meshavad
+  const peerTyping = typingChatId === chat.chatId;
 
   // ---------- Payomho: bori avval + har 6 soniya ----------
   useEffect(() => {
@@ -103,7 +121,9 @@ export default function ChatWindow({
     }
 
     load(true);
-    const timer = setInterval(() => load(false), 6000);
+    // Rohi asosi signal-i "chat" ast (fori merasad).
+    // In interval faqat baroi ehtiyot - agar signal narasad.
+    const timer = setInterval(() => load(false), 2500);
 
     return () => {
       alive = false;
@@ -135,7 +155,14 @@ export default function ChatWindow({
   useEffect(
     () =>
       onChatEvent((incomingChatId) => {
-        if (incomingChatId === chat.chatId) void refetch();
+        if (incomingChatId === chat.chatId) {
+          // Payom firistod -> yani digar naminavisad
+          setTypingChatId(null);
+          if (peerTypingOff.current !== null) {
+            clearTimeout(peerTypingOff.current);
+          }
+          void refetch();
+        }
         void reloadRef.current();
       }),
     [onChatEvent, refetch, chat.chatId]
@@ -145,6 +172,64 @@ export default function ChatWindow({
   const ping = useCallback(() => {
     notifyChat(chat.userId, chat.chatId);
   }, [notifyChat, chat.userId, chat.chatId]);
+
+  // ------------------------------------------------------------
+  //  "PECHATAYET" — firistodan
+  // ------------------------------------------------------------
+  const stopTyping = useCallback(() => {
+    if (typingStop.current !== null) {
+      clearTimeout(typingStop.current);
+      typingStop.current = null;
+    }
+    if (!typingOn.current) return;
+
+    typingOn.current = false;
+    notifyTyping(chat.userId, chat.chatId, false);
+  }, [notifyTyping, chat.userId, chat.chatId]);
+
+  const beatTyping = useCallback(() => {
+    const now = Date.now();
+
+    // Bori avval yo har 2.5 soniya yak bor
+    if (!typingOn.current || now - typingSentAt.current > 2500) {
+      typingOn.current = true;
+      typingSentAt.current = now;
+      notifyTyping(chat.userId, chat.chatId, true);
+    }
+
+    // Agar 3 soniya harf nazanad - "bas kard"
+    if (typingStop.current !== null) clearTimeout(typingStop.current);
+    typingStop.current = setTimeout(stopTyping, 3000);
+  }, [notifyTyping, stopTyping, chat.userId, chat.chatId]);
+
+  // ------------------------------------------------------------
+  //  "PECHATAYET" — giriftan
+  // ------------------------------------------------------------
+  useEffect(
+    () =>
+      onTypingEvent((incomingChatId, _fromUserId, on) => {
+        if (incomingChatId !== chat.chatId) return;
+
+        setTypingChatId(on ? incomingChatId : null);
+
+        if (peerTypingOff.current !== null) clearTimeout(peerTypingOff.current);
+        if (on) {
+          // Agar "khomush" narasad - khudaman poyon mekunam
+          peerTypingOff.current = setTimeout(() => setTypingChatId(null), 4000);
+        }
+      }),
+    [onTypingEvent, chat.chatId]
+  );
+
+  // Suhbat ivaz shud yo sahifa basta shud - taymerhoro toza mekunem
+  // va ba hamsuhbat mego-em ki digar naminavisam.
+  useEffect(
+    () => () => {
+      stopTyping();
+      if (peerTypingOff.current !== null) clearTimeout(peerTypingOff.current);
+    },
+    [chat.chatId, stopTyping]
+  );
 
   // Har bor ki payomi nav omad - ba poyon meravem
   useEffect(() => {
@@ -230,6 +315,7 @@ export default function ChatWindow({
 
       setText("");
       setFiles([]);
+      stopTyping();
       ping(); // REAL TIME: matn / surat / video
       await reloadChats(); // dar ro-ykhat "payomi okhirin" nav shavad
     } catch (err) {
@@ -259,6 +345,7 @@ export default function ChatWindow({
         if (Array.isArray(list)) setMessages(list);
       }
 
+      stopTyping();
       ping(); // REAL TIME: payomi ovozi
       await reloadChats();
     } catch (err) {
@@ -273,6 +360,7 @@ export default function ChatWindow({
     try {
       await deleteMessage(token, messageId);
       setMessages((old) => old.filter((item) => item.messageId !== messageId));
+      stopTyping();
       ping(); // REAL TIME: payom tark shud
       await reloadChats();
     } catch (err) {
@@ -305,9 +393,26 @@ export default function ChatWindow({
 
         <div className="min-w-0 flex-1">
           <p className="truncate text-[15px] font-semibold">{chat.userName}</p>
-          <p className="truncate text-[12px]" style={{ color: "var(--muted)" }}>
-            {chat.fullName}
-          </p>
+
+          {/* Dar tagi nom: yo nomi purra, yo "menavisad..." */}
+          {peerTyping ? (
+            <p
+              className={`${styles.typing} truncate text-[12px]`}
+              aria-live="polite"
+            >
+              menavisad
+              <span className={styles.typingDot} />
+              <span className={styles.typingDot} />
+              <span className={styles.typingDot} />
+            </p>
+          ) : (
+            <p
+              className="truncate text-[12px]"
+              style={{ color: "var(--muted)" }}
+            >
+              {chat.fullName}
+            </p>
+          )}
         </div>
 
         {/* ---------- ZVANOKHO ---------- */}
@@ -449,9 +554,17 @@ export default function ChatWindow({
               <textarea
                 rows={1}
                 value={text}
-                onChange={(event) => setText(event.target.value)}
+                onChange={(event) => {
+                  setText(event.target.value);
+                  // Ba hamsuhbat: "man navishta istodaam"
+                  if (event.target.value === "") stopTyping();
+                  else beatTyping();
+                }}
                 onFocus={() => setFocused(true)}
-                onBlur={() => setFocused(false)}
+                onBlur={() => {
+                  setFocused(false);
+                  stopTyping();
+                }}
                 onPaste={(event) => {
                   // Surat az buferi khotira (Ctrl+V)
                   const pasted = Array.from(event.clipboardData.files);

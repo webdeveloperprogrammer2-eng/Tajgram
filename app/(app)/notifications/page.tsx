@@ -55,7 +55,7 @@ export default function NotificationsPage() {
       )}
 
       {!loading && items.length === 0 && (
-        <div className="animate-fade-up flex flex-col items-center gap-3 py-16 text-center text-[#8e8e8e]">
+        <div className="animate-fade-up flex flex-col items-center gap-3 py-16 text-center text-[var(--muted)]">
           <span className="flex h-20 w-20 items-center justify-center rounded-full bg-[linear-gradient(135deg,#fff1f2,#fdf4ff)] text-[#fb7185]">
             <HeartIcon size={40} />
           </span>
@@ -70,7 +70,7 @@ export default function NotificationsPage() {
             <li
               key={item.id}
               style={{ animationDelay: `${Math.min(index, 12) * 45}ms` }}
-              className={`animate-fade-up flex items-center gap-3 rounded-xl px-2 py-2.5 transition-colors hover:bg-[#fafafa] ${
+              className={`animate-fade-up flex items-center gap-3 rounded-xl px-2 py-2.5 transition-colors hover:bg-[var(--panelSoft)] ${
                 item.isRead ? "" : "bg-[#f2f8ff]"
               }`}
             >
@@ -84,7 +84,7 @@ export default function NotificationsPage() {
                 </Link>{" "}
                 {item.text}
                 {item.preview ? ` «${item.preview}»` : ""}{" "}
-                <span className="text-[#8e8e8e]">{shortTimeAgo(item.createdAt)}</span>
+                <span className="text-[var(--muted)]">{shortTimeAgo(item.createdAt)}</span>
               </p>
 
               {item.type === "subscribed" ? (

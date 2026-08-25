@@ -12,6 +12,7 @@ import type {
   UnreadCount,
   User,
   UserProfile,
+  BlockedUser,
 } from "./types";
 
 /**
@@ -26,10 +27,19 @@ export const API_URL = (
   .replace(/\/docs$/i, "");
 
 /**
- * Данные запрашиваем через свой прокси: он сам подставляет Bearer-токен,
- * поэтому в интерфейсе нет ни логина, ни регистрации.
+ * So-rovho az proxy-i khudamon meguzarand.
+ *
+ * DIQQAT: token-i KHUDI KORBAR (hamon "tajgram_token"-e ki
+ * /Auth, /chats va /profile istifoda mebarand) mefiristem.
+ * Bе in, proxy bo akkaunti KHIZMATI (dilovar06) medaromad va
+ * dar sidebar nomi odami DIGAR namoyon meshud.
  */
 const API_BASE = "/api/backend";
+
+function myToken(): string | null {
+  if (typeof localStorage === "undefined") return null;
+  return localStorage.getItem("tajgram_token");
+}
 
 export class ApiError extends Error {
   statusCode: number;
@@ -67,6 +77,10 @@ export async function request<T>(
   options: RequestOptions = {},
 ): Promise<Envelope<T>> {
   const headers: Record<string, string> = { Accept: "application/json" };
+
+  // Token-i khudam - to ma'lumoti MAN oyad, na akkaunti khizmati
+  const bearer = myToken();
+  if (bearer) headers.Authorization = `Bearer ${bearer}`;
 
   let body: BodyInit | undefined;
   if (options.body instanceof FormData) {
@@ -182,6 +196,51 @@ export const api = {
 
   myStories: () => request<Story[]>("/Story/get-my-stories"),
 
+  // POST /Story/AddStories - "momentalniy snimok"
+  // DIQQAT: server nomi maidonro qat'i talab mekunad, vale dar
+  // swagger on aniq nest. Baroi hamin nomhoro yak-yak mesanjem
+  // (hamon rohe ki dar app/profile/api.ts sanjida shudaast).
+  addStory: async (image: File) => {
+    const fields = ["Image", "Images", "File", "file", "imageFile"];
+
+    // Nomi fayl faqat az harfhoi lotini - ba'ze serverho nomi
+    // rusi/tojikiro qabul namekunand.
+    const safe = new File([image], `story-${Date.now()}.jpg`, {
+      type: image.type === "" ? "image/jpeg" : image.type,
+    });
+
+    let last: unknown = null;
+
+    for (const field of fields) {
+      const form = new FormData();
+      form.append(field, safe);
+
+      try {
+        return await request<string>("/Story/AddStories", {
+          method: "POST",
+          body: form,
+        });
+      } catch (cause) {
+        last = cause;
+
+        const text = cause instanceof Error ? cause.message : "";
+        const wrongField =
+          text.includes("Unexpected field") ||
+          text.toLowerCase().includes("unsupported file type");
+
+        // Khatoi digar (masalan 401) - darhol ist mekunem
+        if (!wrongField) throw cause;
+      }
+    }
+
+    throw last;
+  },
+
+  // --- Reels ---
+  // POST /Reels/add-reels -> Video hatmi, Cover ikhtiyori
+  addReel: (form: FormData) =>
+    request<string>("/Reels/add-reels", { method: "POST", body: form }),
+
   // --- Люди ---
   searchUsers: (search?: string, p?: Paged) =>
     request<ProfileUser[]>("/Search/search-users", {
@@ -229,4 +288,45 @@ export const api = {
 
   updateSettings: (patch: SettingsPatch) =>
     request<Settings>("/Settings/update-settings", { method: "PUT", body: patch }),
+
+  // --- Tahrири profil ---
+  // DIQQAT: swagger faqat "about" va "gender"-ro qabul mekunad.
+  // Ivaz kardani fullName/userName dar backend NEST.
+  updateProfile: (patch: { about?: string | null; gender?: 0 | 1 | null }) =>
+    request<UserProfile>("/UserProfile/update-user-profile", {
+      method: "PUT",
+      body: patch,
+    }),
+
+  updateAvatar: (file: File) => {
+    const form = new FormData();
+    form.append("imageFile", file);
+    return request<string>("/UserProfile/update-user-image-profile", {
+      method: "PUT",
+      body: form,
+    });
+  },
+
+  deleteAvatar: () =>
+    request<string>("/UserProfile/delete-user-image-profile", {
+      method: "DELETE",
+    }),
+
+  changePassword: (oldPassword: string, password: string) =>
+    request<string>("/Account/ChangePassword", {
+      method: "PUT",
+      query: {
+        OldPassword: oldPassword,
+        Password: password,
+        ConfirmPassword: password,
+      },
+    }),
+
+  blockedUsers: () => request<BlockedUser[]>("/Settings/get-blocked-users"),
+
+  unblockUser: (userId: string) =>
+    request<string>("/Settings/unblock-user", {
+      method: "DELETE",
+      query: { userId },
+    }),
 };

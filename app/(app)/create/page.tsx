@@ -53,7 +53,7 @@ export default function CreatePage() {
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
-          className="group flex w-full flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-[#dbdbdb] bg-[linear-gradient(135deg,#fafafa,#f7f9ff)] py-12 text-[#8e8e8e] transition-all duration-300 hover:border-[#0095f6] hover:bg-[#f5faff] hover:text-[#0095f6]"
+          className="group flex w-full flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-[var(--line)] bg-[linear-gradient(135deg,var(--panelSoft),#f7f9ff)] py-12 text-[var(--muted)] transition-all duration-300 hover:border-[var(--accentA)] hover:bg-[#f5faff] hover:text-[var(--accentA)]"
         >
           <span className="transition-transform duration-300 group-hover:-translate-y-1 group-hover:scale-110">
             <ImageIcon size={40} />
@@ -85,7 +85,7 @@ export default function CreatePage() {
               <div
                 key={item.url}
                 style={{ animationDelay: `${Math.min(index, 9) * 50}ms` }}
-                className="animate-scale-in aspect-square overflow-hidden rounded-xl bg-[#efefef] transition-transform duration-300 hover:scale-[1.03]"
+                className="animate-scale-in aspect-square overflow-hidden rounded-xl bg-[var(--line)] transition-transform duration-300 hover:scale-[1.03]"
               >
                 {item.file.type.startsWith("video") ? (
                   <video src={item.url} className="h-full w-full object-cover" muted />
@@ -102,7 +102,7 @@ export default function CreatePage() {
           value={title}
           onChange={(event) => setTitle(event.target.value)}
           placeholder="Заголовок (необязательно)"
-          className="w-full rounded-xl border border-[#dbdbdb] px-3 py-2.5 text-[14px] outline-none transition-all duration-200 focus:border-[#0095f6] focus:shadow-[0_0_0_3px_rgba(0,149,246,0.15)]"
+          className="w-full rounded-xl border border-[var(--line)] px-3 py-2.5 text-[14px] outline-none transition-all duration-200 focus:border-[var(--accentA)] focus:shadow-[0_0_0_3px_rgba(0,149,246,0.15)]"
         />
 
         <textarea
@@ -110,7 +110,7 @@ export default function CreatePage() {
           onChange={(event) => setContent(event.target.value)}
           placeholder="Описание"
           rows={4}
-          className="w-full resize-none rounded-xl border border-[#dbdbdb] px-3 py-2.5 text-[14px] outline-none transition-all duration-200 focus:border-[#0095f6] focus:shadow-[0_0_0_3px_rgba(0,149,246,0.15)]"
+          className="w-full resize-none rounded-xl border border-[var(--line)] px-3 py-2.5 text-[14px] outline-none transition-all duration-200 focus:border-[var(--accentA)] focus:shadow-[0_0_0_3px_rgba(0,149,246,0.15)]"
         />
 
         {error && <p className="text-[13px] text-[#ed4956]">{error}</p>}
@@ -118,7 +118,7 @@ export default function CreatePage() {
         <button
           type="submit"
           disabled={busy}
-          className="w-full rounded-xl bg-[#0095f6] py-2.5 text-[14px] font-semibold text-white shadow-[0_8px_20px_-6px_rgba(0,149,246,0.8)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#1877f2] active:scale-[0.98] disabled:opacity-60"
+          className="w-full rounded-xl bg-[var(--accentA)] py-2.5 text-[14px] font-semibold text-white shadow-[0_8px_20px_-6px_rgba(0,149,246,0.8)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#1877f2] active:scale-[0.98] disabled:opacity-60"
         >
           {busy ? "Публикуем..." : "Опубликовать"}
         </button>

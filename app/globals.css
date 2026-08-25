@@ -1,33 +1,86 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #262626;
-  --border: #efefef;
-  --muted: #8e8e8e;
-  --brand: #0095f6;
-  --gradient: linear-gradient(45deg, #f9ce34, #ee2a7b 45%, #6228d7);
+  /* ============================================================
+     PALITRAI YAGONA BAROI TAMOMI SAYT
+     Yak joi hamai rangho. Har bakhsh (/, /chats, /profile,
+     /reels, /search, /Auth) AZ HAMIN mekhonad - digar
+     har sahifa foni khudashro nadorad.
+     ============================================================ */
+  --bg: #ffffff;
+  --panel: #f7f7f8;
+  --panelSoft: #fbfbfc;
+  --fg: #101014;
+  --muted: #74747c;
+  --line: rgba(16, 16, 20, 0.09);
+  --lineStrong: rgba(16, 16, 20, 0.18);
+  --accentA: #ff2e74;
+  --accentB: #7a2bff;
+  --signal: #e01e5a;
+  --invBg: #101014;
+  --invFg: #ffffff;
+  --glass: rgba(255, 255, 255, 0.78);
+  --shadow: 0 18px 45px -20px rgba(16, 16, 20, 0.35);
+  --shadowSoft: 0 8px 24px -14px rgba(16, 16, 20, 0.28);
 
-  /* Sidebar-i UMUMI (components/Sidebar.tsx) - naqli ravshan */
-  --sb-bg: #ffffff;
-  --sb-line: #efefef;
-  --sb-fg: #262626;
-  --sb-hover: #f5f5f5;
-  --sb-accent: #0095f6;
-  --sb-activeBg: linear-gradient(90deg, #e8f2fd, #f7fbff);
+  /* Nomhoi kuhna - ba hamon rangho ishora mekunand */
+  --background: var(--bg);
+  --foreground: var(--fg);
+  --border: var(--line);
+  --brand: var(--accentA);
+  --gradient: linear-gradient(115deg, var(--accentA), var(--accentB));
+
+  /* Sidebar-i umumi */
+  --sb-bg: var(--bg);
+  --sb-line: var(--line);
+  --sb-fg: var(--fg);
+  --sb-hover: var(--panel);
+  --sb-accent: var(--accentA);
+  --sb-activeBg: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--accentA) 12%, transparent),
+    transparent
+  );
 }
 
-/* Modulho naqlro dar <html> menavisand -> sidebar hamon rangro megirad */
-html[data-chats-theme="dark"],
-html[data-profile-theme="dark"],
-html[data-reels-theme="dark"] {
-  --sb-bg: #000000;
-  --sb-line: rgba(255, 255, 255, 0.12);
-  --sb-fg: #f4f4f6;
-  --sb-hover: #15151a;
-  --sb-accent: #ff2e74;
-  --sb-activeBg: linear-gradient(90deg, rgba(255, 46, 116, 0.16), transparent);
+/* ---------- NAQLI TORIK - yak jo baroi HAMAI sayt ---------- */
+html[data-theme="dark"] {
+  --bg: #000000;
+  --panel: #15151a;
+  --panelSoft: #0e0e12;
+  --fg: #f4f4f6;
+  --muted: #8b8b93;
+  --line: rgba(255, 255, 255, 0.10);
+  --lineStrong: rgba(255, 255, 255, 0.22);
+  --signal: #ff2e74;
+  --invBg: #f4f4f6;
+  --invFg: #0a0a0c;
+  --glass: rgba(10, 10, 12, 0.72);
+  --shadow: 0 18px 45px -18px rgba(0, 0, 0, 0.9);
+  --shadowSoft: 0 8px 24px -12px rgba(0, 0, 0, 0.85);
 }
+
+/* ---------- NAQLI SISTEMA ----------
+   Agar korbar khudash intikhob nakarda boshad (data-theme="light"
+   naguzoshta boshad), naqli sistemai amaliyotro megirem. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+  --bg: #000000;
+  --panel: #15151a;
+  --panelSoft: #0e0e12;
+  --fg: #f4f4f6;
+  --muted: #8b8b93;
+  --line: rgba(255, 255, 255, 0.10);
+  --lineStrong: rgba(255, 255, 255, 0.22);
+  --signal: #ff2e74;
+  --invBg: #f4f4f6;
+  --invFg: #0a0a0c;
+  --glass: rgba(10, 10, 12, 0.72);
+  --shadow: 0 18px 45px -18px rgba(0, 0, 0, 0.9);
+  --shadowSoft: 0 8px 24px -12px rgba(0, 0, 0, 0.85);
+  }
+}
+
 
 @theme inline {
   --color-background: var(--background);
@@ -46,6 +99,83 @@ html[data-reels-theme="dark"] {
   --animate-menu-in: menu-in 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-ring-spin: ring-spin 6s linear infinite;
   --animate-draw: draw 0.9s cubic-bezier(0.65, 0, 0.35, 1) both;
+
+  /* Profil: fon-i "aurora", nur-i tugma, shinokhtan */
+  --animate-aurora: aurora-drift 18s ease-in-out infinite alternate;
+  --animate-aurora-slow: aurora-drift 26s ease-in-out infinite alternate-reverse;
+  --animate-shine: shine 2.6s ease-in-out infinite;
+  --animate-float: float 7s ease-in-out infinite;
+  --animate-halo: halo 3.2s ease-in-out infinite;
+  --animate-slide-down: slide-down 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-sheet-up: sheet-up 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Oynai koment: dar telefon az poyon, dar kompyuter - "pop" */
+@keyframes sheet-up {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Doghhoi rangin ki dar poshti profil ohista shino mekunand */
+@keyframes aurora-drift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(6%, -8%, 0) scale(1.18);
+  }
+  100% {
+    transform: translate3d(-7%, 5%, 0) scale(1.06);
+  }
+}
+
+@keyframes shine {
+  0%,
+  55% {
+    transform: translateX(-140%) skewX(-18deg);
+  }
+  100% {
+    transform: translateX(240%) skewX(-18deg);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+@keyframes halo {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 @keyframes fade-up {
@@ -178,9 +308,34 @@ html {
 
 /* Мерцающая заглушка вместо серого прямоугольника. */
 .skeleton {
-  background-image: linear-gradient(90deg, #f0f0f0 25%, #f8f8f8 37%, #f0f0f0 63%);
+  background-image: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--fg) 6%, transparent) 25%,
+    color-mix(in srgb, var(--fg) 12%, transparent) 37%,
+    color-mix(in srgb, var(--fg) 6%, transparent) 63%
+  );
   background-size: 200% 100%;
   animation: var(--animate-shimmer);
+}
+
+/* Matni gradienti - raqamhoi omor va nomi profil */
+.text-gradient {
+  background: linear-gradient(115deg, var(--accentA), var(--accentB) 70%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Halqai gardishkunanda gird-i avatar */
+.ring-conic {
+  background: conic-gradient(
+    from var(--ring-angle, 0deg),
+    var(--accentA),
+    #ffb84d,
+    var(--accentB),
+    #29d0ff,
+    var(--accentA)
+  );
 }
 
 /* Плавное появление любого экрана при переходе по роуту. */

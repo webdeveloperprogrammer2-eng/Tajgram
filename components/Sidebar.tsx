@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Avatar } from "./Avatar";
+import CreateMenu from "./CreateMenu";
 import { logoutEverywhere, readTheme, toggleAppTheme, type AppTheme } from "./appTheme";
 import { useSession } from "./SessionProvider";
 import {
@@ -33,6 +34,8 @@ export function Sidebar() {
   const pathname = usePathname();
   const { me, unread } = useSession();
   const [menuOpen, setMenuOpen] = useState(false);
+  // Oynai "Chizi nav" (Post / Reel / Moment) - az tugmai Create
+  const [createOpen, setCreateOpen] = useState(false);
   const [theme, setTheme] = useState<AppTheme>("dark");
 
   // Naqli joriro faqat dar browser mekhonem
@@ -110,8 +113,11 @@ export function Sidebar() {
     },
   ];
 
-  const isActive = (href: string) =>
-    href === "/" ? pathname === "/" : pathname.startsWith(href);
+  const isActive = (href: string) => {
+    // "Create" sahifai alohida nadorad -> hech goh active nest
+    if (href === "/create") return false;
+    return href === "/" ? pathname === "/" : pathname.startsWith(href);
+  };
 
   return (
     <>
@@ -127,6 +133,8 @@ export function Sidebar() {
           {activity > 0 && <Dot />}
         </Link>
       </header>
+
+      <CreateMenu open={createOpen} onClose={() => setCreateOpen(false)} />
 
       {/* Боковая панель */}
       <nav className="fixed left-0 top-0 z-30 hidden h-dvh w-[245px] flex-col border-r border-[var(--sb-line)] bg-[var(--sb-bg)] px-3 pb-5 pt-[25px] md:flex">
@@ -146,9 +154,12 @@ export function Sidebar() {
                 {active && (
                   <span className="animate-scale-in absolute -left-3 top-1/2 h-7 w-[3px] -translate-y-1/2 rounded-r-full bg-[var(--sb-accent)]" />
                 )}
-                <Link
+                {/* "Create" ba sahifa NAMEBARAD - oynai intikhobro
+                    mekushoyad (Post / Reel / Moment) */}
+                <Item
                   href={item.href}
-                  className={`group flex items-center gap-4 rounded-xl px-3 py-[11px] transition-all duration-200 active:scale-[0.98] ${
+                  onCreate={() => setCreateOpen(true)}
+                  className={`group flex w-full items-center gap-4 rounded-xl px-3 py-[11px] text-left transition-all duration-200 active:scale-[0.98] ${
                     active
                       ? "bg-[var(--sb-activeBg)] text-[var(--sb-accent)] shadow-[inset_0_0_0_1px_rgba(0,149,246,0.12)]"
                       : "text-[var(--sb-fg)] hover:bg-[var(--sb-hover)]"
@@ -169,7 +180,7 @@ export function Sidebar() {
                   >
                     {item.label}
                   </span>
-                </Link>
+                </Item>
               </li>
             );
           })}
@@ -179,7 +190,7 @@ export function Sidebar() {
               type="button"
               onClick={() => setMenuOpen((open) => !open)}
               aria-expanded={menuOpen}
-              className="group flex w-full items-center gap-4 rounded-xl px-3 py-[11px] text-[var(--sb-fg)] transition-all duration-200 hover:bg-[#f5f5f5] active:scale-[0.98]"
+              className="group flex w-full items-center gap-4 rounded-xl px-3 py-[11px] text-[var(--sb-fg)] transition-all duration-200 hover:bg-[var(--panel)] active:scale-[0.98]"
             >
               <span className="flex h-6 w-6 items-center justify-center transition-transform duration-300 group-hover:scale-110">
                 <MoreIcon />
@@ -295,6 +306,33 @@ export function Logo() {
       <span className="font-logo text-[28px] leading-none text-[var(--sb-fg)] transition-colors duration-300 group-hover:text-[#ee2a7b]">
         Tajgram
       </span>
+    </Link>
+  );
+}
+
+// "Create" tugma ast (oyna mekushoyad), boqi hama Link-and.
+function Item({
+  href,
+  onCreate,
+  className,
+  children,
+}: {
+  href: string;
+  onCreate: () => void;
+  className: string;
+  children: React.ReactNode;
+}) {
+  if (href === "/create") {
+    return (
+      <button type="button" onClick={onCreate} className={className}>
+        {children}
+      </button>
+    );
+  }
+
+  return (
+    <Link href={href} className={className}>
+      {children}
     </Link>
   );
 }

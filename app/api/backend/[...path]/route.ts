@@ -75,11 +75,25 @@ async function proxy(
     });
   };
 
+  // Agar browser token-i KHUDI korbarro firistad - hamonro meguzronem.
+  // Faqat agar token naboshad, ba akkaunti khizmati mefaroem.
+  const fromUser = request.headers.get("authorization");
+  const userBearer =
+    fromUser && fromUser.toLowerCase().startsWith("bearer ")
+      ? fromUser.slice(7).trim()
+      : null;
+
   let response: Response;
   try {
-    response = await send(await token());
-    // Токен мог истечь, пока процесс жил — логинимся заново один раз.
-    if (response.status === 401) response = await send(await token(true));
+    response = await send(userBearer ?? (await token()));
+
+    // Token guzashtaast:
+    //   - agar az korbar bud -> 401-ro hamon tavr bar megardonem
+    //     (bigzor sahifa ba /Auth/login firistad)
+    //   - agar akkaunti khizmati bud -> yak bor az nav medaroem
+    if (response.status === 401 && userBearer === null) {
+      response = await send(await token(true));
+    }
   } catch {
     return Response.json(
       { data: null, errors: ["Бэкенд недоступен"], statusCode: 502 },

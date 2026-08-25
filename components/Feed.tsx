@@ -147,10 +147,10 @@ export function Feed() {
       ) : (
         <section className="animate-fade-up flex flex-col items-center gap-2 py-10 text-center">
           <CheckCircleIcon size={96} />
-          <h2 className="mt-2 text-[16px] font-medium text-[#262626]">
+          <h2 className="mt-2 text-[16px] font-medium text-[var(--fg)]">
             You&apos;re all caught up
           </h2>
-          <p className="text-[13px] text-[#8e8e8e]">
+          <p className="text-[13px] text-[var(--muted)]">
             You&apos;ve seen all new posts from the past 3 days.
           </p>
           {!followingDone && (
@@ -158,7 +158,7 @@ export function Feed() {
               type="button"
               onClick={loadMoreFollowing}
               disabled={loadingMore}
-              className="mt-1 rounded-full px-4 py-1.5 text-[13px] font-semibold text-[#0095f6] transition-all duration-200 hover:bg-[#eaf3fc] active:scale-95 disabled:opacity-60"
+              className="mt-1 rounded-full px-4 py-1.5 text-[13px] font-semibold text-[var(--accentA)] transition-all duration-200 hover:bg-[#eaf3fc] active:scale-95 disabled:opacity-60"
             >
               {loadingMore ? "Loading..." : "View older posts"}
             </button>
@@ -168,9 +168,9 @@ export function Feed() {
 
       {suggested.length > 0 && (
         <section>
-          <h2 className="animate-fade-in mb-3 flex items-center gap-2 text-[16px] font-semibold text-[#262626]">
+          <h2 className="animate-fade-in mb-3 flex items-center gap-2 text-[16px] font-semibold text-[var(--fg)]">
             Suggested Posts
-            <span className="h-px flex-1 bg-[linear-gradient(90deg,#efefef,transparent)]" />
+            <span className="h-px flex-1 bg-[linear-gradient(90deg,var(--line),transparent)]" />
           </h2>
           {suggested.map((post, index) => (
             <PostCard key={post.postId} post={post} index={index} showFollow />
@@ -181,8 +181,8 @@ export function Feed() {
       <div ref={sentinel} className="h-10" />
 
       {loadingMore && (
-        <p className="animate-fade-in flex items-center justify-center gap-2 pb-8 text-center text-[13px] text-[#8e8e8e]">
-          <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#dbdbdb] border-t-[#0095f6]" />
+        <p className="animate-fade-in flex items-center justify-center gap-2 pb-8 text-center text-[13px] text-[var(--muted)]">
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--line)] border-t-[var(--accentA)]" />
           Loading...
         </p>
       )}
@@ -192,18 +192,18 @@ export function Feed() {
 
 function EmptyFeed() {
   return (
-    <section className="animate-fade-up flex flex-col items-center gap-3 py-16 text-center text-[#8e8e8e]">
+    <section className="animate-fade-up flex flex-col items-center gap-3 py-16 text-center text-[var(--muted)]">
       <span className="flex h-20 w-20 items-center justify-center rounded-full bg-[linear-gradient(135deg,#fdf2f8,#eef2ff)] text-[#c084fc]">
         <ImageIcon size={40} />
       </span>
-      <h2 className="text-[16px] font-medium text-[#262626]">No posts yet</h2>
+      <h2 className="text-[16px] font-medium text-[var(--fg)]">No posts yet</h2>
       <p className="max-w-[320px] text-[13px]">
         Nothing has been published to this backend yet. Add the first post or follow
         someone from the suggestions.
       </p>
       <Link
         href="/create"
-        className="mt-1 rounded-xl bg-[#0095f6] px-5 py-2.5 text-[14px] font-semibold text-white shadow-[0_8px_20px_-6px_rgba(0,149,246,0.8)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#1877f2] active:scale-95"
+        className="mt-1 rounded-xl bg-[var(--accentA)] px-5 py-2.5 text-[14px] font-semibold text-white shadow-[0_8px_20px_-6px_rgba(0,149,246,0.8)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#1877f2] active:scale-95"
       >
         Create post
       </Link>
@@ -215,7 +215,7 @@ function PostSkeleton({ index = 0 }: { index?: number }) {
   return (
     <div
       style={{ animationDelay: `${index * 120}ms` }}
-      className="animate-fade-up mb-4 rounded-2xl border border-[#efefef] p-3"
+      className="animate-fade-up mb-4 rounded-2xl border border-[var(--line)] p-3"
     >
       <div className="flex items-center gap-3 pb-3">
         <div className="skeleton h-8 w-8 rounded-full" />

@@ -30,7 +30,7 @@ export function PostMedia({
   if (!url || broken) {
     return (
       <div
-        className={`flex h-full w-full flex-col items-center justify-center gap-2 bg-[linear-gradient(135deg,#fbfbfb,#f2f2f2)] text-[#c7c7c7] ${className}`}
+        className={`flex h-full w-full flex-col items-center justify-center gap-2 bg-[linear-gradient(135deg,#fbfbfb,var(--panel))] text-[#c7c7c7] ${className}`}
       >
         <ImageIcon size={40} className="animate-fade-in" />
         <span className="text-[11px] text-[#a8a8a8]">Media unavailable</span>
@@ -77,7 +77,7 @@ export function PostMedia({
             playing ? "pointer-events-none opacity-0" : "opacity-100"
           }`}
         >
-          <span className="flex h-[64px] w-[64px] items-center justify-center rounded-full bg-white/85 pl-1 text-[#262626] shadow-lg backdrop-blur-sm transition-transform duration-300 hover:scale-110 active:scale-95">
+          <span className="flex h-[64px] w-[64px] items-center justify-center rounded-full bg-[var(--bg)]/85 pl-1 text-[var(--fg)] shadow-lg backdrop-blur-sm transition-transform duration-300 hover:scale-110 active:scale-95">
             <PlayIcon size={26} />
           </span>
         </button>

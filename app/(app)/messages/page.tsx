@@ -48,7 +48,7 @@ export default function MessagesPage() {
       )}
 
       {!loading && chats.length === 0 && (
-        <div className="animate-fade-up flex flex-col items-center gap-3 py-16 text-center text-[#8e8e8e]">
+        <div className="animate-fade-up flex flex-col items-center gap-3 py-16 text-center text-[var(--muted)]">
           <span className="flex h-20 w-20 items-center justify-center rounded-full bg-[linear-gradient(135deg,#eef2ff,#fdf2f8)] text-[#818cf8]">
             <MessageIcon size={40} />
           </span>
@@ -61,16 +61,16 @@ export default function MessagesPage() {
           <li
             key={chat.chatId}
             style={{ animationDelay: `${Math.min(index, 10) * 50}ms` }}
-            className="animate-fade-up flex cursor-pointer items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-[#fafafa]"
+            className="animate-fade-up flex cursor-pointer items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-[var(--panelSoft)]"
           >
             <Avatar src={chat.userImage} name={chat.fullName} size={56} />
             <div className="min-w-0 flex-1 leading-tight">
               <div className="truncate text-[14px] font-semibold">{chat.userName}</div>
-              <div className="truncate text-[14px] text-[#8e8e8e]">
+              <div className="truncate text-[14px] text-[var(--muted)]">
                 {chat.lastMessage ?? "Нет сообщений"}
               </div>
             </div>
-            <span className="shrink-0 text-[12px] text-[#8e8e8e]">
+            <span className="shrink-0 text-[12px] text-[var(--muted)]">
               {shortTimeAgo(chat.lastMessageDate ?? chat.createdAt)}
             </span>
           </li>

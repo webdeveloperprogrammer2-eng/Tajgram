@@ -12,43 +12,7 @@
   transition: background-color 0.25s ease, color 0.25s ease;
 }
 
-/* ---------- NAQLI TORIK ---------- */
-.shell[data-theme="dark"] {
-  --bg: #000000;
-  --panel: #15151a;
-  --panelSoft: #0e0e12;
-  --fg: #f4f4f6;
-  --muted: #8b8b93;
-  --line: rgba(255, 255, 255, 0.10);
-  --lineStrong: rgba(255, 255, 255, 0.22);
-  --accentA: #ff2e74;
-  --accentB: #7a2bff;
-  --signal: #ff2e74;
-  --invBg: #f4f4f6;
-  --invFg: #0a0a0c;
-  --shadow: 0 18px 45px -18px rgba(0, 0, 0, 0.9);
-  --shadowSoft: 0 8px 24px -12px rgba(0, 0, 0, 0.85);
-  --glass: rgba(10, 10, 12, 0.72);
-}
 
-/* ---------- NAQLI RAVSHAN ---------- */
-.shell[data-theme="light"] {
-  --bg: #ffffff;
-  --panel: #f4f4f6;
-  --panelSoft: #fafafa;
-  --fg: #101014;
-  --muted: #74747c;
-  --line: rgba(16, 16, 20, 0.09);
-  --lineStrong: rgba(16, 16, 20, 0.18);
-  --accentA: #ff2e74;
-  --accentB: #7a2bff;
-  --signal: #e01e5a;
-  --invBg: #101014;
-  --invFg: #ffffff;
-  --shadow: 0 18px 45px -20px rgba(16, 16, 20, 0.35);
-  --shadowSoft: 0 8px 24px -14px rgba(16, 16, 20, 0.28);
-  --glass: rgba(255, 255, 255, 0.78);
-}
 
 /* ---------- Gradient (2 rang) ---------- */
 .gradText {
@@ -87,61 +51,6 @@
   border-radius: 50%;
   opacity: 0.10;
   background: radial-gradient(circle at center, var(--accentA) 0%, transparent 68%);
-}
-
-/* ---------- Sidebar (ayni /profile) ---------- */
-.sidebar {
-  background: var(--bg);
-  border-right: 1px solid var(--line);
-}
-
-.navItem {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  width: 100%;
-  padding: 0.7rem 0.75rem;
-  border-radius: 14px;
-  color: var(--fg);
-  transition: background-color 0.18s ease, transform 0.18s ease;
-}
-.navItem:hover {
-  background: var(--panel);
-}
-.navItem:active {
-  transform: scale(0.97);
-}
-
-.navItemActive {
-  font-weight: 700;
-  background: var(--panel);
-}
-.navItemActive::before {
-  content: "";
-  position: absolute;
-  left: -0.6rem;
-  top: 50%;
-  height: 22px;
-  width: 3px;
-  border-radius: 999px;
-  transform: translateY(-50%);
-  background: linear-gradient(180deg, var(--accentA), var(--accentB));
-}
-
-.navItemSoon {
-  opacity: 0.45;
-  cursor: default;
-}
-.navItemSoon:hover {
-  background: transparent;
-}
-
-.topBar {
-  background: var(--glass);
-  backdrop-filter: blur(18px) saturate(140%);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
-  border-bottom: 1px solid var(--line);
 }
 
 /* ---------- Karta ---------- */
