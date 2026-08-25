@@ -120,7 +120,7 @@ export function ChatsProvider({ children }: { children: React.ReactNode }) {
 
   // Faqat ro-ykhati chatho (ba'di firistodani payom yo har 8 soniya)
   async function reloadChats() {
-    if (token === "") return;
+    if (status === "guest") return;
 
     try {
       const list = await getChats(token);
@@ -137,16 +137,17 @@ export function ChatsProvider({ children }: { children: React.ReactNode }) {
     queueMicrotask(() => {
       setTheme(readTheme());
 
+    // Token-i KHUDI korbar. Agar naboshad yo guzashta bosad -
+    // "guest" NAMESAVEM: proxy khudash bo akkaunti khizmati medarod,
+    // aynan hamon tavr ki lentai asosi (/api/backend) kor mekunad.
+    // "Avval daroed" faqat on vaqt paydo mesavad, ki server-i haqiqi
+    // 401 dihad (poyontar, dar catch).
       const stored = getToken();
+      const mine = stored !== null && !isTokenExpired(stored) ? stored : "";
+      if (stored !== null && mine === "") removeToken();
 
-      if (stored === null || isTokenExpired(stored)) {
-        if (stored !== null) removeToken();
-        setStatus("guest");
-        return;
-      }
-
-      setToken(stored);
-      void loadEverything(stored);
+      setToken(mine);
+      void loadEverything(mine);
     });
   }, []);
 

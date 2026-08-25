@@ -1,16 +1,14 @@
 // ============================================================
 //  app/reels/proxy/[...path]/route.ts
 //
-//  CHARO IN LOZIM AST?
-//  Backend sarlavhai "Access-Control-Allow-Origin" NAMEFIRISTAD.
-//  Baroi hamin browser so-rovhoi mustaqimro band mekunad (CORS).
+//  browser -> /reels/proxy/Reels/like-reels?reelsId=1
+//          -> https://instagram-back-qibs.onrender.com/Reels/like-reels?reelsId=1
 //
-//  HALL: so-rovro na az browser, balki az SERVER-i khudamon
-//  mefiristem. Az server ba server CORS umuman nest.
-//
-//  browser -> /reels/proxy/Reels/get-reels
-//          -> server-i mo
-//          -> https://instagram-back-qibs.onrender.com/...
+//  Hamai mantiq dar lib/backendProxy.ts ast (CORS + token).
+//  MUHIM: agar browser token-i khudi korbarro nafiristad,
+//  proxy bo akkaunti KHIZMATI medarod - AYNAN hamon tavr ki
+//  /api/backend (lentai asosi) kor mekunad. Be in, /reels
+//  meguft "Avval daroed", vale lenta kor mekard.
 //
 //  DIQQAT: SURAT va VIDEO az in jo NAMEGUZARAND.
 //  <img src> va <video src> ba CORS ehtiyoj nadorand,
@@ -18,48 +16,14 @@
 // ============================================================
 import type { NextRequest } from "next/server";
 
-const BACKEND = "https://instagram-back-qibs.onrender.com";
+import { forwardToBackend } from "@/lib/backendProxy";
 
 async function forward(
   request: NextRequest,
   context: RouteContext<"/reels/proxy/[...path]">
 ) {
   const { path } = await context.params;
-
-  // /reels/proxy/Reels/like-reels?reelsId=1 -> https://backend/Post/like-post?postId=1
-  const target = `${BACKEND}/${path.join("/")}${request.nextUrl.search}`;
-
-  // Faqat sarlavhahoi zarurro meguzaronem
-  const headers = new Headers();
-
-  const auth = request.headers.get("authorization");
-  if (auth) headers.set("authorization", auth);
-
-  const contentType = request.headers.get("content-type");
-  if (contentType) headers.set("content-type", contentType);
-
-  // GET va HEAD body nadorand
-  const hasBody = request.method !== "GET" && request.method !== "HEAD";
-
-  const response = await fetch(target, {
-    method: request.method,
-    headers,
-    // arrayBuffer -> JSON va surat (multipart) har du kor mekunand
-    body: hasBody ? await request.arrayBuffer() : undefined,
-    cache: "no-store",
-  });
-
-  const data = await response.arrayBuffer();
-
-  // Javobi backend-ro hamon tavr bar megardonem
-  return new Response(data, {
-    status: response.status,
-    headers: {
-      "content-type":
-        response.headers.get("content-type") ?? "application/json",
-      "cache-control": "no-store",
-    },
-  });
+  return forwardToBackend(request, path);
 }
 
 export const GET = forward;
