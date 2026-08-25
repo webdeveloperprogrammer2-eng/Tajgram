@@ -128,16 +128,20 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     if (savedTheme === "dark" || savedTheme === "light") setTheme(savedTheme);
 
     // 2) Token
+    // Token-i KHUDI korbar. Agar naboshad yo guzashta bosad -
+    // "guest" NAMESAVEM: proxy khudash bo akkaunti khizmati medarod,
+    // aynan hamon tavr ki lentai asosi (/api/backend) kor mekunad.
+    // "Avval daroed" faqat on vaqt paydo mesavad, ki server-i haqiqi
+    // 401 dihad (poyontar, dar catch).
     const savedToken = getToken();
+    const mine =
+      savedToken !== null && savedToken !== "" && !isTokenExpired(savedToken)
+        ? savedToken
+        : "";
+    if (savedToken !== null && mine === "") removeToken();
 
-    if (savedToken === null || savedToken === "" || isTokenExpired(savedToken)) {
-      if (savedToken !== null) removeToken();
-      setStatus("guest");
-      return;
-    }
-
-    setToken(savedToken);
-    void loadEverything(savedToken);
+    setToken(mine);
+    void loadEverything(mine);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
