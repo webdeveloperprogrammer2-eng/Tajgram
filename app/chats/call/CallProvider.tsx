@@ -375,6 +375,14 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       if (phaseRef.current !== "idle" && phaseRef.current !== "ended") return;
       if (me === null || hub.current === null) return;
 
+      // Zvanoki peshina hanuz dar holati "ended" bud -> taymer-i onro
+      // MEKUSHEM. Be in, ba'di 2.2 soniya hamon taymer zvanoki NAVro
+      // ba "idle" mepartoft -> "zang mezanam, vale zang nameravad".
+      if (endTimer.current !== null) {
+        clearTimeout(endTimer.current);
+        endTimer.current = null;
+      }
+
       const target: CallPeer = {
         userId: chat.userId,
         userName: chat.userName,
@@ -385,24 +393,36 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
 
 
       // ------------------------------------------------------------
-      //  MUHIM: agar MAN va HAMSUHBAT yak GUID doshta boshem, zvanok
-      //  DAR ASL nameshavad: signal ba qutti-i khudi man meaftad va
-      //  daruni signaling.ts hamchun "sadoi khudam" partofta meshavad.
-      //  In hol vaqte pesh meoyad, ki har du browser BE voridshavi
-      //  kor kunand - on vaqt ba har du akkaunti KHIZMATI doda meshavad.
-      //  Peshtar korbar 40 soniya "Zang mezanad..."-ro medid va ba'd
-      //  "Javob nadodand" - sababash malum nabud. Hozir fori mego-em.
+      //  ADRESI HAMSUHBAT - in jo zvanok bestar gum meshud.
+      //  Du hol:
+      //   1) Backend dar /Chat/get-chats gohe ba joyi hamsuhbat
+      //      ID-i KHUDI moro medihad.
+      //   2) Har du taraf BE voridshavi kor mekunand -> ba har du
+      //      akkaunti KHIZMATI doda meshavad, yane yak GUID.
+      //  Dar har du hol signal "ba khudam" meraft va signaling onro
+      //  hamchun "sadoi khudam" mepartoft: ba hamsuhbat HECH CHIZ
+      //  namerasid (payomho kor mekardand - onho az rohi backend
+      //  meravand, na az signaling). Peshtar korbar 40 soniya
+      //  "Zang mezanad..."-ro medid. Hozir fori va OSHKORO mego-em.
       // ------------------------------------------------------------
-      if (sameId(me.userId, target.userId)) {
+      if (target.userId.trim() === "" || sameId(target.userId, me.userId)) {
         setPeer(target);
+        peerRef.current = null;
         setMedia(kind);
-        setPhaseSafe("outgoing");
-        finish(
-          "Shumo va hamsuhbat bo YAK akkaunt daromadaed - zvanok nameshavad. " +
-            "Bo akkaunti KHUDATON daroed (/Auth/login)."
+        setNote(
+          "Adresi hamsuhbat yofta nashud yo har du bo YAK akkaunt " +
+            "daromadaed. Bo akkaunti KHUDATON daroed (/Auth/login)."
         );
+        setPhaseSafe("ended");
+
+        endTimer.current = setTimeout(() => {
+          setPhaseSafe("idle");
+          setPeer(null);
+          setNote("");
+        }, 2600);
         return;
       }
+
       callId.current = newCallId();
       peerRef.current = target;
       mediaRef.current = kind;
@@ -542,6 +562,17 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         // in "band budan" NEST, faqat guzoshtan.
         if (signal.callId === callId.current && phaseRef.current !== "idle") {
           return;
+        }
+
+        // Zvanoki peshina hanuz 2 soniya "ended"-ro nishon medihad.
+        // In "BAND BUDAN" NEST - taymerro mekushem va zangi navro
+        // qabul mekunem (be in, du zvanoki pai ham namerasid).
+        if (phaseRef.current === "ended") {
+          if (endTimer.current !== null) {
+            clearTimeout(endTimer.current);
+            endTimer.current = null;
+          }
+          phaseRef.current = "idle";
         }
 
         if (phaseRef.current !== "idle") {

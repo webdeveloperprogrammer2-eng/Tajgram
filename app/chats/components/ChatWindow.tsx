@@ -40,6 +40,7 @@ import {
   type Message,
 } from "../api";
 import { useCall } from "../call/CallProvider";
+import { sameId } from "../call/signaling";
 import { clockTime, dayLabel } from "../format";
 import { useChats } from "../providers";
 import styles from "../chats.module.css";
@@ -58,7 +59,7 @@ export default function ChatWindow({
   chat: Chat;
   onBack: () => void;
 }) {
-  const { token, allowedIds, reloadChats } = useChats();
+  const { token, allowedIds, reloadChats, me } = useChats();
   const { callUser, phase, notifyChat, onChatEvent, notifyTyping, onTypingEvent } =
     useCall();
 
@@ -88,8 +89,53 @@ export default function ChatWindow({
   // Agar hamsuhbat naghz qat' kunad - khudaman ba'di 4 soniya khomush mekunem
   const peerTypingOff = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // ------------------------------------------------------------
+  //  ADRESI HAMSUHBAT (baroi ZVANOK va signalhoi real-time)
+  //
+  //  MUHIM: `chat.userId` az /Chat/get-chats meoyad va HAMESHA
+  //  durust nest - baroi yak taraf on ID-i KHUDI hamon odamro
+  //  medihad. On vaqt zvanok "ba khudam" meraft, signaling onro
+  //  hamchun sadoi khudam mepartoft va ba hamsuhbat NAMERASID.
+  //  (Payomho kor mekardand, chunki onho az rohi backend
+  //   meravand va har 2.5 soniya az nav khonda meshavand.)
+  //
+  //  Baroi hamin ID-i haqiqiro az KHUDI payomho megirem:
+  //  payome ki `isMine === false` ast - hatman az hamsuhbat ast.
+  // ------------------------------------------------------------
+  const peerId = useMemo(() => {
+    const fromMessages = messages.find(
+      (message) =>
+        !message.isMine &&
+        typeof message.userId === "string" &&
+        message.userId.trim() !== "" &&
+        !sameId(message.userId, me?.userId)
+    );
+    if (fromMessages !== undefined) return fromMessages.userId;
+
+    // Payom hanuz nest: chat.userId faqat on vaqt, ki on MAN nabosam.
+    if (chat.userId.trim() !== "" && !sameId(chat.userId, me?.userId)) {
+      return chat.userId;
+    }
+    return "";
+  }, [messages, chat.userId, me?.userId]);
+
+  // Hamsuhbati "durust" - hamin ba callUser doda meshavad
+  const peerChat = useMemo<Chat>(
+    () => (peerId === "" ? chat : { ...chat, userId: peerId }),
+    [chat, peerId]
+  );
+
   // Bo in odam navishtan mumkin ast yo ne?
-  const canWrite = allowedIds.has(chat.userId);
+  // GUID-ho gohe bo harfi kalon, gohe khurd meoyand -> sanjishi
+  // "has()" hamon khel nodurust mesud. Hozir bo sameId mesanjem.
+  const canWrite = useMemo(
+    () =>
+      allowedIds.has(chat.userId) ||
+      [...allowedIds].some(
+        (id) => sameId(id, chat.userId) || (peerId !== "" && sameId(id, peerId))
+      ),
+    [allowedIds, chat.userId, peerId]
+  );
 
   // Zvanok hozir jori ast? -> tugmahoro band mekunem
   const busy = phase !== "idle" && phase !== "ended";
@@ -170,8 +216,8 @@ export default function ChatWindow({
 
   // Ba hamsuhbat khabar medihem ki chize guzoshtem
   const ping = useCallback(() => {
-    notifyChat(chat.userId, chat.chatId);
-  }, [notifyChat, chat.userId, chat.chatId]);
+    notifyChat(peerId, chat.chatId);
+  }, [notifyChat, peerId, chat.chatId]);
 
   // ------------------------------------------------------------
   //  "PECHATAYET" — firistodan
@@ -184,8 +230,8 @@ export default function ChatWindow({
     if (!typingOn.current) return;
 
     typingOn.current = false;
-    notifyTyping(chat.userId, chat.chatId, false);
-  }, [notifyTyping, chat.userId, chat.chatId]);
+    notifyTyping(peerId, chat.chatId, false);
+  }, [notifyTyping, peerId, chat.chatId]);
 
   const beatTyping = useCallback(() => {
     const now = Date.now();
@@ -194,13 +240,13 @@ export default function ChatWindow({
     if (!typingOn.current || now - typingSentAt.current > 2500) {
       typingOn.current = true;
       typingSentAt.current = now;
-      notifyTyping(chat.userId, chat.chatId, true);
+      notifyTyping(peerId, chat.chatId, true);
     }
 
     // Agar 3 soniya harf nazanad - "bas kard"
     if (typingStop.current !== null) clearTimeout(typingStop.current);
     typingStop.current = setTimeout(stopTyping, 3000);
-  }, [notifyTyping, stopTyping, chat.userId, chat.chatId]);
+  }, [notifyTyping, stopTyping, peerId, chat.chatId]);
 
   // ------------------------------------------------------------
   //  "PECHATAYET" — giriftan
@@ -419,7 +465,7 @@ export default function ChatWindow({
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => callUser(chat, "audio")}
+            onClick={() => callUser(peerChat, "audio")}
             disabled={!canWrite || busy}
             aria-label="Zvanoki sadoi"
             title={canWrite ? "Zvanoki sadoi" : "Bo in korbar zvanok mumkin nest"}
@@ -430,7 +476,7 @@ export default function ChatWindow({
 
           <button
             type="button"
-            onClick={() => callUser(chat, "video")}
+            onClick={() => callUser(peerChat, "video")}
             disabled={!canWrite || busy}
             aria-label="Zvanoki video"
             title={canWrite ? "Zvanoki video" : "Bo in korbar zvanok mumkin nest"}
