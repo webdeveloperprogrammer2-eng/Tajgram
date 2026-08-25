@@ -15,7 +15,6 @@ import {
   CreateIcon,
   HeartIcon,
   HomeIcon,
-  MessageIcon,
   MoreIcon,
   ReelsIcon,
   SearchIcon,
@@ -82,17 +81,13 @@ export function Sidebar() {
       mobile: true,
     },
     {
-      href: "/messages",
-      label: "Messages",
-      render: () => <MessageIcon />,
-      badge: messages,
-      mobile: true,
-    },
-    {
-      // Раздел команды со своим layout и провайдерами.
+      // Razdeli chat: layout va provider-i khudash.
+      // Peshtar yak sahifai "/messages" ham bud - hozir faqat /chats mond.
       href: "/chats",
       label: "Chats",
       render: () => <CommentIcon />,
+      badge: messages,
+      mobile: true,
     },
     {
       href: "/notifications",

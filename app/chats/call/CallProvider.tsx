@@ -367,6 +367,14 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       if (phaseRef.current !== "idle" && phaseRef.current !== "ended") return;
       if (me === null || hub.current === null) return;
 
+      // Zvanoki peshina hanuz dar holati "ended" bud -> taymer-i onro
+      // MEKUSHEM. Be in, ba'di 2.2 soniya hamon taymer zvanoki NAVro
+      // ba "idle" mepartoft -> "zang mezanam, vale zang nameravad".
+      if (endTimer.current !== null) {
+        clearTimeout(endTimer.current);
+        endTimer.current = null;
+      }
+
       const target: CallPeer = {
         userId: chat.userId,
         userName: chat.userName,
@@ -374,6 +382,28 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         image: chat.userImage,
         chatId: chat.chatId,
       };
+
+      // ADRESI HAMSUHBAT — in jo zvanok bestar gum meshud.
+      // Backend dar /Chat/get-chats gohe ba joyi hamsuhbat ID-i
+      // KHUDI moro medihad. On vaqt signal "ba khudam" meraft,
+      // signaling onro hamchun "sadoi khudam" mepartoft va ba
+      // hamsuhbat HECH CHIZ namerasid (payomho kor mekardand,
+      // chunki onho az rohi backend meravand, na az signaling).
+      // Hozir inro ochiq mego-em, na ki khomush mepartoem.
+      if (target.userId.trim() === "" || sameId(target.userId, me.userId)) {
+        setPeer(target);
+        peerRef.current = null;
+        setMedia(kind);
+        setNote("Adresi hamsuhbat yofta nashud. Sahifaro nav kuned.");
+        setPhaseSafe("ended");
+
+        endTimer.current = setTimeout(() => {
+          setPhaseSafe("idle");
+          setPeer(null);
+          setNote("");
+        }, 2600);
+        return;
+      }
 
       callId.current = newCallId();
       peerRef.current = target;
@@ -512,6 +542,17 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         // in "band budan" NEST, faqat guzoshtan.
         if (signal.callId === callId.current && phaseRef.current !== "idle") {
           return;
+        }
+
+        // Zvanoki peshina hanuz 2 soniya "ended"-ro nishon medihad.
+        // In "BAND BUDAN" NEST - taymerro mekushem va zangi navro
+        // qabul mekunem (be in, du zvanoki pai ham namerasid).
+        if (phaseRef.current === "ended") {
+          if (endTimer.current !== null) {
+            clearTimeout(endTimer.current);
+            endTimer.current = null;
+          }
+          phaseRef.current = "idle";
         }
 
         if (phaseRef.current !== "idle") {
