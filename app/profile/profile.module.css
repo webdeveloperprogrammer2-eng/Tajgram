@@ -16,7 +16,6 @@
   transition: background-color 0.25s ease, color 0.25s ease;
 }
 
-<<<<<<< HEAD
 /* ---------- NAQLI TORIK ---------- */
 .shell[data-theme="dark"] {
   --bg: #000000;
@@ -97,11 +96,6 @@
   --shadowSoft: 0 8px 24px -14px rgba(0, 0, 0, 0.1);
   --glass: rgba(255, 255, 255, 0.85);
 }
-=======
-
-
-
->>>>>>> 1bb84642499ef0b980c88e4e287f136d22835c2f
 
 .mono {
   font-family: var(--font-geist-mono), ui-monospace, monospace;
