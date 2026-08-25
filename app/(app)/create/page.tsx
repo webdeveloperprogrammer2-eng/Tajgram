@@ -4,12 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { ImageIcon } from "@/components/icons";
-import { useT } from "@/components/LocaleProvider";
 
 /** Новый пост: POST /Post/add-post (multipart, поле Images обязательно). */
 export default function CreatePage() {
   const router = useRouter();
-  const { t } = useT();
   const inputRef = useRef<HTMLInputElement>(null);
   const [picked, setPicked] = useState<{ file: File; url: string }[]>([]);
   const [title, setTitle] = useState("");
@@ -26,7 +24,7 @@ export default function CreatePage() {
     event.preventDefault();
     if (busy) return;
     if (files.length === 0) {
-      setError(t.pickAtLeastOne);
+      setError("Выберите хотя бы один файл");
       return;
     }
 
@@ -41,7 +39,7 @@ export default function CreatePage() {
       await api.addPost(form);
       router.push("/");
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : t.publishFailed);
+      setError(cause instanceof Error ? cause.message : "Не удалось опубликовать");
     } finally {
       setBusy(false);
     }
@@ -49,19 +47,19 @@ export default function CreatePage() {
 
   return (
     <div className="mx-auto w-full max-w-[600px] px-4 py-6">
-      <h1 className="animate-fade-up mb-5 text-[22px] font-bold">{t.createTitle}</h1>
+      <h1 className="animate-fade-up mb-5 text-[22px] font-bold">Create post</h1>
 
       <form onSubmit={submit} className="space-y-4">
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
-          className="group flex w-full flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-[var(--border)] bg-[linear-gradient(135deg,#fafafa,#f7f9ff)] py-12 text-[var(--muted)] transition-all duration-300 hover:border-[#0095f6] hover:bg-[#f5faff] hover:text-[var(--sb-accent)]"
+          className="group flex w-full flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-[var(--line)] bg-[linear-gradient(135deg,var(--panelSoft),#f7f9ff)] py-12 text-[var(--muted)] transition-all duration-300 hover:border-[var(--accentA)] hover:bg-[#f5faff] hover:text-[var(--accentA)]"
         >
           <span className="transition-transform duration-300 group-hover:-translate-y-1 group-hover:scale-110">
             <ImageIcon size={40} />
           </span>
           <span className="text-[14px]">
-            {files.length ? `${t.picked}: ${files.length}` : t.pickFiles}
+            {files.length ? `Выбрано файлов: ${files.length}` : "Выбрать фото или видео"}
           </span>
         </button>
 
@@ -87,7 +85,7 @@ export default function CreatePage() {
               <div
                 key={item.url}
                 style={{ animationDelay: `${Math.min(index, 9) * 50}ms` }}
-                className="animate-scale-in aspect-square overflow-hidden rounded-xl bg-[var(--hover)] transition-transform duration-300 hover:scale-[1.03]"
+                className="animate-scale-in aspect-square overflow-hidden rounded-xl bg-[var(--line)] transition-transform duration-300 hover:scale-[1.03]"
               >
                 {item.file.type.startsWith("video") ? (
                   <video src={item.url} className="h-full w-full object-cover" muted />
@@ -103,16 +101,16 @@ export default function CreatePage() {
         <input
           value={title}
           onChange={(event) => setTitle(event.target.value)}
-          placeholder={t.captionTitle}
-          className="w-full rounded-xl border border-[var(--border)] px-3 py-2.5 text-[14px] outline-none transition-all duration-200 focus:border-[#0095f6] focus:shadow-[0_0_0_3px_rgba(0,149,246,0.15)]"
+          placeholder="Заголовок (необязательно)"
+          className="w-full rounded-xl border border-[var(--line)] px-3 py-2.5 text-[14px] outline-none transition-all duration-200 focus:border-[var(--accentA)] focus:shadow-[0_0_0_3px_rgba(0,149,246,0.15)]"
         />
 
         <textarea
           value={content}
           onChange={(event) => setContent(event.target.value)}
-          placeholder={t.captionText}
+          placeholder="Описание"
           rows={4}
-          className="w-full resize-none rounded-xl border border-[var(--border)] px-3 py-2.5 text-[14px] outline-none transition-all duration-200 focus:border-[#0095f6] focus:shadow-[0_0_0_3px_rgba(0,149,246,0.15)]"
+          className="w-full resize-none rounded-xl border border-[var(--line)] px-3 py-2.5 text-[14px] outline-none transition-all duration-200 focus:border-[var(--accentA)] focus:shadow-[0_0_0_3px_rgba(0,149,246,0.15)]"
         />
 
         {error && <p className="text-[13px] text-[#ed4956]">{error}</p>}
@@ -120,9 +118,9 @@ export default function CreatePage() {
         <button
           type="submit"
           disabled={busy}
-          className="w-full rounded-xl bg-[var(--sb-accent)] py-2.5 text-[14px] font-semibold text-white shadow-[0_8px_20px_-6px_rgba(0,149,246,0.8)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#1877f2] active:scale-[0.98] disabled:opacity-60"
+          className="w-full rounded-xl bg-[var(--accentA)] py-2.5 text-[14px] font-semibold text-white shadow-[0_8px_20px_-6px_rgba(0,149,246,0.8)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#1877f2] active:scale-[0.98] disabled:opacity-60"
         >
-          {busy ? t.publishing : t.publish}
+          {busy ? "Публикуем..." : "Опубликовать"}
         </button>
       </form>
     </div>

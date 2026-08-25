@@ -177,3 +177,12 @@ export type Settings = {
 };
 
 export type SettingsPatch = Partial<Omit<Settings, "userId" | "blockedCount">>;
+
+export type BlockedUser = {
+  id: number;
+  userId: string;
+  userName: string;
+  fullName: string;
+  image: string | null;
+  blockedAt: string;
+};

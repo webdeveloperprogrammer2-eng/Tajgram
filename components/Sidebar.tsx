@@ -4,13 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Avatar } from "./Avatar";
-import { logoutEverywhere } from "./appTheme";
-import { LANGS } from "./appLang";
-import { useT } from "./LocaleProvider";
+import CreateMenu from "./CreateMenu";
+import { logoutEverywhere, readTheme, toggleAppTheme, type AppTheme } from "./appTheme";
 import { useSession } from "./SessionProvider";
 import {
   BookmarkIcon,
   CameraIcon,
+  CommentIcon,
   CompassIcon,
   CreateIcon,
   HeartIcon,
@@ -33,8 +33,15 @@ type NavItem = {
 export function Sidebar() {
   const pathname = usePathname();
   const { me, unread } = useSession();
-  const { t, lang, setLang, theme, toggleTheme } = useT();
   const [menuOpen, setMenuOpen] = useState(false);
+  // Oynai "Chizi nav" (Post / Reel / Moment) - az tugmai Create
+  const [createOpen, setCreateOpen] = useState(false);
+  const [theme, setTheme] = useState<AppTheme>("dark");
+
+  // Naqli joriro faqat dar browser mekhonem
+  useEffect(() => {
+    queueMicrotask(() => setTheme(readTheme()));
+  }, []);
   const menuRef = useRef<HTMLLIElement>(null);
 
   // Закрываем «More» по клику вне меню.
@@ -53,55 +60,64 @@ export function Sidebar() {
   const items: NavItem[] = [
     {
       href: "/",
-      label: t.navHome,
+      label: "Home",
       render: (active) => <HomeIcon active={active} />,
       mobile: true,
     },
     {
       href: "/search",
-      label: t.navSearch,
+      label: "Search",
       render: () => <SearchIcon />,
       mobile: true,
     },
     {
       href: "/explore",
-      label: t.navExplore,
+      label: "Explore",
       render: () => <CompassIcon />,
     },
     {
       href: "/reels",
-      label: t.navReels,
+      label: "Reels",
       render: () => <ReelsIcon />,
       mobile: true,
     },
     {
-      href: "/chats",
-      label: t.navMessages,
+      href: "/messages",
+      label: "Messages",
       render: () => <MessageIcon />,
       badge: messages,
       mobile: true,
     },
     {
+      // Раздел команды со своим layout и провайдерами.
+      href: "/chats",
+      label: "Chats",
+      render: () => <CommentIcon />,
+    },
+    {
       href: "/notifications",
-      label: t.navNotifications,
+      label: "Notifications",
       render: (active) => <HeartIcon filled={active} />,
       badge: activity,
     },
     {
       href: "/create",
-      label: t.navCreate,
+      label: "Create",
       render: (active) => <CreateIcon active={active} />,
     },
     {
       href: "/profile",
-      label: t.navProfile,
+      label: "Profile",
       render: () => <Avatar src={me?.image} name={me?.fullName ?? me?.userName} size={24} />,
       mobile: true,
     },
   ];
 
-  const isActive = (href: string) =>
-    href === "/" ? pathname === "/" : pathname.startsWith(href);
+  const isActive = (href: string) => {
+    // "Create" sahifai alohida nadorad -> hech goh active nest
+    if (href === "/create") return false;
+    return href === "/" ? pathname === "/" : pathname.startsWith(href);
+  };
 
   return (
     <>
@@ -110,13 +126,15 @@ export function Sidebar() {
         <Logo />
         <Link
           href="/notifications"
-          aria-label={t.navNotifications}
+          aria-label="Notifications"
           className="relative p-2 text-[var(--sb-fg)]"
         >
           <HeartIcon />
           {activity > 0 && <Dot />}
         </Link>
       </header>
+
+      <CreateMenu open={createOpen} onClose={() => setCreateOpen(false)} />
 
       {/* Боковая панель */}
       <nav className="fixed left-0 top-0 z-30 hidden h-dvh w-[245px] flex-col border-r border-[var(--sb-line)] bg-[var(--sb-bg)] px-3 pb-5 pt-[25px] md:flex">
@@ -136,9 +154,12 @@ export function Sidebar() {
                 {active && (
                   <span className="animate-scale-in absolute -left-3 top-1/2 h-7 w-[3px] -translate-y-1/2 rounded-r-full bg-[var(--sb-accent)]" />
                 )}
-                <Link
+                {/* "Create" ba sahifa NAMEBARAD - oynai intikhobro
+                    mekushoyad (Post / Reel / Moment) */}
+                <Item
                   href={item.href}
-                  className={`group flex items-center gap-4 rounded-xl px-3 py-[11px] transition-all duration-200 active:scale-[0.98] ${
+                  onCreate={() => setCreateOpen(true)}
+                  className={`group flex w-full items-center gap-4 rounded-xl px-3 py-[11px] text-left transition-all duration-200 active:scale-[0.98] ${
                     active
                       ? "bg-[var(--sb-activeBg)] text-[var(--sb-accent)] shadow-[inset_0_0_0_1px_rgba(0,149,246,0.12)]"
                       : "text-[var(--sb-fg)] hover:bg-[var(--sb-hover)]"
@@ -159,7 +180,7 @@ export function Sidebar() {
                   >
                     {item.label}
                   </span>
-                </Link>
+                </Item>
               </li>
             );
           })}
@@ -169,64 +190,42 @@ export function Sidebar() {
               type="button"
               onClick={() => setMenuOpen((open) => !open)}
               aria-expanded={menuOpen}
-              className="group flex w-full items-center gap-4 rounded-xl px-3 py-[11px] text-[var(--sb-fg)] transition-all duration-200 hover:bg-[#f5f5f5] active:scale-[0.98]"
+              className="group flex w-full items-center gap-4 rounded-xl px-3 py-[11px] text-[var(--sb-fg)] transition-all duration-200 hover:bg-[var(--panel)] active:scale-[0.98]"
             >
               <span className="flex h-6 w-6 items-center justify-center transition-transform duration-300 group-hover:scale-110">
                 <MoreIcon />
               </span>
-              <span className="text-[15px]">{t.navMore}</span>
+              <span className="text-[15px]">More</span>
             </button>
 
             {menuOpen && (
               <div className="animate-menu-in absolute bottom-[calc(100%+8px)] left-0 w-[266px] origin-bottom-left overflow-hidden rounded-2xl border border-[var(--sb-line)] bg-[var(--sb-bg)] shadow-[0_12px_40px_-8px_rgba(0,0,0,0.22)]">
                 <MenuLink
                   href="/settings"
-                  label={t.navSettings}
+                  label="Settings"
                   icon={<SettingsIcon size={18} />}
                   onSelect={() => setMenuOpen(false)}
                 />
                 <MenuLink
                   href="/saved"
-                  label={t.navSaved}
+                  label="Saved"
                   icon={<BookmarkIcon size={18} />}
                   onSelect={() => setMenuOpen(false)}
                 />
 
                 <button
                   type="button"
-                  onClick={toggleTheme}
+                  onClick={() => {
+                    setTheme(toggleAppTheme());
+                    setMenuOpen(false);
+                  }}
                   className="flex w-full items-center gap-3 px-4 py-3 text-left text-[14px] transition-colors hover:bg-[var(--sb-hover)]"
                 >
                   <span className="flex h-[18px] w-[18px] items-center justify-center text-[13px]">
                     {theme === "dark" ? "☀" : "☽"}
                   </span>
-                  {theme === "dark" ? t.themeLight : t.themeDark}
+                  {theme === "dark" ? "Naqli ravshan" : "Naqli torik"}
                 </button>
-
-                {/* Panel-i zabon: intikhob dar hamai sayt kor mekunad */}
-                <div className="border-t border-[var(--sb-line)] px-4 py-3">
-                  <div className="mb-2 text-[12px] font-semibold uppercase tracking-wide text-[var(--muted)]">
-                    {t.navLanguage}
-                  </div>
-                  <div className="flex gap-1.5">
-                    {LANGS.map((option) => (
-                      <button
-                        key={option.code}
-                        type="button"
-                        onClick={() => setLang(option.code)}
-                        title={option.label}
-                        aria-pressed={lang === option.code}
-                        className={`flex-1 rounded-lg px-2 py-1.5 text-[12px] font-semibold transition-all duration-200 active:scale-95 ${
-                          lang === option.code
-                            ? "bg-[var(--sb-accent)] text-white"
-                            : "bg-[var(--sb-hover)] text-[var(--sb-fg)] hover:opacity-80"
-                        }`}
-                      >
-                        {option.short}
-                      </button>
-                    ))}
-                  </div>
-                </div>
 
                 <button
                   type="button"
@@ -236,7 +235,7 @@ export function Sidebar() {
                   <span className="flex h-[18px] w-[18px] items-center justify-center text-[13px]">
                     {"↪"}
                   </span>
-                  {t.logout}
+                  Baromadan
                 </button>
               </div>
             )}
@@ -307,6 +306,33 @@ export function Logo() {
       <span className="font-logo text-[28px] leading-none text-[var(--sb-fg)] transition-colors duration-300 group-hover:text-[#ee2a7b]">
         Tajgram
       </span>
+    </Link>
+  );
+}
+
+// "Create" tugma ast (oyna mekushoyad), boqi hama Link-and.
+function Item({
+  href,
+  onCreate,
+  className,
+  children,
+}: {
+  href: string;
+  onCreate: () => void;
+  className: string;
+  children: React.ReactNode;
+}) {
+  if (href === "/create") {
+    return (
+      <button type="button" onClick={onCreate} className={className}>
+        {children}
+      </button>
+    );
+  }
+
+  return (
+    <Link href={href} className={className}>
+      {children}
     </Link>
   );
 }

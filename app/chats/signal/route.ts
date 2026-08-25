@@ -1,7 +1,7 @@
 // ============================================================
 //  app/chats/signal/route.ts
 //
-//  SERVER-i SIGNALING baroi zvanok (khudi mo, na backend).
+//  SERVER-i SIGNALING baroi zvanok va payomhoi real-time.
 //
 //  CHARO IN LOZIM AST?
 //  Dar swagger-i backend HECH endpoint-i zvanok/socket NEST.
@@ -9,9 +9,18 @@
 //  az yak roh guzarand. Baroi hamin roh-i khudamonro dar hamin
 //  ilova soakhtem ("long polling"):
 //
-//    GET  /chats/signal?userId=..   -> 25 soniya sabr mekunad,
-//                                      payomhoi tozaro bar megardonad
-//    POST /chats/signal             -> yak signalro ba "to" meguzorad
+//    GET  /chats/signal?userId=..&after=..  -> to 20 soniya sabr,
+//                                              payomhoi tozaro medihad
+//    POST /chats/signal                     -> yak signalro ba "to" meguzorad
+//
+//  KURSOR (after/cursor) - MUHIM:
+//  Peshtar signal ba YAK waiter doda meshud va az navbat tark
+//  meshud. Agar on payvast allakay murda bud (browser sahifaro
+//  iavz kard, dev-server az nav bor shud), signal ABADAN gum
+//  meshud -> "zang mezanam vale ba u zvanok nameoyad".
+//  Hozir hech chiz tark nameshavad: har signal raqami khud (seq)
+//  dorad, client oakhirin raqamro nigoh medorad va az on ba'd
+//  mepursad. Payvasti murda hech chizro namekhurad.
 //
 //  Ma'lumot dar KHOTIRAI server nigoh doshta meshavad (baza lozim
 //  nest) - zvanok fori ast, ba'di on chize namemonad.
@@ -27,11 +36,14 @@ import type { NextRequest } from "next/server";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-type Waiter = (list: unknown[]) => void;
+type Item = { seq: number; at: number; signal: unknown };
+
+type Waiter = () => void;
 
 type Mailbox = {
-  queue: unknown[];
-  waiters: Waiter[];
+  items: Item[];
+  seq: number;
+  waiters: Set<Waiter>;
   touched: number;
 };
 
@@ -39,88 +51,146 @@ type Mailbox = {
 // khotiraro dar globalThis nigoh medorem, to gum nashavad.
 type Store = { boxes: Map<string, Mailbox> };
 
+// DIQQAT: raqami okhir (v2) MUHIM ast. Dar rejimi dev khotira
+// bayni bor-kunihoi modul memonad. Agar shakli Mailbox ivaz shavad,
+// quttihoi KUHNA memonand va kod bo khatoi "items is undefined"
+// meaftad. Raqamro ivaz kunem -> khotirai toza.
 const globalStore = globalThis as unknown as {
-  __tajgramSignal?: Store;
+  __tajgramSignalV2?: Store;
 };
 
 const store: Store =
-  globalStore.__tajgramSignal ?? (globalStore.__tajgramSignal = {
+  globalStore.__tajgramSignalV2 ?? (globalStore.__tajgramSignalV2 = {
     boxes: new Map(),
   });
 
-const WAIT_MS = 25_000; // chand vaqt sabr mekunem
-const DEAD_MS = 120_000; // quttihoi kuhnaro tark mekunem
+const WAIT_MS = 20_000; // chand vaqt sabr mekunem
+const KEEP_MS = 60_000; // signal chand vaqt dar navbat memonad
+const DEAD_MS = 180_000; // quttihoi kuhnaro tark mekunem
+const MAX_ITEMS = 200;
+// Bori avval chand soniyai guzastaro ham megirem (sahifa bor mesud)
+const GRACE_MS = 25_000;
+
+// Har du taraf boyad AYNAN yak kalidro binand.
+// GUID-ho gohe bo harfhoi kalon, gohe khurd meoyand ->
+// hamesha ba yak shakl meorem.
+function key(raw: string): string {
+  return raw.trim().toLowerCase();
+}
 
 function box(userId: string): Mailbox {
-  const found = store.boxes.get(userId);
-  if (found !== undefined) {
+  const id = key(userId);
+  const found = store.boxes.get(id);
+
+  // Shaklashro ham tekshir mekunem - agar qutti kuhna boshad,
+  // az nav mesozem (ba joyi khato aftodan).
+  if (found !== undefined && Array.isArray(found.items)) {
     found.touched = Date.now();
     return found;
   }
 
-  const fresh: Mailbox = { queue: [], waiters: [], touched: Date.now() };
-  store.boxes.set(userId, fresh);
+  const fresh: Mailbox = {
+    items: [],
+    seq: 0,
+    waiters: new Set(),
+    touched: Date.now(),
+  };
+  store.boxes.set(id, fresh);
   return fresh;
 }
 
-// Quttihoi kuhna (korbar raftaast) - toza mekunem
+// Signalhoi kuhna va quttihoi kuhna (korbar raftaast) - toza mekunem
 function sweep() {
   const now = Date.now();
 
-  for (const [key, value] of store.boxes) {
+  for (const [id, mail] of store.boxes) {
+    if (!Array.isArray(mail.items)) {
+      store.boxes.delete(id);
+      continue;
+    }
+
+    mail.items = mail.items.filter((item) => now - item.at < KEEP_MS);
+
     if (
-      now - value.touched > DEAD_MS &&
-      value.waiters.length === 0 &&
-      value.queue.length === 0
+      now - mail.touched > DEAD_MS &&
+      mail.waiters.size === 0 &&
+      mail.items.length === 0
     ) {
-      store.boxes.delete(key);
+      store.boxes.delete(id);
     }
   }
 }
 
 // ------------------------------------------------------------
-//  GET - "baroi man chize hast?" (25 soniya sabr)
+//  GET - "ba'di raqami `after` baroi man chize hast?"
 // ------------------------------------------------------------
 export async function GET(request: NextRequest) {
   const userId = request.nextUrl.searchParams.get("userId");
 
-  if (userId === null || userId === "") {
-    return Response.json({ items: [] }, { status: 400 });
+  if (userId === null || userId.trim() === "") {
+    return Response.json({ items: [], cursor: 0 }, { status: 400 });
   }
 
   sweep();
   const mail = box(userId);
 
-  // Agar allakay chize boshad - darhol medihem
-  if (mail.queue.length > 0) {
-    const items = mail.queue;
-    mail.queue = [];
-    return Response.json({ items });
+  // BORI AVVAL (after nadodashuda):
+  // Peshtar in jo `Number(null)` -> 0 mesud (bogi khomush!), yane
+  // HAMAI signalhoi 60 soniyai guzasta az nav dodа mesudand -
+  // zvanoki KUHNA "az nav" zang mezad. Vale agar faqat az mail.seq
+  // sar kunem, zange ki 2 soniya pes firistoda sud (dar in dam
+  // sahifa bor mesud) tamoman gum mesavad.
+  //
+  // Baroi hamin: az signalhoi TOZA (to GRACE_MS) sar mekunem.
+  const rawAfter = request.nextUrl.searchParams.get("after");
+  const parsed = rawAfter === null ? Number.NaN : Number(rawAfter);
+
+  let after: number;
+
+  if (Number.isFinite(parsed) && parsed >= 0) {
+    after = parsed;
+  } else {
+    const edge = Date.now() - GRACE_MS;
+    const firstFresh = mail.items.find((item) => item.at >= edge);
+    after = firstFresh === undefined ? mail.seq : firstFresh.seq - 1;
   }
 
-  // Nabosad - sabr mekunem
-  const items = await new Promise<unknown[]>((resolve) => {
-    let done = false;
+  const take = () => mail.items.filter((item) => item.seq > after);
 
-    const finish = (list: unknown[]) => {
-      if (done) return;
-      done = true;
+  let fresh = take();
 
-      const index = mail.waiters.indexOf(finish);
-      if (index >= 0) mail.waiters.splice(index, 1);
+  // Agar hozir chize naboshad - sabr mekunem
+  if (fresh.length === 0) {
+    await new Promise<void>((resolve) => {
+      let done = false;
 
-      clearTimeout(timer);
-      resolve(list);
-    };
+      const finish = () => {
+        if (done) return;
+        done = true;
 
-    const timer = setTimeout(() => finish([]), WAIT_MS);
-    mail.waiters.push(finish);
+        mail.waiters.delete(finish);
+        clearTimeout(timer);
+        resolve();
+      };
 
-    // Agar browser so-rovro qat' kunad
-    request.signal.addEventListener("abort", () => finish([]));
+      const timer = setTimeout(finish, WAIT_MS);
+      mail.waiters.add(finish);
+
+      // Agar browser so-rovro qat' kunad
+      request.signal.addEventListener("abort", finish);
+    });
+
+    fresh = take();
+  }
+
+  // DIQQAT: chize az navbat TARK NAMEKUNEM. Agar in javob ba
+  // client narasad, so-rovi oyanda hamon signalro boz megirad.
+  const cursor = fresh.length > 0 ? fresh[fresh.length - 1].seq : after;
+
+  return Response.json({
+    items: fresh.map((item) => item.signal),
+    cursor,
   });
-
-  return Response.json({ items });
 }
 
 // ------------------------------------------------------------
@@ -136,20 +206,20 @@ export async function POST(request: NextRequest) {
   }
 
   const to = signal?.to;
-  if (typeof to !== "string" || to === "") {
+  if (typeof to !== "string" || to.trim() === "") {
     return Response.json({ ok: false }, { status: 400 });
   }
 
   const mail = box(to);
 
-  // Agar tarafi digar hozir sabr karda istoda bosad - fori medihem
-  const waiter = mail.waiters.shift();
-  if (waiter !== undefined) {
-    waiter([signal]);
-  } else {
-    mail.queue.push(signal);
-    // az 50 payom ziyod nigoh namedorem
-    if (mail.queue.length > 50) mail.queue.shift();
+  mail.seq += 1;
+  mail.items.push({ seq: mail.seq, at: Date.now(), signal });
+  if (mail.items.length > MAX_ITEMS) mail.items.shift();
+
+  // HAMAI sabrkunandaro bedor mekunem (odam metavonad chand tab
+  // kushoda boshad) - har kadom khudash navbatro mekhonad.
+  if (mail.waiters instanceof Set) {
+    for (const waiter of [...mail.waiters]) waiter();
   }
 
   return Response.json({ ok: true });

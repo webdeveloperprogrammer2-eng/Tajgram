@@ -34,7 +34,7 @@ export function Avatar({
 
   const inner = (
     <span
-      className="relative flex items-center justify-center overflow-hidden rounded-full bg-[var(--hover)] text-[var(--muted)] select-none"
+      className="relative flex items-center justify-center overflow-hidden rounded-full bg-[linear-gradient(135deg,var(--panel),var(--panelSoft))] text-[var(--muted)] select-none"
       style={{ width: size, height: size, fontSize: Math.max(9, size * 0.36) }}
     >
       {showImage ? (
@@ -69,10 +69,10 @@ export function Avatar({
       className={`group/ring inline-flex shrink-0 items-center justify-center rounded-full p-[2px] ${
         ring === "gradient"
           ? "bg-[linear-gradient(45deg,#f9ce34,#ee2a7b_45%,#6228d7)] shadow-[0_0_0_0_rgba(238,42,123,0.35)] hover:shadow-[0_0_0_4px_rgba(238,42,123,0.12)]"
-          : "bg-[var(--border)]"
+          : "bg-[var(--line)]"
       } transition-shadow duration-300 ${motion} ${className}`}
     >
-      <span className="rounded-full bg-[var(--card)] p-[2px]">{inner}</span>
+      <span className="rounded-full bg-[var(--bg)] p-[2px]">{inner}</span>
     </span>
   );
 }

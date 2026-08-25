@@ -8,7 +8,6 @@
 //    - qatori boloi bo logo (telefon)
 //  Logika ivaz nashudaast: faqat naql (theme) va baromadan.
 // ============================================================
-import { useEffect } from "react";
 
 import { ProfileProvider, useProfile } from "../providers";
 import styles from "../profile.module.css";
@@ -31,13 +30,6 @@ function Frame({ children }: { children: React.ReactNode }) {
   const { theme } = useProfile();
 
   // Radix modal-horo ba <body> mekashad - berun az .shell.
-  // Baroi hamin rangho boyad dar <html> ham bosand.
-  useEffect(() => {
-    document.documentElement.setAttribute("data-profile-theme", theme);
-    return () => {
-      document.documentElement.removeAttribute("data-profile-theme");
-    };
-  }, [theme]);
 
   return (
     <div

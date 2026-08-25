@@ -3,7 +3,6 @@
 import { useRef, useState } from "react";
 import { isVideo, mediaUrl } from "@/lib/api";
 import { ImageIcon, PlayIcon, SoundIcon } from "./icons";
-import { useT } from "./LocaleProvider";
 
 /**
  * Один слайд поста: картинка или видео. Файл может быть недоступен,
@@ -20,7 +19,6 @@ export function PostMedia({
   className?: string;
   zoom?: boolean;
 }) {
-  const { t } = useT();
   const [broken, setBroken] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [playing, setPlaying] = useState(false);
@@ -32,10 +30,10 @@ export function PostMedia({
   if (!url || broken) {
     return (
       <div
-        className={`flex h-full w-full flex-col items-center justify-center gap-2 bg-[var(--hover)] text-[var(--muted)] ${className}`}
+        className={`flex h-full w-full flex-col items-center justify-center gap-2 bg-[linear-gradient(135deg,#fbfbfb,var(--panel))] text-[#c7c7c7] ${className}`}
       >
         <ImageIcon size={40} className="animate-fade-in" />
-        <span className="text-[11px] text-[var(--muted)]">{t.mediaUnavailable}</span>
+        <span className="text-[11px] text-[#a8a8a8]">Media unavailable</span>
       </div>
     );
   }
@@ -79,7 +77,7 @@ export function PostMedia({
             playing ? "pointer-events-none opacity-0" : "opacity-100"
           }`}
         >
-          <span className="flex h-[64px] w-[64px] items-center justify-center rounded-full bg-[var(--card)]/85 pl-1 text-[var(--foreground)] shadow-lg backdrop-blur-sm transition-transform duration-300 hover:scale-110 active:scale-95">
+          <span className="flex h-[64px] w-[64px] items-center justify-center rounded-full bg-[var(--bg)]/85 pl-1 text-[var(--fg)] shadow-lg backdrop-blur-sm transition-transform duration-300 hover:scale-110 active:scale-95">
             <PlayIcon size={26} />
           </span>
         </button>

@@ -10,24 +10,20 @@
 // ============================================================
 import { useEffect, useRef } from "react";
 
-import { CallProvider, useCall } from "../call/CallProvider";
-import { ChatsProvider, useChats } from "../providers";
+import { useCall } from "../call/CallProvider";
+import { useChats } from "../providers";
 import styles from "../chats.module.css";
 
-import CallOverlay from "./CallOverlay";
-
+// DIQQAT: <ChatsProvider>, <CallProvider> va <CallOverlay> in jo NESTAND.
+// Onho hozir dar app/layout.tsx (GlobalCall) ba TAMOMI sayt guzoshta
+// shudaand - to zvanok dar har sahifa girifta shavad, na faqat dar /chats.
+// Agar in jo boz yak bor guzorem, DU signaling paydo meshavad.
 export default function ChatsShell({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <ChatsProvider>
-      <CallProvider>
-        <Frame>{children}</Frame>
-      </CallProvider>
-    </ChatsProvider>
-  );
+  return <Frame>{children}</Frame>;
 }
 
 
@@ -47,16 +43,9 @@ function Frame({ children }: { children: React.ReactNode }) {
     [onChatEvent]
   );
 
-  // Modal-ho ba <body> mekashand - rangho boyad dar <html> ham bosand
-  useEffect(() => {
-    document.documentElement.setAttribute("data-chats-theme", theme);
-    return () => {
-      document.documentElement.removeAttribute("data-chats-theme");
-    };
-  }, [theme]);
 
   return (
-    <div data-theme={theme} className={`${styles.shell} relative h-screen`}>
+    <div data-theme={theme} className={`${styles.shell} relative h-dvh overflow-hidden`}>
       <span className={styles.aura} aria-hidden />
       <span className={styles.auraLow} aria-hidden />
 
@@ -66,9 +55,6 @@ function Frame({ children }: { children: React.ReactNode }) {
       <main className="relative z-10 h-full pt-[60px] pb-[50px] md:pb-0 md:pl-[245px] md:pt-0">
         {children}
       </main>
-
-      {/* ================= ZVANOK (boloi hama) ================= */}
-      <CallOverlay />
     </div>
   );
 }

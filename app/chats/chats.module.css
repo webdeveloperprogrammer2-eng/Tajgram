@@ -12,43 +12,7 @@
   transition: background-color 0.25s ease, color 0.25s ease;
 }
 
-/* ---------- NAQLI TORIK ---------- */
-.shell[data-theme="dark"] {
-  --bg: #000000;
-  --panel: #15151a;
-  --panelSoft: #0e0e12;
-  --fg: #f4f4f6;
-  --muted: #8b8b93;
-  --line: rgba(255, 255, 255, 0.10);
-  --lineStrong: rgba(255, 255, 255, 0.22);
-  --accentA: #ff2e74;
-  --accentB: #7a2bff;
-  --signal: #ff2e74;
-  --invBg: #f4f4f6;
-  --invFg: #0a0a0c;
-  --shadow: 0 18px 45px -18px rgba(0, 0, 0, 0.9);
-  --shadowSoft: 0 8px 24px -12px rgba(0, 0, 0, 0.85);
-  --glass: rgba(10, 10, 12, 0.72);
-}
 
-/* ---------- NAQLI RAVSHAN ---------- */
-.shell[data-theme="light"] {
-  --bg: #ffffff;
-  --panel: #f4f4f6;
-  --panelSoft: #fafafa;
-  --fg: #101014;
-  --muted: #74747c;
-  --line: rgba(16, 16, 20, 0.09);
-  --lineStrong: rgba(16, 16, 20, 0.18);
-  --accentA: #ff2e74;
-  --accentB: #7a2bff;
-  --signal: #e01e5a;
-  --invBg: #101014;
-  --invFg: #ffffff;
-  --shadow: 0 18px 45px -20px rgba(16, 16, 20, 0.35);
-  --shadowSoft: 0 8px 24px -14px rgba(16, 16, 20, 0.28);
-  --glass: rgba(255, 255, 255, 0.78);
-}
 
 /* ---------- Gradient (2 rang) ---------- */
 .gradText {
@@ -809,4 +773,52 @@
 .headBtn:disabled {
   opacity: 0.35;
   background: transparent;
+}
+
+/* ============================================================
+   "PECHATAYET" - dar tagi nomi hamsuhbat
+   ============================================================ */
+.typing {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--brand, #d946ef);
+  font-weight: 500;
+}
+
+.typingDot {
+  width: 3px;
+  height: 3px;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.25;
+  animation: typingBlink 1.2s infinite ease-in-out;
+}
+
+.typingDot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typingDot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typingBlink {
+  0%,
+  80%,
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .typingDot {
+    animation: none;
+    opacity: 0.7;
+  }
 }

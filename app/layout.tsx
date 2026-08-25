@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { Geist, Geist_Mono, Grand_Hotel } from "next/font/google";
-import { LocaleProvider } from "@/components/LocaleProvider";
-import { SessionProvider } from "@/components/SessionProvider";
-import { Sidebar } from "@/components/Sidebar";
 import "./globals.css";
+import { THEME_KEY, type AppTheme } from "@/components/themeKeys";
+import { ThemeSync } from "@/components/ThemeSync";
+import GlobalCall from "./chats/call/GlobalCall";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,25 +28,25 @@ export const metadata: Metadata = {
   description: "Tajgram — веб-приложение на Next.js",
 };
 
-/**
- * Навигация живёт здесь, а не в группе (app): разделы команды
- * (profile, chats, reels, search, getInfoUsers) тоже должны её видеть —
- * их оболочки уже оставляют слева отступ под сайдбар.
- */
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  // Naqlro dar SERVER meguzorem - to safedi chashmak nazanad.
+  // Skript daroxil-i React kor namekunad (React 19 onro иҷро намекунад),
+  // baroi hamin qimatro az cookie megirem.
+  const theme: AppTheme =
+    (await cookies()).get(THEME_KEY)?.value === "light" ? "light" : "dark";
+
   return (
     <html
-      lang="tg"
+      lang="en"
+      data-theme={theme}
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} ${grandHotel.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-[var(--background)] text-[var(--foreground)]">
-        <LocaleProvider>
-          <SessionProvider>
-            <Sidebar />
-            {children}
-          </SessionProvider>
-        </LocaleProvider>
+      <body className="min-h-full bg-[var(--bg)] text-[var(--fg)] transition-colors duration-300">
+        <ThemeSync />
+        {/* Zvanok dar HAMAI sayt gush mekunad - na faqat dar /chats.
+            Be in, zang faqat ba kase merasid ki /chats kushoda dosht. */}
+        <GlobalCall>{children}</GlobalCall>
       </body>
     </html>
   );

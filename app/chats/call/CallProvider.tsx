@@ -30,6 +30,7 @@ import { useChats } from "../providers";
 import {
   ICE_SERVERS,
   newCallId,
+  sameId,
   Signaling,
   SIGNALING_URL,
   type CallMedia,
@@ -77,6 +78,14 @@ type CallState = {
     listener: (chatId: number, fromUserId: string) => void
   ) => () => void;
 
+  // ---------- "PECHATAYET" ----------
+  // Ba hamsuhbat mego-em: "man hozir navishta istodaam" / "bas kardam"
+  notifyTyping: (toUserId: string, chatId: number, on: boolean) => void;
+  // Gush kardan: hamsuhbat navishta istodaast yo ne
+  onTypingEvent: (
+    listener: (chatId: number, fromUserId: string, on: boolean) => void
+  ) => () => void;
+
   callUser: (chat: Chat, media: CallMedia) => void;
   accept: () => void;
   decline: () => void;
@@ -88,6 +97,7 @@ type CallState = {
 const CallContext = createContext<CallState | null>(null);
 
 const RING_TIMEOUT = 40_000; // 40 soniya sabr mekunem
+const RING_REPEAT_MS = 2_500; // har chand vaqt "ring"-ro takror mefiristem
 
 export function CallProvider({ children }: { children: React.ReactNode }) {
   const { me } = useChats();
@@ -117,12 +127,20 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   const isCaller = useRef(false);
   const iceQueue = useRef<RTCIceCandidateInit[]>([]);
   const ringTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // "ring"-ro takror mefiristem: agar hamsuhbat yak-du soniya
+  // dertar sahifaro kusod, zang boz ham ba u merasad.
+  const ringRepeat = useRef<ReturnType<typeof setInterval> | null>(null);
   const endTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const ringer = useRef<Ringer | null>(null);
 
   // Onhoe ki payomhoi navro intizorand (ChatWindow, ChatsShell)
   const chatListeners = useRef(
     new Set<(chatId: number, fromUserId: string) => void>()
+  );
+
+  // Onhoe ki "pechatayet"-ro intizorand (ChatWindow)
+  const typingListeners = useRef(
+    new Set<(chatId: number, fromUserId: string, on: boolean) => void>()
   );
 
   const setPhaseSafe = useCallback((next: CallPhase) => {
@@ -160,6 +178,10 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     if (ringTimer.current !== null) {
       clearTimeout(ringTimer.current);
       ringTimer.current = null;
+    }
+    if (ringRepeat.current !== null) {
+      clearInterval(ringRepeat.current);
+      ringRepeat.current = null;
     }
 
     ringer.current?.stop();
@@ -278,7 +300,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   const notifyChat = useCallback(
     (toUserId: string, chatId: number) => {
       if (hub.current === null || me === null) return;
-      if (toUserId === "" || toUserId === me.userId) return;
+      if (toUserId === "" || sameId(toUserId, me.userId)) return;
 
       hub.current.send({
         kind: "chat",
@@ -299,6 +321,39 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       chatListeners.current.add(listener);
       return () => {
         chatListeners.current.delete(listener);
+      };
+    },
+    []
+  );
+
+  // ------------------------------------------------------------
+  //  "PECHATAYET": hamsuhbat mebinad ki man navishta istodaam
+  // ------------------------------------------------------------
+  const notifyTyping = useCallback(
+    (toUserId: string, chatId: number, on: boolean) => {
+      if (hub.current === null || me === null) return;
+      if (toUserId === "" || sameId(toUserId, me.userId)) return;
+
+      hub.current.send({
+        kind: "typing",
+        callId: `typing-${chatId}`, // ba zvanok robita nadorad
+        chatId,
+        media: "audio",
+        from: me.userId,
+        fromName: me.fullName || me.userName,
+        fromImage: me.image,
+        to: toUserId,
+        payload: { on },
+      });
+    },
+    [me]
+  );
+
+  const onTypingEvent = useCallback(
+    (listener: (chatId: number, fromUserId: string, on: boolean) => void) => {
+      typingListeners.current.add(listener);
+      return () => {
+        typingListeners.current.delete(listener);
       };
     },
     []
@@ -333,6 +388,16 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
 
       emit("ring", null, target);
       ringer.current?.play("outgoing");
+
+      // TAKROR: har 2.5 soniya boz "ring" mefiristem to javob nagirem.
+      // Yak so-rov metavonad gum shavad, yo hamsuhbat mumkin ast
+      // aynan hozir saytro kusoda bosad - hamin takror onro megirad.
+      // Tarafi digar ba HAMON callId du bor javob namedihad.
+      if (ringRepeat.current !== null) clearInterval(ringRepeat.current);
+      ringRepeat.current = setInterval(() => {
+        if (phaseRef.current !== "outgoing") return;
+        emit("ring", null, target);
+      }, RING_REPEAT_MS);
 
       ringTimer.current = setTimeout(() => {
         emit("hangup");
@@ -432,8 +497,23 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      // --- "PECHATAYET" ---
+      if (signal.kind === "typing") {
+        const on = (signal.payload as { on?: boolean } | null)?.on === true;
+        for (const listener of typingListeners.current) {
+          listener(signal.chatId, signal.from, on);
+        }
+        return;
+      }
+
       // --- Zangi nav ---
       if (signal.kind === "ring") {
+        // Takrori HAMON zvanok (zangzananda har 2.5s mefiristad) -
+        // in "band budan" NEST, faqat guzoshtan.
+        if (signal.callId === callId.current && phaseRef.current !== "idle") {
+          return;
+        }
+
         if (phaseRef.current !== "idle") {
           // Man band hastam
           signaling.send({
@@ -498,6 +578,14 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       // --- Tarafi digar qabul kard -> MAN offer mesozam ---
       if (signal.kind === "accept" && isCaller.current) {
         ringer.current?.stop();
+        if (ringRepeat.current !== null) {
+          clearInterval(ringRepeat.current);
+          ringRepeat.current = null;
+        }
+        if (ringTimer.current !== null) {
+          clearTimeout(ringTimer.current);
+          ringTimer.current = null;
+        }
         setPhaseSafe("connecting");
 
         try {
@@ -619,6 +707,8 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       signalStatus,
       notifyChat,
       onChatEvent,
+      notifyTyping,
+      onTypingEvent,
       callUser,
       accept,
       decline,
@@ -639,6 +729,8 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       signalStatus,
       notifyChat,
       onChatEvent,
+      notifyTyping,
+      onTypingEvent,
       callUser,
       accept,
       decline,

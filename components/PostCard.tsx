@@ -6,8 +6,8 @@ import { api } from "@/lib/api";
 import { formatCount, shortTimeAgo, timeAgo } from "@/lib/format";
 import type { Post, PostComment } from "@/lib/types";
 import { Avatar } from "./Avatar";
+import { CommentsModal } from "./CommentsModal";
 import { PostMedia } from "./PostMedia";
-import { useT } from "./LocaleProvider";
 import {
   BookmarkIcon,
   ChevronLeftIcon,
@@ -30,7 +30,6 @@ export function PostCard({
   showFollow?: boolean;
   index?: number;
 }) {
-  const { t } = useT();
   const [liked, setLiked] = useState(post.postLike);
   const [likeCount, setLikeCount] = useState(post.postLikeCount);
   const [saved, setSaved] = useState(post.postFavorite);
@@ -38,8 +37,7 @@ export function PostCard({
   const [comments, setComments] = useState<PostComment[]>(post.comments ?? []);
   const [commentCount, setCommentCount] = useState(post.commentCount);
   const [allLoaded, setAllLoaded] = useState(false);
-  const [draft, setDraft] = useState("");
-  const [sending, setSending] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [slide, setSlide] = useState(0);
   const [burst, setBurst] = useState(false);
@@ -106,8 +104,9 @@ export function PostCard({
     }
   };
 
-  const loadAllComments = async () => {
-    if (allLoaded) return;
+  // Vaqte oyna pushida meshavad - se komenti okhirin dar zeri
+  // post nav memonand, ki lenta bo ruykhati kuhna namonad.
+  const syncPreview = async () => {
     try {
       const response = await api.postComments(post.postId, { page: 1, pageSize: 50 });
       setComments(response.data ?? []);
@@ -117,34 +116,21 @@ export function PostCard({
     }
   };
 
-  const submitComment = async () => {
-    const text = draft.trim();
-    if (!text || sending) return;
-    setSending(true);
-    try {
-      await api.addComment(post.postId, text);
-      const response = await api.postComments(post.postId, { page: 1, pageSize: 50 });
-      setComments(response.data ?? []);
-      setCommentCount((count) => count + 1);
-      setAllLoaded(true);
-      setDraft("");
-    } catch {
-      /* ввод не теряем, пользователь может повторить */
-    } finally {
-      setSending(false);
-    }
+  const closeComments = () => {
+    setCommentsOpen(false);
+    void syncPreview();
   };
 
   const slides = post.images?.length ? post.images : [{ id: 0, imageName: null }];
   const caption = post.content ?? post.title ?? "";
   const clipped = !expanded && caption.length > CAPTION_LIMIT;
-  const preview = allLoaded ? comments : comments.slice(0, 2);
+  const preview = comments.slice(0, allLoaded ? 3 : 2);
 
   return (
     <article
       ref={cardRef}
       style={{ animationDelay: `${Math.min(index, 6) * 90}ms` }}
-      className="animate-fade-up mb-4 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-3 shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition-shadow duration-300 hover:shadow-[0_10px_30px_-12px_rgba(0,0,0,0.18)]"
+      className="animate-fade-up mb-4 rounded-2xl border border-[var(--line)] bg-[var(--bg)] p-3 shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition-shadow duration-300 hover:shadow-[0_10px_30px_-12px_rgba(0,0,0,0.18)]"
     >
       <header className="flex items-center gap-3 pb-3">
         <Link href={`/profile/${post.userId}`}>
@@ -155,7 +141,7 @@ export function PostCard({
           <div className="flex items-center gap-1.5">
             <Link
               href={`/profile/${post.userId}`}
-              className="truncate text-[14px] font-semibold transition-colors hover:text-[var(--sb-accent)]"
+              className="truncate text-[14px] font-semibold transition-colors hover:text-[var(--accentA)]"
             >
               {post.userName}
             </Link>
@@ -169,9 +155,9 @@ export function PostCard({
                 <button
                   type="button"
                   onClick={toggleFollow}
-                  className="text-[14px] font-semibold text-[var(--sb-accent)] transition-colors hover:text-[#00376b]"
+                  className="text-[14px] font-semibold text-[var(--accentA)] transition-colors hover:text-[#00376b]"
                 >
-                  {following ? t.following : t.follow}
+                  {following ? "Following" : "Follow"}
                 </button>
               </>
             )}
@@ -184,7 +170,7 @@ export function PostCard({
         <button
           type="button"
           aria-label="More options"
-          className="rounded-full p-1.5 text-[var(--foreground)] transition-colors hover:bg-[var(--hover)]"
+          className="rounded-full p-1.5 text-[var(--fg)] transition-colors hover:bg-[var(--panel)]"
         >
           <DotsIcon size={20} />
         </button>
@@ -192,7 +178,7 @@ export function PostCard({
 
       <div
         onDoubleClick={doubleTapLike}
-        className="group/media relative aspect-[4/5] w-full select-none overflow-hidden rounded-xl bg-[var(--hover)]"
+        className="group/media relative aspect-[4/5] w-full select-none overflow-hidden rounded-xl bg-[var(--panelSoft)]"
       >
         <PostMedia
           key={slides[slide]?.id ?? slide}
@@ -217,7 +203,7 @@ export function PostCard({
                 type="button"
                 onClick={() => setSlide((current) => current - 1)}
                 aria-label="Previous"
-                className="absolute left-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-[var(--card)]/85 text-[var(--foreground)] opacity-0 shadow-md backdrop-blur-sm transition-all duration-200 hover:scale-110 group-hover/media:opacity-100"
+                className="absolute left-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-[var(--bg)]/85 text-[var(--fg)] opacity-0 shadow-md backdrop-blur-sm transition-all duration-200 hover:scale-110 group-hover/media:opacity-100"
               >
                 <ChevronLeftIcon size={16} />
               </button>
@@ -227,7 +213,7 @@ export function PostCard({
                 type="button"
                 onClick={() => setSlide((current) => current + 1)}
                 aria-label="Next"
-                className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-[var(--card)]/85 text-[var(--foreground)] opacity-0 shadow-md backdrop-blur-sm transition-all duration-200 hover:scale-110 group-hover/media:opacity-100"
+                className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-[var(--bg)]/85 text-[var(--fg)] opacity-0 shadow-md backdrop-blur-sm transition-all duration-200 hover:scale-110 group-hover/media:opacity-100"
               >
                 <ChevronRightIcon size={16} />
               </button>
@@ -237,7 +223,7 @@ export function PostCard({
                 <span
                   key={item.id}
                   className={`h-1.5 rounded-full transition-all duration-300 ${
-                    position === slide ? "w-4 bg-[var(--card)]" : "w-1.5 bg-white/60"
+                    position === slide ? "w-4 bg-[var(--bg)]" : "w-1.5 bg-[var(--bg)]/60"
                   }`}
                 />
               ))}
@@ -251,8 +237,8 @@ export function PostCard({
           type="button"
           onClick={() => void sendLike(!liked)}
           aria-label={liked ? "Unlike" : "Like"}
-          className={`rounded-full p-1.5 transition-all duration-200 hover:bg-[var(--hover)] active:scale-90 ${
-            liked ? "text-[#ff3040]" : "text-[var(--foreground)]"
+          className={`rounded-full p-1.5 transition-all duration-200 hover:bg-[var(--panel)] active:scale-90 ${
+            liked ? "text-[#ff3040]" : "text-[var(--fg)]"
           }`}
         >
           <span key={pulse} className={pulse ? "block animate-pop" : "block"}>
@@ -261,16 +247,16 @@ export function PostCard({
         </button>
         <button
           type="button"
-          onClick={loadAllComments}
+          onClick={() => setCommentsOpen(true)}
           aria-label="Comments"
-          className="rounded-full p-1.5 text-[var(--foreground)] transition-all duration-200 hover:bg-[var(--hover)] active:scale-90"
+          className="rounded-full p-1.5 text-[var(--fg)] transition-all duration-200 hover:bg-[var(--panel)] active:scale-90"
         >
           <CommentIcon />
         </button>
         <button
           type="button"
           aria-label="Share"
-          className="rounded-full p-1.5 text-[var(--foreground)] transition-all duration-200 hover:bg-[var(--hover)] active:scale-90 hover:-rotate-12"
+          className="rounded-full p-1.5 text-[var(--fg)] transition-all duration-200 hover:bg-[var(--panel)] active:scale-90 hover:-rotate-12"
         >
           <ShareIcon />
         </button>
@@ -278,7 +264,7 @@ export function PostCard({
           type="button"
           onClick={toggleSave}
           aria-label={saved ? "Remove from saved" : "Save"}
-          className="ml-auto rounded-full p-1.5 text-[var(--foreground)] transition-all duration-200 hover:bg-[var(--hover)] active:scale-90"
+          className="ml-auto rounded-full p-1.5 text-[var(--fg)] transition-all duration-200 hover:bg-[var(--panel)] active:scale-90"
         >
           <span className={saved ? "block animate-pop" : "block"}>
             <BookmarkIcon filled={saved} />
@@ -289,7 +275,7 @@ export function PostCard({
       <div className="flex items-center gap-2 px-1.5 pb-1.5">
         <Avatar src={post.userImage} name={post.userName} size={18} interactive={false} />
         <span className="text-[14px] font-semibold">
-          {formatCount(likeCount)} {likeCount === 1 ? t.like : t.likes}
+          {formatCount(likeCount)} {likeCount === 1 ? "like" : "likes"}
         </span>
       </div>
 
@@ -303,9 +289,9 @@ export function PostCard({
             <button
               type="button"
               onClick={() => setExpanded(true)}
-              className="text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
+              className="text-[var(--muted)] transition-colors hover:text-[var(--fg)]"
             >
-              {t.more}
+              more
             </button>
           )}
         </p>
@@ -314,10 +300,10 @@ export function PostCard({
       {commentCount > preview.length && (
         <button
           type="button"
-          onClick={loadAllComments}
-          className="mt-1 block px-1.5 text-[14px] text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
+          onClick={() => setCommentsOpen(true)}
+          className="mt-1 block px-1.5 text-[14px] text-[var(--muted)] transition-colors hover:text-[var(--fg)]"
         >
-          {t.viewAllComments} ({formatCount(commentCount)})
+          Hamai {formatCount(commentCount)} komentro dided
         </button>
       )}
 
@@ -338,38 +324,28 @@ export function PostCard({
         </ul>
       )}
 
-      <div className="mt-1.5 px-1.5 text-[11px] uppercase tracking-wide text-[var(--muted)]">
+      <div className="mt-1.5 px-1.5 text-[11px] uppercase tracking-wide text-[#a8a8a8]">
         {timeAgo(post.datePublished)}
       </div>
 
-      <div className="mt-2 flex items-center gap-2 rounded-xl bg-[var(--hover)] px-3 py-2 transition-colors focus-within:bg-[var(--hover)]">
-        <input
-          value={draft}
-          onChange={(event) => setDraft(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") void submitComment();
-          }}
-          placeholder={t.addComment}
-          className="min-w-0 flex-1 bg-transparent text-[14px] text-[var(--foreground)] outline-none placeholder:text-[var(--muted)]"
-        />
-        {draft.trim() && (
-          <button
-            type="button"
-            onClick={submitComment}
-            disabled={sending}
-            className="animate-scale-in text-[14px] font-semibold text-[var(--sb-accent)] transition-transform active:scale-95 disabled:opacity-50"
-          >
-            {t.send}
-          </button>
-        )}
-        <button
-          type="button"
-          aria-label="Emoji"
-          className="text-[var(--muted)] transition-all duration-200 hover:scale-110 hover:text-[var(--foreground)]"
-        >
-          <EmojiIcon size={20} />
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={() => setCommentsOpen(true)}
+        className="mt-2 flex w-full items-center gap-2 rounded-xl bg-[var(--panelSoft)] px-3 py-2.5 text-left transition-colors duration-200 hover:bg-[var(--panel)]"
+      >
+        <span className="flex-1 text-[14px] text-[var(--muted)]">Koment navised...</span>
+        <EmojiIcon size={20} className="text-[var(--muted)]" />
+      </button>
+
+      <CommentsModal
+        postId={post.postId}
+        open={commentsOpen}
+        onClose={closeComments}
+        initial={comments}
+        count={commentCount}
+        onCountChange={setCommentCount}
+      />
+
     </article>
   );
 }

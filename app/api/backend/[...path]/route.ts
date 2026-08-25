@@ -1,15 +1,55 @@
 import type { NextRequest } from "next/server";
-import { BACKEND, serviceToken } from "@/lib/serverToken";
 
 /**
  * Прокси к Instagram API.
  *
  * Бэкенд требует Bearer-токен на всех эндпоинтах кроме /Account/*, но входа
  * в интерфейсе нет: сервер сам логинится сервисным аккаунтом из .env, держит
- * токен в памяти процесса и подставляет его в каждый запрос. Логин и пароль
- * остаются на сервере; сам токен браузер получает отдельно (/api/session),
- * потому что разделы команды ходят на бэкенд напрямую.
+ * токен в памяти процесса и подставляет его в каждый запрос. В браузер
+ * ни логин, ни пароль, ни токен не попадают.
  */
+const BACKEND = (
+  process.env.NEXT_PUBLIC_API_URL ?? "https://instagram-back-qibs.onrender.com"
+)
+  .trim()
+  .replace(/\/+$/, "")
+  .replace(/\/docs$/i, "");
+
+const SERVICE_USER = process.env.TAJGRAM_USER ?? "dilovar06";
+const SERVICE_PASSWORD = process.env.TAJGRAM_PASSWORD ?? "P@ssw0rd!";
+
+let cachedToken: string | null = null;
+let inFlight: Promise<string | null> | null = null;
+
+async function login(): Promise<string | null> {
+  try {
+    const response = await fetch(`${BACKEND}/Account/login`, {
+      method: "POST",
+      headers: { "content-type": "application/json", accept: "application/json" },
+      body: JSON.stringify({ userName: SERVICE_USER, password: SERVICE_PASSWORD }),
+      cache: "no-store",
+    });
+    if (!response.ok) return null;
+    const json = (await response.json()) as { data?: unknown };
+    return typeof json.data === "string" ? json.data : null;
+  } catch {
+    return null;
+  }
+}
+
+async function token(force = false): Promise<string | null> {
+  if (force) cachedToken = null;
+  if (cachedToken) return cachedToken;
+
+  inFlight ??= login().then((value) => {
+    cachedToken = value;
+    inFlight = null;
+    return value;
+  });
+
+  return inFlight;
+}
+
 async function proxy(
   request: NextRequest,
   context: { params: Promise<{ path: string[] }> },
@@ -35,11 +75,25 @@ async function proxy(
     });
   };
 
+  // Agar browser token-i KHUDI korbarro firistad - hamonro meguzronem.
+  // Faqat agar token naboshad, ba akkaunti khizmati mefaroem.
+  const fromUser = request.headers.get("authorization");
+  const userBearer =
+    fromUser && fromUser.toLowerCase().startsWith("bearer ")
+      ? fromUser.slice(7).trim()
+      : null;
+
   let response: Response;
   try {
-    response = await send(await serviceToken());
-    // Токен мог истечь, пока процесс жил — логинимся заново один раз.
-    if (response.status === 401) response = await send(await serviceToken(true));
+    response = await send(userBearer ?? (await token()));
+
+    // Token guzashtaast:
+    //   - agar az korbar bud -> 401-ro hamon tavr bar megardonem
+    //     (bigzor sahifa ba /Auth/login firistad)
+    //   - agar akkaunti khizmati bud -> yak bor az nav medaroem
+    if (response.status === 401 && userBearer === null) {
+      response = await send(await token(true));
+    }
   } catch {
     return Response.json(
       { data: null, errors: ["Бэкенд недоступен"], statusCode: 502 },

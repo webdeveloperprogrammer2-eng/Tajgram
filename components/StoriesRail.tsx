@@ -1,29 +1,33 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { api } from "@/lib/api";
+import { api, isVideo, mediaUrl } from "@/lib/api";
+import { shortTimeAgo } from "@/lib/format";
 import type { Story } from "@/lib/types";
 import { Avatar } from "./Avatar";
 import { useSession } from "./SessionProvider";
-import { useT } from "./LocaleProvider";
 import { ChevronLeftIcon, ChevronRightIcon } from "./icons";
+
+/** Сколько держится фото. У видео время своё. */
+const PHOTO_MS = 5000;
 
 type StoryGroup = {
   userId: string;
   userName: string;
   avatar: string | null;
   count: number;
+  items: Story[];
 };
 
 /** Истории за 24 часа, сгруппированные по автору. */
 export function StoriesRail() {
   const { me } = useSession();
-  const { t } = useT();
   const [groups, setGroups] = useState<StoryGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const railRef = useRef<HTMLDivElement>(null);
   const [scroll, setScroll] = useState({ left: false, right: false });
+  const [active, setActive] = useState<number | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -60,7 +64,7 @@ export function StoriesRail() {
   };
 
   return (
-    <div className="animate-fade-up relative mb-4 rounded-2xl border border-[var(--border)] bg-[var(--card)] px-2 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+    <div className="animate-fade-up relative mb-4 rounded-2xl border border-[var(--line)] bg-[var(--bg)] px-2 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
       <div
         ref={railRef}
         onScroll={syncArrows}
@@ -77,12 +81,12 @@ export function StoriesRail() {
               size={56}
               ring="muted"
             />
-            <span className="absolute bottom-0 right-0 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-[var(--sb-accent)] text-[13px] leading-none text-white transition-transform duration-300 group-hover:scale-110">
+            <span className="absolute bottom-0 right-0 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-[var(--accentA)] text-[13px] leading-none text-white transition-transform duration-300 group-hover:scale-110">
               +
             </span>
           </span>
-          <span className="w-full truncate text-center text-[12px] text-[var(--foreground)]">
-            {t.yourStory}
+          <span className="w-full truncate text-center text-[12px] text-[var(--fg)]">
+            your story
           </span>
         </Link>
 
@@ -98,22 +102,23 @@ export function StoriesRail() {
           ))}
 
         {groups.map((story, index) => (
-          <Link
+          <button
             key={story.userId}
-            href={`/profile/${story.userId}`}
+            type="button"
+            onClick={() => setActive(index)}
             style={{ animationDelay: `${index * 60}ms` }}
             className="animate-scale-in flex w-[74px] shrink-0 flex-col items-center gap-1.5"
           >
             <Avatar src={story.avatar} name={story.userName} size={56} ring="gradient" />
-            <span className="w-full truncate text-center text-[12px] text-[var(--foreground)]">
+            <span className="w-full truncate text-center text-[12px] text-[var(--fg)]">
               {story.userName}
             </span>
-          </Link>
+          </button>
         ))}
 
         {!loading && groups.length === 0 && (
           <div className="flex items-center px-3 text-[13px] text-[var(--muted)]">
-            {t.noStories}
+            No new stories in the last 24 hours.
           </div>
         )}
       </div>
@@ -123,7 +128,7 @@ export function StoriesRail() {
           type="button"
           onClick={() => slide(-1)}
           aria-label="Scroll stories left"
-          className="animate-fade-in absolute left-1 top-[44px] flex h-[28px] w-[28px] items-center justify-center rounded-full bg-[var(--card)] text-[var(--foreground)] shadow-[0_2px_8px_rgba(0,0,0,0.18)] transition-transform duration-200 hover:scale-110 active:scale-95"
+          className="animate-fade-in absolute left-1 top-[44px] flex h-[28px] w-[28px] items-center justify-center rounded-full bg-[var(--bg)] text-[var(--fg)] shadow-[0_2px_8px_rgba(0,0,0,0.18)] transition-transform duration-200 hover:scale-110 active:scale-95"
         >
           <ChevronLeftIcon size={14} />
         </button>
@@ -133,11 +138,217 @@ export function StoriesRail() {
           type="button"
           onClick={() => slide(1)}
           aria-label="Scroll stories right"
-          className="animate-fade-in absolute right-1 top-[44px] flex h-[28px] w-[28px] items-center justify-center rounded-full bg-[var(--card)] text-[var(--foreground)] shadow-[0_2px_8px_rgba(0,0,0,0.18)] transition-transform duration-200 hover:scale-110 active:scale-95"
+          className="animate-fade-in absolute right-1 top-[44px] flex h-[28px] w-[28px] items-center justify-center rounded-full bg-[var(--bg)] text-[var(--fg)] shadow-[0_2px_8px_rgba(0,0,0,0.18)] transition-transform duration-200 hover:scale-110 active:scale-95"
         >
           <ChevronRightIcon size={14} />
         </button>
       )}
+
+      {active !== null && groups[active] && (
+        <StoryViewer
+          groups={groups}
+          index={active}
+          onChangeIndex={setActive}
+          onClose={() => setActive(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+/**
+ * Полноэкранный просмотр историй.
+ * Фото держится PHOTO_MS, видео — свою длительность; дальше переход сам.
+ */
+function StoryViewer({
+  groups,
+  index,
+  onChangeIndex,
+  onClose,
+}: {
+  groups: StoryGroup[];
+  index: number;
+  onChangeIndex: (next: number) => void;
+  onClose: () => void;
+}) {
+  const group = groups[index];
+  const [step, setStep] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const elapsed = useRef(0);
+
+  const story = group.items[step] ?? null;
+  const src = mediaUrl(story?.fileName);
+  const video = isVideo(story?.fileName);
+
+  const next = useCallback(() => {
+    setProgress(0);
+    elapsed.current = 0;
+    if (step < group.items.length - 1) setStep(step + 1);
+    else if (index < groups.length - 1) onChangeIndex(index + 1);
+    else onClose();
+  }, [step, index, group.items.length, groups.length, onChangeIndex, onClose]);
+
+  const prev = useCallback(() => {
+    setProgress(0);
+    elapsed.current = 0;
+    if (step > 0) setStep(step - 1);
+    else if (index > 0) onChangeIndex(index - 1);
+  }, [step, index, onChangeIndex]);
+
+  // Новый автор — начинаем с его первой истории.
+  useEffect(() => {
+    setStep(0);
+    setProgress(0);
+    elapsed.current = 0;
+  }, [index]);
+
+  // Таймер для фото. У видео время своё — там onTimeUpdate.
+  useEffect(() => {
+    if (video || paused || story === null) return;
+
+    // После паузы продолжаем с того же места, а не с нуля.
+    const startedAt = Date.now() - elapsed.current;
+    let frame = 0;
+
+    const tick = () => {
+      elapsed.current = Date.now() - startedAt;
+      const value = Math.min(1, elapsed.current / PHOTO_MS);
+      setProgress(value);
+      if (value >= 1) next();
+      else frame = requestAnimationFrame(tick);
+    };
+
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [video, paused, story, next]);
+
+  // Пауза/продолжение видео вместе с общей паузой.
+  useEffect(() => {
+    const node = videoRef.current;
+    if (!node) return;
+    if (paused) node.pause();
+    else void node.play().catch(() => {});
+  }, [paused, src]);
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+      else if (event.key === "ArrowRight") next();
+      else if (event.key === "ArrowLeft") prev();
+    };
+    window.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [next, prev, onClose]);
+
+  return (
+    <div
+      className="animate-fade-in fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <button
+        type="button"
+        onClick={onClose}
+        aria-label="Close story"
+        className="absolute right-4 top-4 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-[16px] leading-none text-white transition hover:bg-white/20"
+      >
+        ✕
+      </button>
+
+      <div
+        className="animate-scale-in relative flex aspect-[9/16] max-h-[92vh] w-full max-w-[420px] flex-col overflow-hidden rounded-2xl bg-[#101014] shadow-[0_24px_60px_rgba(0,0,0,0.6)]"
+        onClick={(event) => event.stopPropagation()}
+        onPointerDown={() => setPaused(true)}
+        onPointerUp={() => setPaused(false)}
+        onPointerLeave={() => setPaused(false)}
+      >
+        {/* Медиа */}
+        <div className="absolute inset-0">
+          {src && video ? (
+            <video
+              key={src}
+              ref={videoRef}
+              src={src}
+              autoPlay
+              playsInline
+              onTimeUpdate={(event) => {
+                const node = event.currentTarget;
+                if (node.duration > 0) setProgress(node.currentTime / node.duration);
+              }}
+              onEnded={next}
+              className="h-full w-full object-contain"
+            />
+          ) : src ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              key={src}
+              src={src}
+              alt="Story"
+              className="h-full w-full object-contain"
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center text-[13px] text-white/50">
+              Story unavailable
+            </div>
+          )}
+        </div>
+
+        {/* Затемнение сверху, чтобы шапка читалась на любом фото */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/70 to-transparent" />
+
+        {/* Полоски прогресса */}
+        <div className="relative z-10 flex gap-1 px-3 pt-3">
+          {group.items.map((item, i) => (
+            <span
+              key={item.id}
+              className="h-[2.5px] flex-1 overflow-hidden rounded-full bg-white/30"
+            >
+              <span
+                className="block h-full rounded-full bg-white"
+                style={{
+                  width: i < step ? "100%" : i === step ? `${progress * 100}%` : "0%",
+                }}
+              />
+            </span>
+          ))}
+        </div>
+
+        {/* Шапка: автор и когда выложил */}
+        <div className="relative z-10 flex items-center gap-2.5 px-3 py-3">
+          <Link
+            href={`/profile/${group.userId}`}
+            className="flex min-w-0 items-center gap-2.5"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <Avatar src={group.avatar} name={group.userName} size={34} />
+            <span className="truncate text-[13px] font-semibold text-white">
+              {group.userName}
+            </span>
+          </Link>
+          <span className="shrink-0 text-[12px] text-white/60">
+            {shortTimeAgo(story?.createAt)}
+          </span>
+        </div>
+
+        {/* Зоны перелистывания */}
+        <button
+          type="button"
+          onClick={prev}
+          aria-label="Previous story"
+          className="absolute bottom-0 left-0 top-16 w-1/3"
+        />
+        <button
+          type="button"
+          onClick={next}
+          aria-label="Next story"
+          className="absolute bottom-0 right-0 top-16 w-2/3"
+        />
+      </div>
     </div>
   );
 }
@@ -152,6 +363,7 @@ function group(stories: Story[]): StoryGroup[] {
     const existing = map.get(userId);
     if (existing) {
       existing.count += 1;
+      existing.items.push(story);
       continue;
     }
 
@@ -160,6 +372,7 @@ function group(stories: Story[]): StoryGroup[] {
       userName: story.viewerDto?.userName ?? story.viewerDto?.name ?? "story",
       avatar: story.userAvatar,
       count: 1,
+      items: [story],
     });
   }
 
