@@ -1,18 +1,15 @@
 // ============================================================
 //  app/chats/layout.tsx
-//  Ramkai umumi. Sidebar YAKTOST baroi hamai sayt
-//  (components/Sidebar.tsx) - dizayni daruni sahifa dar <ChatsShell>.
+//  Ramkai umumi baroi /chats.
+//
+//  DIQQAT: <Sidebar /> va <SessionProvider> in jo NESTAND!
+//  Onho YAK JOI hastand - dar app/layout.tsx (components/AppFrame.tsx)
+//  va ba HAMAI sayt kor mekunand. Agar in jo takror kuni,
+//  DU sidebar va DU so-rovi profil paydo meshavad.
+//  Dizayni daruni sahifa dar <ChatsShell> ast.
 // ============================================================
-import { Sidebar } from "@/components/Sidebar";
-import { SessionProvider } from "@/components/SessionProvider";
-
 import ChatsShell from "./components/ChatsShell";
 
 export default function Layout({ children }: LayoutProps<"/chats">) {
-  return (
-    <SessionProvider>
-      <Sidebar />
-      <ChatsShell>{children}</ChatsShell>
-    </SessionProvider>
-  );
+  return <ChatsShell>{children}</ChatsShell>;
 }

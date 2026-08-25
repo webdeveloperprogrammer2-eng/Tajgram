@@ -2,23 +2,10 @@
 
 // ============================================================
 //  UserShell - ramkai umumi baroi /getInfoUsers.
-//  Ayni hamon dizayni /profile: sidebar-i chap + qatori boloi telefon.
+//  Sidebar in jo NEST - u yak joi ast, dar components/AppFrame.tsx.
 //  Naql (dark/light) az localStorage girifta meshavad.
 // ============================================================
 import { useEffect, useState } from "react";
-import {
-  Bookmark,
-  Compass,
-  Film,
-  Heart,
-  Home,
-  MessageCircle,
-  Moon,
-  PlusSquare,
-  Search,
-  Sun,
-  User,
-} from "lucide-react";
 
 import { onThemeChange, readTheme, type AppTheme } from "@/components/appTheme";
 import styles from "../user.module.css";

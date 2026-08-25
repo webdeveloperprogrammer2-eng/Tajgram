@@ -273,7 +273,15 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       typeof navigator === "undefined" ||
       navigator.mediaDevices === undefined
     ) {
-      throw new Error("In browser mikrofon/kameraro dastgiri namekunad.");
+      // Sababi ASOSI: sahifa az rohi HTTP kushoda shudaast.
+      // Browser getUserMedia-ro FAQAT dar https:// yo localhost medihad.
+      // Agar telefonro bo http://192.168.x.x:3000 pay vast kuned,
+      // navigator.mediaDevices tamoman NEST -> zvanok nameshavad.
+      throw new Error(
+        typeof window !== "undefined" && !window.isSecureContext
+          ? "Zvanok faqat dar https:// (yo localhost) kor mekunad. Sahifaro bo https kushoed."
+          : "In browser mikrofon/kameraro dastgiri namekunad."
+      );
     }
 
     const stream = await navigator.mediaDevices.getUserMedia({
@@ -375,6 +383,26 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         chatId: chat.chatId,
       };
 
+
+      // ------------------------------------------------------------
+      //  MUHIM: agar MAN va HAMSUHBAT yak GUID doshta boshem, zvanok
+      //  DAR ASL nameshavad: signal ba qutti-i khudi man meaftad va
+      //  daruni signaling.ts hamchun "sadoi khudam" partofta meshavad.
+      //  In hol vaqte pesh meoyad, ki har du browser BE voridshavi
+      //  kor kunand - on vaqt ba har du akkaunti KHIZMATI doda meshavad.
+      //  Peshtar korbar 40 soniya "Zang mezanad..."-ro medid va ba'd
+      //  "Javob nadodand" - sababash malum nabud. Hozir fori mego-em.
+      // ------------------------------------------------------------
+      if (sameId(me.userId, target.userId)) {
+        setPeer(target);
+        setMedia(kind);
+        setPhaseSafe("outgoing");
+        finish(
+          "Shumo va hamsuhbat bo YAK akkaunt daromadaed - zvanok nameshavad. " +
+            "Bo akkaunti KHUDATON daroed (/Auth/login)."
+        );
+        return;
+      }
       callId.current = newCallId();
       peerRef.current = target;
       mediaRef.current = kind;
@@ -433,7 +461,9 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       finish(
         err instanceof Error && err.name === "NotAllowedError"
           ? "Ijozati mikrofon/kamera doda nashud."
-          : "Mikrofon yo kamera kushoda nashud."
+          : err instanceof Error && err.message !== ""
+            ? err.message
+            : "Mikrofon yo kamera kushoda nashud."
       );
     }
   }, [buildPeerConnection, emit, finish, openDevices, setPhaseSafe]);
@@ -603,7 +633,9 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
           finish(
             err instanceof Error && err.name === "NotAllowedError"
               ? "Ijozati mikrofon/kamera doda nashud."
-              : "Mikrofon yo kamera kushoda nashud."
+              : err instanceof Error && err.message !== ""
+                ? err.message
+                : "Mikrofon yo kamera kushoda nashud."
           );
         }
         return;
