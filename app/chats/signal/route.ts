@@ -145,14 +145,30 @@ export async function GET(request: NextRequest) {
   const rawAfter = request.nextUrl.searchParams.get("after");
   const parsed = rawAfter === null ? Number.NaN : Number(rawAfter);
 
-  let after: number;
-
-  if (Number.isFinite(parsed) && parsed >= 0) {
-    after = parsed;
-  } else {
+  // Az kujo sar kunem, agar kursor NABOSHAD yo BEKOR shuda boshad.
+  const freshStart = () => {
     const edge = Date.now() - GRACE_MS;
     const firstFresh = mail.items.find((item) => item.at >= edge);
-    after = firstFresh === undefined ? mail.seq : firstFresh.seq - 1;
+    return firstFresh === undefined ? mail.seq : firstFresh.seq - 1;
+  };
+
+  let after: number;
+
+  // DIQQAT - BOGI JIDDI (ba kori zvanok halal merasond):
+  // seq dar KHOTIRAI server ast. Vaqte server az nav bor shavad
+  // (next dev restart, deploy, instansiyai nav), seq ba 0 barmegardad,
+  // vale dar tab-i kushodai korbar kursori KUHNA memonad (masalan 7).
+  // On vaqt sarti "seq > 7" HECH GOH rost nameshavad -> zangho, payomho
+  // ba on tab ABADAN namerasand. Az berun hama chiz "sog" menamud:
+  // poll javob megirift, dar sidebar "Server-i zvanok" mesuht,
+  // vale zangzananda 40 soniya "Zang meravad..."-ro medid.
+  //
+  // Halli on: agar kursor az seq-i qutti KALONTAR bosad, u bekor ast ->
+  // hamchun bori avval az signalhoi TOZA sar mekunem.
+  if (Number.isFinite(parsed) && parsed >= 0 && parsed <= mail.seq) {
+    after = parsed;
+  } else {
+    after = freshStart();
   }
 
   const take = () => mail.items.filter((item) => item.seq > after);

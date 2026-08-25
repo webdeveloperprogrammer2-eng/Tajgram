@@ -2,75 +2,76 @@
   font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
   min-height: 100dvh;
   position: relative;
-  background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.75)), url("https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=2000&q=80");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  background: var(--auth-bg);
   color: var(--fg);
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .shell[data-theme="light"] {
+  --auth-bg: radial-gradient(circle at 10% 20%, rgba(37, 99, 235, 0.02) 0%, transparent 40%), #ffffff;
   --bg: #ffffff;
-  --surface: rgba(255, 255, 255, 0.72);
-  --panel: rgba(255, 255, 255, 0.65);
-  --panelSoft: rgba(255, 255, 255, 0.82);
-  --fg: #0f172a;
-  --muted: #64748b;
-  --line: rgba(255, 255, 255, 0.45);
-  --lineStrong: rgba(0, 0, 0, 0.15);
-  --accentA: #f09433;
-  --accentB: #dc2743;
+  --surface: #ffffff;
+  --panel: #ffffff;
+  --panelSoft: #f3f4f6;
+  --fg: #111111;
+  --muted: #6b7280;
+  --line: #e5e7eb;
+  --lineStrong: #d1d5db;
   --danger: #ef4444;
-  --dangerSoft: rgba(239, 68, 68, 0.15);
+  --dangerSoft: rgba(239, 68, 68, 0.08);
   --ok: #10b981;
-  --okSoft: rgba(16, 185, 129, 0.15);
-  --invBg: #0f172a;
+  --okSoft: rgba(16, 185, 129, 0.08);
+  --invBg: #111111;
   --invFg: #ffffff;
-  --shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.35);
-  --shadowSoft: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
-  --glassBg: rgba(255, 255, 255, 0.68);
-  --glassBorder: rgba(255, 255, 255, 0.6);
+  --shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.01);
+  --shadowSoft: 0 4px 12px -2px rgba(0, 0, 0, 0.02);
+  --glassBg: #ffffff;
+  --glassBorder: #e5e7eb;
+  --gold: #2563eb;
+  --goldSoft: rgba(37, 99, 235, 0.06);
+  --brand: #2563eb;
 }
 
 .shell[data-theme="dark"] {
+  --auth-bg: radial-gradient(circle at 10% 20%, rgba(29, 78, 216, 0.15) 0%, transparent 40%), radial-gradient(circle at 90% 80%, rgba(220, 39, 67, 0.1) 0%, transparent 50%), #000000;
   --bg: #000000;
-  --surface: rgba(18, 18, 22, 0.75);
-  --panel: rgba(24, 24, 28, 0.7);
-  --panelSoft: rgba(18, 18, 22, 0.85);
-  --fg: #f8fafc;
-  --muted: #94a3b8;
-  --line: rgba(255, 255, 255, 0.16);
-  --lineStrong: rgba(255, 255, 255, 0.28);
-  --accentA: #f09433;
-  --accentB: #dc2743;
+  --surface: #0a0a0a;
+  --panel: #080808;
+  --panelSoft: #121212;
+  --fg: #ffffff;
+  --muted: #a1a1aa;
+  --line: #27272a;
+  --lineStrong: #3f3f46;
   --danger: #f87171;
-  --dangerSoft: rgba(248, 113, 113, 0.18);
+  --dangerSoft: rgba(248, 113, 113, 0.12);
   --ok: #34d399;
-  --okSoft: rgba(52, 211, 153, 0.18);
-  --invBg: #f8fafc;
-  --invFg: #0f172a;
-  --shadow: 0 35px 90px -20px rgba(0, 0, 0, 0.75);
-  --shadowSoft: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
-  --glassBg: rgba(18, 18, 22, 0.75);
-  --glassBorder: rgba(255, 255, 255, 0.18);
+  --okSoft: rgba(52, 211, 153, 0.12);
+  --invBg: #ffffff;
+  --invFg: #0a0a0c;
+  --shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+  --shadowSoft: 0 8px 24px -8px rgba(0, 0, 0, 0.5);
+  --glassBg: #0a0a0a;
+  --glassBorder: #27272a;
+  --gold: #3b82f6;
+  --goldSoft: rgba(59, 130, 246, 0.12);
+  --brand: #3b82f6;
 }
 
 .display {
   font-family: var(--font-geist-sans), ui-serif, Georgia, serif;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-weight: 800;
+  letter-spacing: -0.03em;
   line-height: 1.15;
 }
 
 .fadeUp {
-  animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fadeIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
@@ -80,79 +81,229 @@
 
 .glassCard {
   background: var(--glassBg);
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
   border: 1px solid var(--glassBorder);
-  border-radius: 36px;
-  box-shadow: var(--shadow);
-}
-
-.leftCard {
-  background: rgba(20, 20, 25, 0.55);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 28px;
-  color: #ffffff;
+  box-shadow: var(--shadow);
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.pillBadge {
+/* Swiper classes */
+.stage {
+  border-radius: 28px;
+  height: 600px;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--glassBorder);
   background: #000000;
-  color: #ffffff;
-  border-radius: 9999px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.8s cubic-bezier(0.25, 1, 0.5, 1), transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+  transform: scale(1.04) translateZ(0);
+  pointer-events: none;
+}
+
+.slideActive {
+  opacity: 1;
+  transform: scale(1) translateZ(0);
+  pointer-events: auto;
+}
+
+.slideOutLeft {
+  opacity: 0;
+  transform: scale(0.96) translate3d(-12px, 0, 0);
+}
+
+.slideOutRight {
+  opacity: 0;
+  transform: scale(0.96) translate3d(12px, 0, 0);
+}
+
+.kenburns {
+  animation: kenburnsAnimation 10s ease-out infinite alternate;
+}
+
+@keyframes kenburnsAnimation {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.08);
+  }
+}
+
+.barFill {
+  transform-origin: left;
+  animation: fillProgress linear forwards;
+}
+
+@keyframes fillProgress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.captionIn {
+  animation: captionFadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes captionFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* BrandMark classes */
+.logoEnter {
+  animation: logoZoom 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes logoZoom {
+  from {
+    opacity: 0;
+    transform: scale(0.3) rotate(-15deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+
+.logo3d {
+  transform-style: preserve-3d;
+  animation: logoRotate 6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes logoRotate {
+  0%, 100% {
+    transform: rotateY(0deg);
+  }
+  50% {
+    transform: rotateY(180deg);
+  }
+}
+
+.letter {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(20px) rotateX(-90deg);
+  animation: letterFlyIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes letterFlyIn {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.accentWord {
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  display: inline-block;
+}
+
+.ruleIn {
+  animation: ruleGrow 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: left;
+}
+
+@keyframes ruleGrow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.gradBg {
+  background: var(--gradient);
 }
 
 .inputBox {
   background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: 14px;
   color: var(--fg);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
 .inputBox:focus-within {
-  border-color: var(--fg);
-  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.08);
+  border-color: var(--brand);
+  box-shadow: 0 0 0 4px var(--goldSoft);
 }
 
 .primaryBtn {
-  background: #09090b;
+  background: var(--brand);
   color: #ffffff;
-  border-radius: 16px;
+  border-radius: 14px;
   font-weight: 600;
-  transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.15s ease, background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .primaryBtn:hover {
-  background: #000000;
-  transform: translateY(-1px);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+  filter: brightness(1.05);
+  box-shadow: 0 10px 25px -8px var(--goldSoft);
 }
 
 .primaryBtn:active {
-  transform: translateY(0);
+  transform: scale(0.99);
 }
 
 .socialBtn {
   background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: 14px;
   color: var(--fg);
   font-size: 13px;
-  font-weight: 500;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+  font-weight: 600;
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
 }
 
 .socialBtn:hover {
   background: var(--panelSoft);
   border-color: var(--lineStrong);
+  transform: translateY(-1px);
+  box-shadow: var(--shadowSoft);
 }
 
-.nudge { animation: none; }
-.sheen { position: relative; overflow: hidden; }
+.socialBtn:active {
+  transform: translateY(0);
+}
 
-/* ---------- SURATI PROFIL dar registratsiya ---------- */
+.nudge {
+  animation: nudgeAnimation 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes nudgeAnimation {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+.sheen {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Avatar upload picker */
 .avatarPick {
   position: relative;
   display: grid;
@@ -160,23 +311,24 @@
   width: 72px;
   height: 72px;
   flex: 0 0 72px;
-  border-radius: 999px;
+  border-radius: 50%;
   overflow: hidden;
   cursor: pointer;
-  background: color-mix(in srgb, var(--muted, #888) 12%, transparent);
-  border: 2px dashed color-mix(in srgb, var(--muted, #888) 45%, transparent);
-  transition: border-color 0.18s ease, transform 0.18s ease;
+  background: var(--panel);
+  border: 2px dashed var(--lineStrong);
+  transition: border-color 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
 }
 
 .avatarPick:hover {
-  transform: scale(1.04);
-  border-color: var(--brand, #d946ef);
+  transform: scale(1.05);
+  border-color: var(--brand);
+  background: var(--panelSoft);
 }
 
 .avatarPickPlus {
   font-size: 26px;
   line-height: 1;
-  color: var(--muted, #888);
+  color: var(--muted);
 }
 
 .avatarPickImg {
@@ -186,7 +338,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .shell *, .shell *::before, .shell *::after {
+  .shell *,
+  .shell *::before,
+  .shell *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }

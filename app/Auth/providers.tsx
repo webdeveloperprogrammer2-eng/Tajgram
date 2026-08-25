@@ -11,6 +11,7 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { dictionary, type Dict, type Lang } from "./i18n";
+import { writeTheme, readTheme, onThemeChange } from "@/components/appTheme";
 
 export type Theme = "dark" | "light";
 
@@ -30,27 +31,25 @@ type Settings = {
 const SettingsContext = createContext<Settings | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  // Qimathoi ibtidoi (server hamin-horo mebinad)
   const [theme, setTheme] = useState<Theme>("dark");
   const [lang, setLang] = useState<Lang>("tj");
 
-  // Faqat YAK bor, ba'di kushodani sahifa:
-  // az localStorage intikhobi kuhnai korbarro megirem.
   useEffect(() => {
-    const savedTheme = localStorage.getItem(THEME_KEY);
+    setTheme(readTheme());
     const savedLang = localStorage.getItem(LANG_KEY);
-
-    if (savedTheme === "dark" || savedTheme === "light") setTheme(savedTheme);
     if (savedLang === "tj" || savedLang === "ru" || savedLang === "en") {
       setLang(savedLang);
     }
+
+    return onThemeChange((nextTheme) => {
+      setTheme(nextTheme);
+    });
   }, []);
 
-  // Ivaz kardani theme + darhol nigoh doshtan
   function toggleTheme() {
     const next: Theme = theme === "dark" ? "light" : "dark";
     setTheme(next);
-    localStorage.setItem(THEME_KEY, next);
+    writeTheme(next);
   }
 
   // Ivaz kardani zabon + darhol nigoh doshtan

@@ -18,6 +18,7 @@ type Props = {
   hint?: string;
   autoFocus?: boolean;
   placeholder?: string;
+  error?: string;
 };
 
 export default function Field({
@@ -30,6 +31,7 @@ export default function Field({
   hint,
   autoFocus,
   placeholder,
+  error,
 }: Props) {
   const { t } = useSettings();
   const [showPassword, setShowPassword] = useState(false);
@@ -44,13 +46,15 @@ export default function Field({
   }
 
   return (
-    <div className="space-y-1.5">
-      <label
-        htmlFor={name}
-        className="block text-[13px] font-semibold tracking-tight opacity-90"
-      >
-        {label}
-      </label>
+    <div className="space-y-2">
+      <div className="flex justify-between items-center px-1">
+        <label
+          htmlFor={name}
+          className="block text-[13px] font-bold tracking-tight opacity-90 text-[var(--fg)]"
+        >
+          {label}
+        </label>
+      </div>
 
       <div className="relative">
         <input
@@ -64,7 +68,11 @@ export default function Field({
           onKeyUp={checkCaps}
           onKeyDown={checkCaps}
           onChange={(event) => onChange(event.target.value)}
-          className="w-full rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 text-sm font-medium outline-none transition-all duration-150 focus:border-[var(--fg)] focus:ring-2 focus:ring-[var(--fg)]/10"
+          className={`w-full rounded-2xl border bg-[var(--panel)] px-4 py-3.5 text-sm font-medium outline-none transition-all duration-200 ${
+            error
+              ? "border-[var(--danger)] focus:border-[var(--danger)] focus:ring-4 focus:ring-[var(--dangerSoft)]"
+              : "border-[var(--line)] focus:border-[var(--brand)] focus:ring-4 focus:ring-[var(--goldSoft)]"
+          }`}
           style={{ color: "var(--fg)" }}
         />
 
@@ -73,25 +81,31 @@ export default function Field({
             type="button"
             onClick={() => setShowPassword(!showPassword)}
             aria-label={showPassword ? t.hide : t.show}
-            className="absolute right-3.5 top-1/2 -translate-y-1/2 rounded-full p-1 text-[var(--muted)] hover:text-[var(--fg)] transition-colors"
+            className="absolute right-3.5 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-[var(--muted)] hover:text-[var(--fg)] hover:bg-[var(--panelSoft)] transition-all duration-150"
           >
             {showPassword ? (
-              <EyeOff className="h-4 w-4" strokeWidth={2} />
+              <EyeOff className="h-4.5 w-4.5" strokeWidth={1.8} />
             ) : (
-              <Eye className="h-4 w-4" strokeWidth={2} />
+              <Eye className="h-4.5 w-4.5" strokeWidth={1.8} />
             )}
           </button>
         )}
       </div>
 
       {capsOn && (
-        <p className="mt-1 text-[11px] font-medium text-red-500" role="status">
-          {t.capsLock}
+        <p className="px-1 text-[11px] font-bold text-[var(--danger)]" role="status">
+          ⚠️ {t.capsLock}
         </p>
       )}
 
-      {hint && !capsOn && (
-        <p className="mt-1 text-[11px] opacity-75" style={{ color: "var(--muted)" }}>
+      {error && !capsOn && (
+        <p className="px-1 text-[11px] font-bold text-[var(--danger)] animate-fade-in" role="status">
+          {error}
+        </p>
+      )}
+
+      {hint && !error && !capsOn && (
+        <p className="px-1 text-[11px] font-medium opacity-75" style={{ color: "var(--muted)" }}>
           {hint}
         </p>
       )}

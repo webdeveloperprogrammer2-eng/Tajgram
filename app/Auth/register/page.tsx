@@ -43,6 +43,13 @@ export default function RegisterPage() {
   const [errors, setErrors] = useState<string[]>([]);
   const [success, setSuccess] = useState("");
 
+  // Field validation errors
+  const [userNameError, setUserNameError] = useState("");
+  const [fullNameError, setFullNameError] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
+
   useEffect(() => {
     const url = avatar?.url;
     if (url === undefined) return;
@@ -77,35 +84,48 @@ export default function RegisterPage() {
     t.strength4,
   ];
 
+  let strengthColor = "bg-[var(--line)]";
+  if (power === 1) strengthColor = "bg-red-500";
+  else if (power === 2) strengthColor = "bg-amber-500";
+  else if (power === 3) strengthColor = "bg-emerald-500";
+  else if (power === 4) strengthColor = "bg-emerald-600";
+
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setErrors([]);
     setSuccess("");
+    setUserNameError("");
+    setFullNameError("");
+    setEmailError("");
+    setPasswordError("");
+    setConfirmPasswordError("");
 
+    let hasError = false;
     if (userName.trim().length < RULES.userNameMin) {
-      setErrors([t.errUserShort]);
-      return;
+      setUserNameError(t.errUserShort);
+      hasError = true;
     }
     if (userName.trim().length > RULES.userNameMax) {
-      setErrors([t.errUserLong]);
-      return;
+      setUserNameError(t.errUserLong);
+      hasError = true;
     }
     if (fullName.trim().length < RULES.fullNameMin) {
-      setErrors([t.errFullName]);
-      return;
+      setFullNameError(t.errFullName);
+      hasError = true;
     }
     if (!email.includes("@") || !email.includes(".")) {
-      setErrors([t.errEmail]);
-      return;
+      setEmailError(t.errEmail);
+      hasError = true;
     }
     if (password.length < RULES.passwordMin) {
-      setErrors([t.errShort]);
-      return;
+      setPasswordError(t.errShort);
+      hasError = true;
     }
     if (password !== confirmPassword) {
-      setErrors([t.errMatch]);
-      return;
+      setConfirmPasswordError(t.errMatch);
+      hasError = true;
     }
+    if (hasError) return;
 
     setLoading(true);
 
@@ -145,17 +165,17 @@ export default function RegisterPage() {
   return (
     <div className={styles.fadeUp}>
       <div className="text-center">
-        <h2 className="font-serif text-2xl font-bold tracking-tight sm:text-3xl">
+        <h2 className="font-sans text-2xl font-extrabold tracking-tight sm:text-3xl text-[var(--fg)]">
           {t.registerTitle}
         </h2>
-        <p className="mt-1.5 text-xs font-medium opacity-75" style={{ color: "var(--muted)" }}>
+        <p className="mt-2.5 text-xs font-semibold text-[var(--muted)]">
           {t.registerSubtitle}
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="mt-5 space-y-3">
+      <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         {/* Акси профил (ихтиёрӣ) */}
-        <div className="flex items-center gap-4 py-1">
+        <div className="flex items-center gap-4 py-2 border border-[var(--line)] bg-[var(--panelSoft)] rounded-2xl px-4 shadow-sm">
           <button
             type="button"
             onClick={() => avatarInput.current?.click()}
@@ -171,8 +191,8 @@ export default function RegisterPage() {
           </button>
 
           <div className="min-w-0">
-            <p className="text-[13px] font-semibold">Сурати профил</p>
-            <p className="text-[11px]" style={{ color: "var(--muted)" }}>
+            <p className="text-[13px] font-bold text-[var(--fg)]">Сурати профил</p>
+            <p className="text-[11px] font-medium" style={{ color: "var(--muted)" }}>
               Ихтиёрӣ — баъд ҳам иваз кардан мумкин аст
             </p>
 
@@ -180,8 +200,8 @@ export default function RegisterPage() {
               <button
                 type="button"
                 onClick={clearAvatar}
-                className="mt-1 text-[11px] underline"
-                style={{ color: "var(--muted)" }}
+                className="mt-1 text-[11px] font-bold underline cursor-pointer"
+                style={{ color: "var(--danger)" }}
               >
                 Тоза кардан
               </button>
@@ -201,20 +221,28 @@ export default function RegisterPage() {
           label={t.fieldUsername}
           name="userName"
           value={userName}
-          onChange={setUserName}
+          onChange={(val) => {
+            setUserName(val);
+            if (userNameError) setUserNameError("");
+          }}
           placeholder="Номи корбарро ворид кунед..."
           autoComplete="username"
           autoFocus
           hint={t.hintUserName}
+          error={userNameError}
         />
 
         <Field
           label={t.fieldFullName}
           name="fullName"
           value={fullName}
-          onChange={setFullName}
+          onChange={(val) => {
+            setFullName(val);
+            if (fullNameError) setFullNameError("");
+          }}
           placeholder="Номи пурраи худро ворид кунед..."
           autoComplete="name"
+          error={fullNameError}
         />
 
         <Field
@@ -222,9 +250,13 @@ export default function RegisterPage() {
           name="email"
           type="email"
           value={email}
-          onChange={setEmail}
+          onChange={(val) => {
+            setEmail(val);
+            if (emailError) setEmailError("");
+          }}
           placeholder="Почтаи электронии худро ворид кунед..."
           autoComplete="email"
+          error={emailError}
         />
 
         <Field
@@ -232,31 +264,31 @@ export default function RegisterPage() {
           name="password"
           type="password"
           value={password}
-          onChange={setPassword}
+          onChange={(val) => {
+            setPassword(val);
+            if (passwordError) setPasswordError("");
+          }}
           placeholder="Паролро ворид кунед..."
           autoComplete="new-password"
           hint={t.hintPassword}
+          error={passwordError}
         />
 
         {password !== "" && (
-          <div className="flex items-center justify-between gap-4 pt-1">
+          <div className="flex items-center justify-between gap-4 pt-1 px-1">
             <div className="flex flex-1 gap-1.5">
               {[0, 1, 2, 3].map((i) => (
                 <span
                   key={i}
-                  className="h-1.5 flex-1 rounded-full transition-colors duration-150"
-                  style={{
-                    background:
-                      i < power
-                        ? "var(--fg)"
-                        : "var(--line)",
-                  }}
+                  className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
+                    i < power ? strengthColor : "bg-[var(--line)]"
+                  }`}
                 />
               ))}
             </div>
 
             <span
-              className="text-[11px] font-medium opacity-80"
+              className="text-[11px] font-bold opacity-80"
               style={{ color: "var(--muted)" }}
             >
               {powerNames[power]}
@@ -269,9 +301,13 @@ export default function RegisterPage() {
           name="confirmPassword"
           type="password"
           value={confirmPassword}
-          onChange={setConfirmPassword}
+          onChange={(val) => {
+            setConfirmPassword(val);
+            if (confirmPasswordError) setConfirmPasswordError("");
+          }}
           placeholder="Такрори паролро ворид кунед..."
           autoComplete="new-password"
+          error={confirmPasswordError}
         />
 
         {errors.length > 0 && (
@@ -292,7 +328,7 @@ export default function RegisterPage() {
           </Alert>
         )}
 
-        <div className="pt-2">
+        <div className="pt-3">
           <Submit
             label={t.registerSubmit}
             loadingLabel={t.registerLoading}
@@ -301,12 +337,12 @@ export default function RegisterPage() {
         </div>
       </form>
 
-      <p className="mt-4 text-center text-xs font-medium opacity-85">
+      <p className="mt-6 text-center text-xs font-semibold opacity-85 text-[var(--fg)]">
         <span>Аллакай аккаунт доред? </span>
         <Link
           href="/Auth/login"
-          className="font-semibold underline hover:opacity-100 transition-opacity"
-          style={{ color: "var(--fg)" }}
+          className="font-bold underline hover:opacity-100 transition-opacity"
+          style={{ color: "var(--brand)" }}
         >
           {t.tabLogin}
         </Link>

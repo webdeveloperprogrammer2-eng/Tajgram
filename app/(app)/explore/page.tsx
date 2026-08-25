@@ -5,9 +5,11 @@ import { api } from "@/lib/api";
 import type { Post } from "@/lib/types";
 import { PostGrid } from "@/components/PostGrid";
 import { ImageIcon } from "@/components/icons";
+import { useT } from "@/components/LocaleProvider";
 
 /** Kashf / Explore — все посты бэкенда сеткой. */
 export default function ExplorePage() {
+  const { t } = useT();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -31,7 +33,7 @@ export default function ExplorePage() {
 
   return (
     <div className="mx-auto w-full max-w-[935px] px-4 py-6">
-      <h1 className="animate-fade-up mb-5 text-[22px] font-bold">Explore</h1>
+      <h1 className="animate-fade-up mb-5 text-[22px] font-bold">{t.explore}</h1>
 
       {loading && (
         <div className="grid grid-cols-3 gap-1 md:gap-[3px]">
@@ -46,7 +48,7 @@ export default function ExplorePage() {
           <span className="flex h-20 w-20 items-center justify-center rounded-full bg-[linear-gradient(135deg,#fdf2f8,#eef2ff)] text-[#c084fc]">
             <ImageIcon size={40} />
           </span>
-          <p className="text-[14px]">Постов пока нет.</p>
+          <p className="text-[14px]">{t.noPostsTitle}</p>
         </div>
       )}
 

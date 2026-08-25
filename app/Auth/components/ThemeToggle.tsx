@@ -18,12 +18,12 @@ export default function ThemeToggle() {
       size="icon"
       onClick={toggleTheme}
       aria-label={t.theme}
-      className="hover:text-[var(--gold)]"
+      className="h-10 w-10 rounded-xl border border-[var(--line)] bg-[var(--panel)] text-[var(--fg)] hover:bg-[var(--panelSoft)] hover:text-[var(--gold)] transition-colors duration-200"
     >
       {isDark ? (
-        <Sun className="h-4 w-4" strokeWidth={1.3} />
+        <Sun className="h-4.5 w-4.5" strokeWidth={1.5} />
       ) : (
-        <Moon className="h-4 w-4" strokeWidth={1.3} />
+        <Moon className="h-4.5 w-4.5" strokeWidth={1.5} />
       )}
     </Button>
   );

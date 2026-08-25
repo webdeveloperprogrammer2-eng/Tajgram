@@ -5,8 +5,10 @@ import { api } from "@/lib/api";
 import type { Post } from "@/lib/types";
 import { PostGrid } from "@/components/PostGrid";
 import { BookmarkIcon } from "@/components/icons";
+import { useT } from "@/components/LocaleProvider";
 
 export default function SavedPage() {
+  const { t } = useT();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -30,7 +32,7 @@ export default function SavedPage() {
 
   return (
     <div className="mx-auto w-full max-w-[935px] px-4 py-6">
-      <h1 className="animate-fade-up mb-5 text-[22px] font-bold">Saved</h1>
+      <h1 className="animate-fade-up mb-5 text-[22px] font-bold">{t.saved}</h1>
 
       {loading && (
         <div className="grid grid-cols-3 gap-1 md:gap-[3px]">
@@ -45,7 +47,7 @@ export default function SavedPage() {
           <span className="flex h-20 w-20 items-center justify-center rounded-full bg-[linear-gradient(135deg,#eff6ff,#f0fdfa)] text-[#38bdf8]">
             <BookmarkIcon size={40} />
           </span>
-          <p className="text-[14px]">Сохранённых постов пока нет.</p>
+          <p className="text-[14px]">{t.noSaved}</p>
         </div>
       )}
 

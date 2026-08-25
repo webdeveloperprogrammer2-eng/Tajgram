@@ -43,14 +43,12 @@ export function PostCard({
   // Nisbati qutti-i media. To surat naomadaast 4/5 (monandi instagram),
   // ba'd az omadan - nisbati TABI'II, vale mahdud: az 4/5 to 16/9.
   // Bе in suratkhoi pahn (screenshot-ho) bad burida meshudand.
-  const [ratio, setRatio] = useState<number | null>(null);
+  const [ratio, setRatio] = useState<{ slide: number; value: number } | null>(null);
 
-  // Slaidi nav -> nisbati kuhna ba kor namebarem
-  useEffect(() => {
-    setRatio(null);
-  }, [slide]);
-
-  const boxRatio = ratio === null ? 4 / 5 : Math.min(Math.max(ratio, 4 / 5), 16 / 9);
+  // Nisbat hamrohi raqami slaid nigoh doshta meshavad - slaidi nav
+  // nisbati kuhnaro khud ba khud bekor mekunad (be useEffect).
+  const own = ratio !== null && ratio.slide === slide ? ratio.value : null;
+  const boxRatio = own === null ? 4 / 5 : Math.min(Math.max(own, 4 / 5), 16 / 9);
   const [pulse, setPulse] = useState(0);
 
   const cardRef = useRef<HTMLElement>(null);
@@ -195,7 +193,7 @@ export function PostCard({
           key={slides[slide]?.id ?? slide}
           fileName={slides[slide]?.imageName ?? null}
           alt={post.title ?? `Post by ${post.userName}`}
-          onRatio={setRatio}
+          onRatio={(value) => setRatio({ slide, value })}
           zoom
         />
 
