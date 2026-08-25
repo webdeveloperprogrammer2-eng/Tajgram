@@ -121,28 +121,30 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // Faqat YAK bor, ba'di kushodani sahifa
+  // Faqat YAK bor, ba'di kushodani sahifa.
+  // Holatro daruni queueMicrotask meguzorem - to render-i joriro
+  // az nav nakashad (hamon usuli components/Sidebar.tsx).
   useEffect(() => {
-    // 1) Naqli kuhna
-    const savedTheme = localStorage.getItem(THEME_KEY);
-    if (savedTheme === "dark" || savedTheme === "light") setTheme(savedTheme);
+    queueMicrotask(() => {
+      // 1) Naqli kuhna
+      const savedTheme = localStorage.getItem(THEME_KEY);
+      if (savedTheme === "dark" || savedTheme === "light") setTheme(savedTheme);
 
-    // 2) Token
-    // Token-i KHUDI korbar. Agar naboshad yo guzashta bosad -
-    // "guest" NAMESAVEM: proxy khudash bo akkaunti khizmati medarod,
-    // aynan hamon tavr ki lentai asosi (/api/backend) kor mekunad.
-    // "Avval daroed" faqat on vaqt paydo mesavad, ki server-i haqiqi
-    // 401 dihad (poyontar, dar catch).
-    const savedToken = getToken();
-    const mine =
-      savedToken !== null && savedToken !== "" && !isTokenExpired(savedToken)
-        ? savedToken
-        : "";
-    if (savedToken !== null && mine === "") removeToken();
+      // 2) Token-i KHUDI korbar. Agar naboshad yo guzashta bosad -
+      // "guest" NAMESHAVEM: proxy khudash bo akkaunti khizmati medarod,
+      // aynan hamon tavr ki lentai asosi (/api/backend) kor mekunad.
+      // "Avval daroed" faqat on vaqt paydo meshavad, ki server-i
+      // haqiqi 401 dihad (dar catch-i loadEverything).
+      const savedToken = getToken();
+      const mine =
+        savedToken !== null && savedToken !== "" && !isTokenExpired(savedToken)
+          ? savedToken
+          : "";
+      if (savedToken !== null && mine === "") removeToken();
 
-    setToken(mine);
-    void loadEverything(mine);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+      setToken(mine);
+      void loadEverything(mine);
+    });
   }, []);
 
   function toggleTheme() {
