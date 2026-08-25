@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { api } from "@/lib/api";
+import { TOKEN_KEY } from "./appTheme";
 import type { UnreadCount, UserProfile } from "@/lib/types";
 
 type SessionValue = {
@@ -53,8 +54,36 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  /**
+   * Разделы команды (chats, reels, profile, search) ходят на бэкенд напрямую и
+   * берут токен из localStorage. Логина у нас нет, поэтому кладём туда тот же
+   * служебный токен, которым пользуется серверный прокси — иначе их страницы
+   * показывают пустой экран.
+   */
   useEffect(() => {
     let alive = true;
+
+    const ensureToken = async () => {
+      try {
+        if (localStorage.getItem(TOKEN_KEY)) return;
+
+        const response = await fetch("/api/session", { cache: "no-store" });
+        const json = (await response.json()) as { data?: string | null };
+        if (!alive || typeof json.data !== "string") return;
+
+        localStorage.setItem(TOKEN_KEY, json.data);
+
+        // Их страницы читают токен только при монтировании — один раз обновим.
+        if (!sessionStorage.getItem("tajgram_token_ready")) {
+          sessionStorage.setItem("tajgram_token_ready", "1");
+          window.location.reload();
+        }
+      } catch {
+        /* без токена разделы команды просто попросят войти */
+      }
+    };
+
+    void ensureToken();
 
     Promise.all([api.myProfile(), api.unreadCount().catch(() => null)])
       .then(([profile, counts]) => {

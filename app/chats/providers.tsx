@@ -32,7 +32,7 @@ import {
   type MyProfile,
 } from "./api";
 import { getToken, isTokenExpired, removeToken } from "./token";
-import { onThemeChange } from "@/components/appTheme";
+import { onThemeChange, toggleAppTheme } from "@/components/appTheme";
 
 export type Theme = "dark" | "light";
 
@@ -151,16 +151,12 @@ export function ChatsProvider({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem(THEME_KEY, theme);
-  }, [theme]);
-
   // Naql az sidebar-i UMUMI ivaz meshavad -> in jo khabar megirem
   useEffect(() => onThemeChange(setTheme), []);
 
   const value: ChatsState = {
     theme,
-    toggleTheme: () => setTheme(theme === "dark" ? "light" : "dark"),
+    toggleTheme: () => setTheme(toggleAppTheme()),
 
     status,
     error,
