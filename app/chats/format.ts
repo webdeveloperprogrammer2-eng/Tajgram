@@ -3,6 +3,7 @@
 //  Funksiyahoi khurdi namoish (sana, harfhoi avval).
 //  Hech so-rov ba server in jo nest.
 // ============================================================
+import { tr } from "@/components/appLang";
 
 // "Iso Samadov" -> "IS"
 export function initials(name: string | null | undefined): string {
@@ -36,7 +37,7 @@ export function chatTime(iso: string | null | undefined): string {
 
   const yesterday = new Date(now);
   yesterday.setDate(now.getDate() - 1);
-  if (date.toDateString() === yesterday.toDateString()) return "Dina";
+  if (date.toDateString() === yesterday.toDateString()) return tr().yesterday;
 
   return date.toLocaleDateString([], { day: "2-digit", month: "2-digit" });
 }
@@ -49,11 +50,11 @@ export function dayLabel(iso: string | null | undefined): string {
   if (Number.isNaN(date.getTime())) return "";
 
   const now = new Date();
-  if (date.toDateString() === now.toDateString()) return "Imruz";
+  if (date.toDateString() === now.toDateString()) return tr().today;
 
   const yesterday = new Date(now);
   yesterday.setDate(now.getDate() - 1);
-  if (date.toDateString() === yesterday.toDateString()) return "Dina";
+  if (date.toDateString() === yesterday.toDateString()) return tr().yesterday;
 
   return date.toLocaleDateString([], {
     day: "2-digit",

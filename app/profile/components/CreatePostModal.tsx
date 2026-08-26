@@ -29,6 +29,7 @@ import {
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
+import { useT } from "@/components/LocaleProvider";
 
 export default function CreatePostModal({
   open,
@@ -37,6 +38,7 @@ export default function CreatePostModal({
   open: boolean;
   onOpenChange: (next: boolean) => void;
 }) {
+  const { t } = useT();
   const { token, reload } = useProfile();
 
   const [title, setTitle] = useState("");
@@ -50,7 +52,7 @@ export default function CreatePostModal({
   // va ba'di istifoda ONRO OZOD mekunem (memory leak nashavad).
   useEffect(() => {
     const urls = files.map((file) => URL.createObjectURL(file));
-    setPreviews(urls);
+    queueMicrotask(() => setPreviews(urls));
 
     return () => {
       for (const url of urls) URL.revokeObjectURL(url);
@@ -61,10 +63,12 @@ export default function CreatePostModal({
   useEffect(() => {
     if (open) return;
 
-    setTitle("");
-    setContent("");
-    setFiles([]);
-    setError("");
+    queueMicrotask(() => {
+      setTitle("");
+      setContent("");
+      setFiles([]);
+      setError("");
+    });
   }, [open]);
 
   function handlePick(event: React.ChangeEvent<HTMLInputElement>) {
@@ -84,7 +88,7 @@ export default function CreatePostModal({
     setError("");
 
     if (files.length === 0) {
-      setError("Kam az kam YAK surat lozim ast.");
+      setError(t.needOnePhoto);
       return;
     }
 
@@ -100,7 +104,7 @@ export default function CreatePostModal({
       await reload();
       onOpenChange(false);
     } catch (err) {
-      setError(errorText(err, "Post guzoshta nashud."));
+      setError(errorText(err, t.postFailed));
     } finally {
       setBusy(false);
     }
@@ -110,7 +114,7 @@ export default function CreatePostModal({
     <Dialog open={open} onOpenChange={busy ? () => {} : onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>POSTI NAV</DialogTitle>
+          <DialogTitle>{t.newPost}</DialogTitle>
           <DialogDescription>POST / POST / ADD-POST</DialogDescription>
         </DialogHeader>
 
@@ -118,7 +122,7 @@ export default function CreatePostModal({
           <div className={`${styles.scroll} max-h-[60vh] space-y-6 px-5 py-6`}>
             {/* ---------- SURATHO ---------- */}
             <div className="space-y-3">
-              <Label>01 / SURATHO (HATMI)</Label>
+              <Label>{t.photosStep}</Label>
 
               <label
                 className="flex cursor-pointer items-center justify-center gap-3 border border-dashed py-8 transition-colors duration-150 hover:border-[var(--signal)]"
@@ -128,7 +132,7 @@ export default function CreatePostModal({
                 <span
                   className={`${styles.mono} text-[10px] uppercase tracking-[0.24em]`}
                 >
-                  SURAT INTIKHOB KUNED
+                  {t.pickPhotos}
                 </span>
                 <input
                   type="file"
@@ -146,14 +150,14 @@ export default function CreatePostModal({
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={url}
-                        alt={`Surat ${index + 1}`}
+                        alt={`${t.photoAlt} ${index + 1}`}
                         className="h-full w-full object-cover"
                       />
 
                       <button
                         type="button"
                         onClick={() => removeFile(index)}
-                        aria-label="Suratro tark kuned"
+                        aria-label={t.removePhoto}
                         className="absolute right-0 top-0 flex h-6 w-6 items-center justify-center"
                         style={{
                           background: "var(--invBg)",
@@ -170,26 +174,26 @@ export default function CreatePostModal({
 
             {/* ---------- SARLAVHA ---------- */}
             <div className="space-y-2">
-              <Label htmlFor="post-title">02 / SARLAVHA</Label>
+              <Label htmlFor="post-title">{t.titleStep}</Label>
               <Input
                 id="post-title"
                 value={title}
                 maxLength={120}
                 onChange={(event) => setTitle(event.target.value)}
-                placeholder="Sarlavhai post"
+                placeholder={t.postTitlePlaceholder}
               />
             </div>
 
             {/* ---------- MATN ---------- */}
             <div className="space-y-2">
-              <Label htmlFor="post-content">03 / MATN</Label>
+              <Label htmlFor="post-content">{t.textStep}</Label>
               <Textarea
                 id="post-content"
                 rows={3}
                 maxLength={500}
                 value={content}
                 onChange={(event) => setContent(event.target.value)}
-                placeholder="Dar borai in post..."
+                placeholder={t.postTextPlaceholder}
               />
             </div>
 
@@ -208,11 +212,11 @@ export default function CreatePostModal({
               onClick={() => onOpenChange(false)}
               disabled={busy}
             >
-              BEKOR
+              {t.cancel}
             </Button>
 
             <Button type="submit" size="sm" disabled={busy}>
-              {busy ? "BOR KARDA ISTODAAST..." : "GUZOSHTAN"}
+              {busy ? t.uploading : t.post}
             </Button>
           </DialogFooter>
         </form>

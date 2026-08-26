@@ -1,22 +1,30 @@
 // ============================================================
 //  app/Auth/proxy/[...path]/route.ts
 //
-//  CHARO IN LOZIM AST?
-//  Backend sarlavhai "Access-Control-Allow-Origin" NAMEFIRISTAD.
-//  Baroi hamin browser so'rovhoi mustaqimro band mekunad (CORS).
-//
-//  HALL: so'rovro na az browser, balki az SERVER-i khudamon
-//  mefiristem. Az server ba server CORS umuman nest.
-//
 //  browser -> /Auth/proxy/Account/login  ->  server-i mo
-//          -> https://instagram-back...  ->  backend
+//          -> https://instagram-back-qibs.onrender.com/Account/login
 //
-//  Vaqte backend CORS-ro durust kunad, in fayl-ro pok karda
-//  dar api.ts API_URL-ro ba adresi backend bar megardonem.
-// ============================================================
+//  CHARO IN LOZIM AST?
+//  Backend sarlavhai "Access-Control-Allow-Origin" NAMEFIRISTAD,
+//  baroi hamin browser so-rovi mustaqimro band mekunad (CORS).
+//
+//  ============================================================
+//  IN JO YAK FARQI MUHIM HAST:
+//
+//  Boqi hamai proxy-ho token TALAB mekunand (be token -> 401).
+//  Vale voridshavi va sabtinom tabian token NADORAND - odam
+//  hanuz nadaromadaast! Baroi hamin in jo `allowAnonymous`
+//  guzoshta meshavad.
+//
+//  Peshtar in fayl kodi TAKRORI-i khudashro dosht va fetch-ro
+//  daruni try/catch namegirift: agar backend khob bosad
+//  (Render 502), sahifai login khatoi 500-i HTML megirift va
+//  ba korbar "khatoi nomalum" menamud. Hozir javobi JSON-i
+//  fahmo meoyad.
+//  ============================================================
 import type { NextRequest } from "next/server";
 
-const BACKEND = "https://instagram-back-qibs.onrender.com";
+import { forwardToBackend } from "@/lib/backendProxy";
 
 async function forward(
   request: NextRequest,
@@ -24,43 +32,10 @@ async function forward(
 ) {
   const { path } = await context.params;
 
-  // /Auth/proxy/Account/login?x=1  ->  https://backend/Account/login?x=1
-  const target = `${BACKEND}/${path.join("/")}${request.nextUrl.search}`;
-
-  // Faqat sarlavhahoi zarurro meguzaronem
-  const headers = new Headers();
-
-  const auth = request.headers.get("authorization");
-  if (auth) headers.set("authorization", auth);
-
-  const contentType = request.headers.get("content-type");
-  if (contentType) headers.set("content-type", contentType);
-
-  // GET va HEAD body nadorand
-  const hasBody = request.method !== "GET" && request.method !== "HEAD";
-
-  const response = await fetch(target, {
-    method: request.method,
-    headers,
-    // arrayBuffer -> JSON va surat (multipart) har du kor mekunand
-    body: hasBody ? await request.arrayBuffer() : undefined,
-    cache: "no-store",
-  });
-
-  const data = await response.arrayBuffer();
-
-  // Javobi backend-ro hamon tavr bar megardonem
-  return new Response(data, {
-    status: response.status,
-    headers: {
-      "content-type":
-        response.headers.get("content-type") ?? "application/json",
-      "cache-control": "no-store",
-    },
-  });
+  // allowAnonymous: login/register BE token meravand
+  return forwardToBackend(request, path, { allowAnonymous: true });
 }
 
-// Hamai methodhoi ki mo istifoda mebarem
 export const GET = forward;
 export const POST = forward;
 export const PUT = forward;

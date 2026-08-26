@@ -32,6 +32,7 @@ import {
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
+import { useT } from "@/components/LocaleProvider";
 
 // Windows ba'ze vaqt namudi (type) faylro namedihad - kholi mefiristad.
 // Baroi hamin ILOVATAN pasvandi faylro ham mesanjem.
@@ -61,6 +62,7 @@ export default function CreateReelModal({
   open: boolean;
   onOpenChange: (next: boolean) => void;
 }) {
+  const { t } = useT();
   const { token, reload } = useProfile();
 
   const [title, setTitle] = useState("");
@@ -107,7 +109,7 @@ export default function CreateReelModal({
     if (file === null) return;
 
     if (!file.type.startsWith("image/")) {
-      setError(`"${file.name}" surat nest. Cover boyad SURAT bosad.`);
+      setError(`"${file.name}" — ${t.coverMustBeImage}`);
       return;
     }
 
@@ -139,7 +141,7 @@ export default function CreateReelModal({
     setError("");
 
     if (video === null) {
-      setError("Avval VIDEO intikhob kuned - be on reel sokhta nameshavad.");
+      setError(t.pickVideoFirst);
       return;
     }
 
@@ -152,7 +154,7 @@ export default function CreateReelModal({
       resetForm();
       onOpenChange(false);
     } catch (err) {
-      setError(errorText(err, "Reel guzoshta nashud."));
+      setError(errorText(err, t.reelFailed));
     } finally {
       setBusy(false);
     }
@@ -162,7 +164,7 @@ export default function CreateReelModal({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>REEL-I NAV</DialogTitle>
+          <DialogTitle>{t.newReel}</DialogTitle>
           <DialogDescription>POST / REELS / ADD-REELS</DialogDescription>
         </DialogHeader>
 
@@ -181,7 +183,7 @@ export default function CreateReelModal({
 
             {/* ---------- 01 VIDEO (HATMI) ---------- */}
             <div className="space-y-3">
-              <Label>01 / VIDEO — HATMI</Label>
+              <Label>{t.videoStep}</Label>
 
               {video === null ? (
                 <>
@@ -193,7 +195,7 @@ export default function CreateReelModal({
                     <span
                       className={`${styles.mono} text-[10px] uppercase tracking-[0.24em]`}
                     >
-                      VIDEO INTIKHOB KUNED
+                      {t.pickVideoCaps}
                     </span>
                     <input
                       type="file"
@@ -209,7 +211,7 @@ export default function CreateReelModal({
                     className={`${styles.mono} text-[9px] uppercase tracking-[0.18em]`}
                     style={{ color: "var(--muted)" }}
                   >
-                    MP4 / MOV / WEBM ... — FAQAT SURAT KIFOYA NEST
+                    {t.videoFormatsHint}
                   </p>
                 </>
               ) : (
@@ -234,7 +236,7 @@ export default function CreateReelModal({
                     <button
                       type="button"
                       onClick={removeVideo}
-                      aria-label="Videoro tark kuned"
+                      aria-label={t.removeVideo}
                       className="shrink-0"
                     >
                       <X className="h-4 w-4" strokeWidth={1.8} />
@@ -258,7 +260,7 @@ export default function CreateReelModal({
 
             {/* ---------- 02 COVER (IKHTIYORI) ---------- */}
             <div className="space-y-3">
-              <Label>02 / SURATI RUYI VIDEO — IKHTIYORI</Label>
+              <Label>{t.coverStep}</Label>
 
               <label
                 className="flex cursor-pointer items-center justify-center gap-3 border border-dashed py-5 transition-colors duration-150 hover:border-[var(--signal)]"
@@ -268,7 +270,7 @@ export default function CreateReelModal({
                 <span
                   className={`${styles.mono} max-w-[70%] truncate text-[10px] uppercase tracking-[0.24em]`}
                 >
-                  {cover === null ? "SURAT INTIKHOB KUNED" : cover.name}
+                  {cover === null ? t.pickPhotos : cover.name}
                 </span>
                 <input type="file" accept="image/*" hidden onChange={pickCover} />
               </label>
@@ -276,26 +278,26 @@ export default function CreateReelModal({
 
             {/* ---------- 03 SARLAVHA ---------- */}
             <div className="space-y-2">
-              <Label htmlFor="reel-title">03 / SARLAVHA</Label>
+              <Label htmlFor="reel-title">{t.reelTitleStep}</Label>
               <Input
                 id="reel-title"
                 value={title}
                 maxLength={120}
                 onChange={(event) => setTitle(event.target.value)}
-                placeholder="Sarlavhai reel"
+                placeholder={t.reelTitlePlaceholder}
               />
             </div>
 
             {/* ---------- 04 TAVSIF ---------- */}
             <div className="space-y-2">
-              <Label htmlFor="reel-description">04 / TAVSIF</Label>
+              <Label htmlFor="reel-description">{t.reelTextStep}</Label>
               <Textarea
                 id="reel-description"
                 rows={3}
                 maxLength={500}
                 value={description}
                 onChange={(event) => setDescription(event.target.value)}
-                placeholder="Dar borai in video..."
+                placeholder={t.reelTextPlaceholder}
               />
             </div>
           </div>
@@ -307,7 +309,7 @@ export default function CreateReelModal({
                 className={`${styles.mono} mr-auto text-[9px] uppercase tracking-[0.18em]`}
                 style={{ color: "var(--muted)" }}
               >
-                VIDEO LOZIM AST
+                {t.videoRequiredNote}
               </span>
             )}
 
@@ -318,7 +320,7 @@ export default function CreateReelModal({
               onClick={() => handleOpenChange(false)}
               disabled={busy}
             >
-              BEKOR
+              {t.cancel}
             </Button>
 
             <Button
@@ -327,7 +329,7 @@ export default function CreateReelModal({
               variant="signal"
               disabled={busy || video === null}
             >
-              {busy ? "BOR KARDA ISTODAAST..." : "GUZOSHTAN"}
+              {busy ? t.uploading : t.post}
             </Button>
           </DialogFooter>
         </form>

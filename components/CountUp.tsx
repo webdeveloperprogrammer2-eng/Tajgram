@@ -34,7 +34,7 @@ export function CountUp({
       typeof window === "undefined" ||
       window.matchMedia("(prefers-reduced-motion: reduce)").matches
     ) {
-      setShown(target);
+      queueMicrotask(() => setShown(target));
       return;
     }
 

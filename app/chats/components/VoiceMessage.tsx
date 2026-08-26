@@ -9,10 +9,12 @@ import { useEffect, useRef, useState } from "react";
 import { Pause, Play } from "lucide-react";
 
 import styles from "../chats.module.css";
+import { useT } from "@/components/LocaleProvider";
 
 const SPEEDS = [1, 1.5, 2];
 
 export default function VoiceMessage({ src }: { src: string }) {
+  const { t } = useT();
   const audio = useRef<HTMLAudioElement>(null);
 
   const [playing, setPlaying] = useState(false);
@@ -93,7 +95,7 @@ export default function VoiceMessage({ src }: { src: string }) {
       <button
         type="button"
         onClick={toggle}
-        aria-label={playing ? "Istoned" : "Gush kuned"}
+        aria-label={playing ? t.pause : t.play}
         className={styles.voicePlay}
       >
         {playing ? (
@@ -121,7 +123,7 @@ export default function VoiceMessage({ src }: { src: string }) {
       <button
         type="button"
         onClick={nextSpeed}
-        aria-label="Sur'ati navokhtan"
+        aria-label={t.playbackSpeed}
         className={styles.voiceSpeed}
       >
         {SPEEDS[speedIndex]}x

@@ -9,6 +9,7 @@
 //  in jo NEST. Har chize ki dar sahifa namoyon meshavad -
 //  az server meoyad.
 // ============================================================
+import { tr } from "@/components/appLang";
 
 // 1) Manzili VOQEI-i backend.
 //    Faqat baroi SURAT va VIDEO istifoda meshavad
@@ -124,6 +125,36 @@ export type Story = {
   viewerDto: StoryViewer | null;
 };
 
+// ============================================================
+//  ACTUAL ("Actualniy" / Highlights)
+//  Backend inro 26.08.2026 ilova kard - bakhshi /Actual.
+//
+//  Dar instagram "actualniy" - in storyhoi HAMESHAGI ast:
+//  story ba'di 24 soat ghoib meshavad, vale agar onro ba
+//  "actualniy" guzori - dar profil HAMESHA memonad.
+// ============================================================
+
+// GetActualDto
+export type Actual = {
+  actualId: number;
+  title: string;
+  /** Muqovai guzoshtashuda, yo storyi AVVALI hamin actual. */
+  coverImage: string | null;
+  storyCount: number;
+  userId: string;
+  userName: string;
+  fullName: string;
+  userImage: string | null;
+  createAt: string;
+  updateAt: string;
+};
+
+// GetActualDetailsDto = GetActualDto + storyho
+export type ActualDetails = Actual & {
+  /** Bo tartibi namoish: avval on ki peshtar ilova shudaast. */
+  stories: Story[];
+};
+
 // FollowUserDto
 export type FollowUser = {
   userId: string;
@@ -160,8 +191,23 @@ export type Comment = {
 // ------------------------------------------------------------
 export function mediaUrl(name: string | null | undefined): string | null {
   if (!name) return null;
-  if (name.startsWith("http")) return name; // server adresi purra dod
+
+  // "blob:" va "data:" - suratho ki HANUZ dar browser hastand
+  // (namoishi peshaki pesh az firistodan). Peshtar in jo faqat
+  // "http" sanjida meshud va chunin adresho VAYRON meshudand:
+  // BACKEND_URL/blob:http://... -> surat namenamud.
+  if (/^(https?:|blob:|data:)/i.test(name)) return name;
+
   return `${BACKEND_URL}/${name.replace(/^\/+/, "")}`;
+}
+
+/**
+ * Fayl video ast yo surat?
+ * Server namudi faylro alohida nameguyad - faqat nom medihad,
+ * baroi hamin az okhiri nom mefahmem.
+ */
+export function isVideoName(name: string | null | undefined): boolean {
+  return !!name && /\.(mp4|mov|webm|m4v|ogv|avi|mkv)$/i.test(name);
 }
 
 // ------------------------------------------------------------
@@ -211,7 +257,7 @@ function toApiError(err: unknown, path: string): ApiError {
     typeof navigator !== "undefined" && navigator.onLine === false;
 
   if (offline) {
-    return new ApiError(["Internet nest. Ulanishro sanjed."], 0);
+    return new ApiError([tr().offline], 0);
   }
 
   // Dar konsol tafsiloti purra - baroi mo (dasturson)
@@ -232,13 +278,13 @@ function toApiError(err: unknown, path: string): ApiError {
 //  ba'di raqami HTTP matni fahmo menavisem.
 // ------------------------------------------------------------
 function describeStatus(status: number, path: string): string {
-  if (status === 401) return "Token guzashtaast. Az nav daroed.";
-  if (status === 403) return "Ijozat nest.";
-  if (status === 404) return `Chunin ma'lumot yoft nashud: ${path}`;
-  if (status === 413) return "Fayl khele kalon ast. Khurdtarashro intikhob kuned.";
+  if (status === 401) return tr().errTokenExpired;
+  if (status === 403) return tr().errForbidden;
+  if (status === 404) return `${tr().errNotFound}: ${path}`;
+  if (status === 413) return tr().errTooLarge;
   if (status === 502 || status === 503)
-    return "Backend hozir khob ast (Render). 30-60 soniya sabr kuned.";
-  if (status >= 500) return `Khatoi daruni server (HTTP ${status}).`;
+    return tr().errServerAsleep;
+  if (status >= 500) return `${tr().errServer} (HTTP ${status}).`;
 
   return `HTTP ${status} - ${path}`;
 }
@@ -523,6 +569,110 @@ export function viewStory(token: string, storyId: number) {
     method: "POST",
     token,
     query: { StoryId: storyId },
+  });
+}
+
+// ============================================================
+//  ACTUAL ("Actualniy" / Highlights)
+// ============================================================
+
+// GET /Actual/get-my-actuals -> actualhoi MAN
+export function getMyActuals(token: string) {
+  return request<Actual[]>("/Actual/get-my-actuals", { token });
+}
+
+// GET /Actual/get-actuals?UserId=... -> actualhoi korbari DIGAR
+export function getUserActuals(token: string, userId: string) {
+  return request<Actual[]>("/Actual/get-actuals", {
+    token,
+    query: { UserId: userId, PageNumber: 1, PageSize: 50 },
+  });
+}
+
+// GET /Actual/get-actual-by-id -> hamrohi HAMAI storyhoyash
+export function getActualById(token: string, id: number) {
+  return request<ActualDetails>("/Actual/get-actual-by-id", {
+    token,
+    query: { id },
+  });
+}
+
+/**
+ * POST /Actual/add-actual  (multipart)
+ *   Title    - hatmi
+ *   StoryIds - raqamhoi story bo vergul: "12,15,18"
+ *   Cover    - ikhtiyori; agar naboshad, server storyi
+ *              avvalro muqova mekunad.
+ */
+export function addActual(
+  token: string,
+  body: { title: string; storyIds: number[]; cover?: File | null }
+) {
+  const form = new FormData();
+  form.append("Title", body.title);
+
+  if (body.storyIds.length > 0) {
+    form.append("StoryIds", body.storyIds.join(","));
+  }
+  if (body.cover) form.append("Cover", body.cover);
+
+  return request<Actual>("/Actual/add-actual", {
+    method: "POST",
+    token,
+    form,
+  });
+}
+
+// PUT /Actual/update-actual  (multipart) - nom yo muqovaro ivaz mekunad
+export function updateActual(
+  token: string,
+  body: { actualId: number; title?: string; cover?: File | null }
+) {
+  const form = new FormData();
+  form.append("ActualId", String(body.actualId));
+
+  if (body.title !== undefined) form.append("Title", body.title);
+  if (body.cover) form.append("Cover", body.cover);
+
+  return request<Actual>("/Actual/update-actual", {
+    method: "PUT",
+    token,
+    form,
+  });
+}
+
+// POST /Actual/add-story-to-actual
+export function addStoryToActual(
+  token: string,
+  actualId: number,
+  storyId: number
+) {
+  return request<string>("/Actual/add-story-to-actual", {
+    method: "POST",
+    token,
+    query: { actualId, storyId },
+  });
+}
+
+// DELETE /Actual/remove-story-from-actual
+export function removeStoryFromActual(
+  token: string,
+  actualId: number,
+  storyId: number
+) {
+  return request<string>("/Actual/remove-story-from-actual", {
+    method: "DELETE",
+    token,
+    query: { actualId, storyId },
+  });
+}
+
+// DELETE /Actual/delete-actual
+export function deleteActual(token: string, id: number) {
+  return request<string>("/Actual/delete-actual", {
+    method: "DELETE",
+    token,
+    query: { id },
   });
 }
 

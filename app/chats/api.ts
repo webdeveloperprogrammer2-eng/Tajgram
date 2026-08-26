@@ -17,6 +17,7 @@
 //
 //  QOIDA: hech ma'lumoti soakhta (demo/test) in jo NEST.
 // ============================================================
+import { tr } from "@/components/appLang";
 
 // Manzili VOQEI-i backend - faqat baroi SURAT va FAYL
 export const BACKEND_URL = "https://instagram-back-qibs.onrender.com";
@@ -136,7 +137,7 @@ function toApiError(err: unknown, path: string): ApiError {
     typeof navigator !== "undefined" && navigator.onLine === false;
 
   if (offline) {
-    return new ApiError(["Internet nest. Ulanishro sanjed."], 0);
+    return new ApiError([tr().offline], 0);
   }
 
   console.error(`[chats] so-rov narasid: ${path}`, err);
@@ -152,13 +153,13 @@ function toApiError(err: unknown, path: string): ApiError {
 }
 
 function describeStatus(status: number, path: string): string {
-  if (status === 401) return "Token guzashtaast. Az nav daroed.";
-  if (status === 403) return "Ijozat nest.";
-  if (status === 404) return `Chunin ma'lumot yoft nashud: ${path}`;
-  if (status === 413) return "Fayl khele kalon ast. Khurdtarashro intikhob kuned.";
+  if (status === 401) return tr().errTokenExpired;
+  if (status === 403) return tr().errForbidden;
+  if (status === 404) return `${tr().errNotFound}: ${path}`;
+  if (status === 413) return tr().errTooLarge;
   if (status === 502 || status === 503)
-    return "Backend hozir khob ast (Render). 30-60 soniya sabr kuned.";
-  if (status >= 500) return `Khatoi daruni server (HTTP ${status}).`;
+    return tr().errServerAsleep;
+  if (status >= 500) return `${tr().errServer} (HTTP ${status}).`;
 
   return `HTTP ${status} - ${path}`;
 }
@@ -322,4 +323,44 @@ export function getSubscriptions(token: string, userId: string) {
     token,
     query: { UserId: userId },
   });
+}
+
+// ============================================================
+//  BLOK KARDAN
+//  POST   /Settings/block-user?userId=...
+//  DELETE /Settings/unblock-user?userId=...
+//  GET    /Settings/get-blocked-users
+//
+//  DIQQAT (az swagger): blok kardan podpiskaro dar HAR DU
+//  taraf ham me-burad. Yane ba'di blok "canWrite" khudash
+//  false meshavad va maidoni navishtan basta megardad.
+// ============================================================
+
+export type BlockedUser = {
+  id: number;
+  userId: string;
+  userName: string;
+  fullName: string;
+  image: string | null;
+  blockedAt: string;
+};
+
+export function blockUser(token: string, userId: string) {
+  return request<string>("/Settings/block-user", {
+    method: "POST",
+    token,
+    query: { userId },
+  });
+}
+
+export function unblockUser(token: string, userId: string) {
+  return request<string>("/Settings/unblock-user", {
+    method: "DELETE",
+    token,
+    query: { userId },
+  });
+}
+
+export function getBlockedUsers(token: string) {
+  return request<BlockedUser[]>("/Settings/get-blocked-users", { token });
 }

@@ -4,9 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { ImageIcon } from "@/components/icons";
+import { useT } from "@/components/LocaleProvider";
 
 /** Новый пост: POST /Post/add-post (multipart, поле Images обязательно). */
 export default function CreatePage() {
+  const { t } = useT();
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [picked, setPicked] = useState<{ file: File; url: string }[]>([]);
@@ -39,7 +41,7 @@ export default function CreatePage() {
       await api.addPost(form);
       router.push("/");
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Не удалось опубликовать");
+      setError(cause instanceof Error ? cause.message : t.publishFailed);
     } finally {
       setBusy(false);
     }
@@ -47,19 +49,19 @@ export default function CreatePage() {
 
   return (
     <div className="mx-auto w-full max-w-[600px] px-4 py-6">
-      <h1 className="animate-fade-up mb-5 text-[22px] font-bold">Create post</h1>
+      <h1 className="animate-fade-up mb-5 text-[22px] font-bold">{t.createTitle}</h1>
 
       <form onSubmit={submit} className="space-y-4">
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
-          className="group flex w-full flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-[var(--line)] bg-[linear-gradient(135deg,var(--panelSoft),#f7f9ff)] py-12 text-[var(--muted)] transition-all duration-300 hover:border-[var(--accentA)] hover:bg-[#f5faff] hover:text-[var(--accentA)]"
+          className="group flex w-full flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-[var(--line)] bg-[var(--panelSoft)] py-12 text-[var(--muted)] transition-all duration-300 hover:border-[var(--accentA)] hover:bg-[var(--panel)] hover:text-[var(--accentA)]"
         >
           <span className="transition-transform duration-300 group-hover:-translate-y-1 group-hover:scale-110">
             <ImageIcon size={40} />
           </span>
           <span className="text-[14px]">
-            {files.length ? `Выбрано файлов: ${files.length}` : "Выбрать фото или видео"}
+            {files.length ? `${t.picked}: ${files.length}` : t.pickFiles}
           </span>
         </button>
 
@@ -101,14 +103,14 @@ export default function CreatePage() {
         <input
           value={title}
           onChange={(event) => setTitle(event.target.value)}
-          placeholder="Заголовок (необязательно)"
+          placeholder={t.captionTitle}
           className="w-full rounded-xl border border-[var(--line)] px-3 py-2.5 text-[14px] outline-none transition-all duration-200 focus:border-[var(--accentA)] focus:shadow-[0_0_0_3px_rgba(0,149,246,0.15)]"
         />
 
         <textarea
           value={content}
           onChange={(event) => setContent(event.target.value)}
-          placeholder="Описание"
+          placeholder={t.captionText}
           rows={4}
           className="w-full resize-none rounded-xl border border-[var(--line)] px-3 py-2.5 text-[14px] outline-none transition-all duration-200 focus:border-[var(--accentA)] focus:shadow-[0_0_0_3px_rgba(0,149,246,0.15)]"
         />
@@ -120,7 +122,7 @@ export default function CreatePage() {
           disabled={busy}
           className="w-full rounded-xl bg-[var(--accentA)] py-2.5 text-[14px] font-semibold text-white shadow-[0_8px_20px_-6px_rgba(0,149,246,0.8)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#1877f2] active:scale-[0.98] disabled:opacity-60"
         >
-          {busy ? "Публикуем..." : "Опубликовать"}
+          {busy ? t.publishing : t.publish}
         </button>
       </form>
     </div>

@@ -42,6 +42,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
 import { Input } from "../ui/input";
+import { useT } from "@/components/LocaleProvider";
 
 export default function ReelModal({
   reel,
@@ -50,6 +51,7 @@ export default function ReelModal({
   reel: Reel | null;
   onClose: () => void;
 }) {
+  const { t } = useT();
   const { token, patchReel, reload } = useProfile();
 
   const [data, setData] = useState<Reel | null>(null);
@@ -59,9 +61,11 @@ export default function ReelModal({
 
   // Vaqte reel-i nav kushoda meshavad
   useEffect(() => {
-    setData(reel);
-    setComments([]);
-    setCommentText("");
+    queueMicrotask(() => {
+      setData(reel);
+      setComments([]);
+      setCommentText("");
+    });
 
     if (reel === null || token === "") return;
 
@@ -233,12 +237,12 @@ export default function ReelModal({
             >
               <BigStat
                 icon={<Eye className="h-4 w-4" strokeWidth={1.6} />}
-                label="PROSMOTR"
+                label={t.views2}
                 value={data.reelsViewCount}
               />
               <BigStat
                 icon={<Heart className="h-4 w-4" strokeWidth={1.6} />}
-                label="LIKE"
+                label={t.likes}
                 value={data.reelsLikeCount}
                 withBorder
               />
@@ -359,7 +363,7 @@ export default function ReelModal({
               <Input
                 value={commentText}
                 onChange={(event) => setCommentText(event.target.value)}
-                placeholder="Komment navised..."
+                placeholder={t.addComment}
                 maxLength={300}
                 className="text-sm"
               />
@@ -369,7 +373,7 @@ export default function ReelModal({
                 size="icon"
                 variant="ghost"
                 disabled={busy || commentText.trim() === ""}
-                aria-label="Firistodan"
+                aria-label={t.sendAction}
               >
                 <Send className="h-4 w-4" strokeWidth={1.6} />
               </Button>

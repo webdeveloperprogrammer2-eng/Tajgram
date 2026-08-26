@@ -44,7 +44,7 @@ export default function SavedPage() {
 
       {!loading && posts.length === 0 && (
         <div className="animate-fade-up flex flex-col items-center gap-3 py-16 text-center text-[var(--muted)]">
-          <span className="flex h-20 w-20 items-center justify-center rounded-full bg-[linear-gradient(135deg,#eff6ff,#f0fdfa)] text-[#38bdf8]">
+          <span className="flex h-20 w-20 items-center justify-center rounded-full bg-[var(--panel)] text-[var(--muted)]">
             <BookmarkIcon size={40} />
           </span>
           <p className="text-[14px]">{t.noSaved}</p>

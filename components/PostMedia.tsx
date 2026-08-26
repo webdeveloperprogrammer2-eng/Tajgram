@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { isVideo, mediaUrl } from "@/lib/api";
 import { ImageIcon, PlayIcon, SoundIcon } from "./icons";
+import { useT } from "./LocaleProvider";
 
 /**
  * Один слайд поста: картинка или видео. Файл может быть недоступен,
@@ -22,6 +23,7 @@ export function PostMedia({
   /** Nisbati tabi'ii media (bar / balandi) - to qutti khudro moslonad. */
   onRatio?: (ratio: number) => void;
 }) {
+  const { t } = useT();
   const [broken, setBroken] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [playing, setPlaying] = useState(false);
@@ -33,10 +35,10 @@ export function PostMedia({
   if (!url || broken) {
     return (
       <div
-        className={`flex h-full w-full flex-col items-center justify-center gap-2 bg-[linear-gradient(135deg,#fbfbfb,var(--panel))] text-[#c7c7c7] ${className}`}
+        className={`flex h-full w-full flex-col items-center justify-center gap-2 bg-[var(--panel)] text-[var(--muted)] ${className}`}
       >
         <ImageIcon size={40} className="animate-fade-in" />
-        <span className="text-[11px] text-[#a8a8a8]">Media unavailable</span>
+        <span className="text-[11px] text-[#a8a8a8]">{t.mediaUnavailable}</span>
       </div>
     );
   }
@@ -90,7 +92,7 @@ export function PostMedia({
         <button
           type="button"
           onClick={toggle}
-          aria-label={playing ? "Pause" : "Play"}
+          aria-label={playing ? t.pause : t.play}
           className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${
             playing ? "pointer-events-none opacity-0" : "opacity-100"
           }`}
@@ -103,7 +105,7 @@ export function PostMedia({
         <button
           type="button"
           onClick={() => setMuted((value) => !value)}
-          aria-label={muted ? "Unmute" : "Mute"}
+          aria-label={muted ? t.unmute : t.mute}
           className="absolute bottom-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur-sm transition-transform duration-200 hover:scale-110 active:scale-90"
         >
           <SoundIcon size={15} muted={muted} />

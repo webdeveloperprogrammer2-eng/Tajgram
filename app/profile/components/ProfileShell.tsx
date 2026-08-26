@@ -2,53 +2,32 @@
 
 // ============================================================
 //  ProfileShell - "ramkai" umumi baroi sahifai profil.
-//  Dizayn: monandi instagram -
-//    - SIDEBAR-i chap (kompyuter)
-//    - qatori poyoni (telefon)
-//    - qatori boloi bo logo (telefon)
-//  Logika ivaz nashudaast: faqat naql (theme) va baromadan.
+//
+//  Peshtar in jo doghhoi rangin (aura) va fon-i khudash bud -
+//  baroi hamin /profile az tamomi sayt farq mekard.
+//  Instagram fon-i sof dorad. Hozir mo ham.
+//
+//  Sidebar in jo NEST - on YAK JOI ast (components/AppFrame.tsx)
+//  va ba HAMAI sayt kor mekunad.
+//
+//  Andozahoi instagram: pahnii mazmun 935px.
 // ============================================================
 
-import { ProfileProvider, useProfile } from "../providers";
-import styles from "../profile.module.css";
+import { ProfileProvider } from "../providers";
 
 export default function ProfileShell({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // Avval Provider, ba'd Frame - chunki Frame az Provider ma'lumot megirad
   return (
     <ProfileProvider>
-      <Frame>{children}</Frame>
+      {/* pt-[60px] - joi qatori boloi telefon;
+          md:pl-[245px] - joi sidebar-i kompyuter;
+          pb-[70px] - joi qatori poyoni telefon. */}
+      <main className="min-h-dvh bg-[var(--bg)] pt-[60px] pb-[70px] md:pt-0 md:pb-10 md:pl-[245px]">
+        <div className="mx-auto w-full max-w-[935px] px-4 md:px-5">{children}</div>
+      </main>
     </ProfileProvider>
   );
 }
-
-
-function Frame({ children }: { children: React.ReactNode }) {
-  const { theme } = useProfile();
-
-  // Radix modal-horo ba <body> mekashad - berun az .shell.
-
-  return (
-    <div
-      data-theme={theme}
-      className={`${styles.shell} relative min-h-screen`}
-    >
-      {/* Nurhoi narmi gradient dar fon */}
-      <span className={styles.aura} aria-hidden />
-      <span className={styles.auraLow} aria-hidden />
-
-
-
-      {/* ================= QISMI ASOSI ================= */}
-      <main className="relative z-10 mx-auto w-full max-w-[935px] px-4 pt-[60px] pb-28 md:pl-[265px] md:pr-6 md:pt-6 md:pb-16">
-        {children}
-      </main>
-
-    </div>
-  );
-}
-
-

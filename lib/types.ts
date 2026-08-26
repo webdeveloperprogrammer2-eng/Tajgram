@@ -62,6 +62,32 @@ export type Story = {
   viewerDto?: StoryViewer;
 };
 
+/**
+ * "Actualniy" (Highlights) - storyhoi HAMESHAGI.
+ * Story ba'di 24 soat ghoib meshavad; agar onro ba "actual"
+ * guzori - dar profil hamesha memonad. Backend inro dar
+ * bakhshi /Actual dorad (GetActualDto).
+ */
+export type Actual = {
+  actualId: number;
+  title: string;
+  /** Muqovai guzoshtashuda, yo storyi AVVALI hamin actual. */
+  coverImage: string | null;
+  storyCount: number;
+  userId: string;
+  userName: string;
+  fullName: string;
+  userImage: string | null;
+  createAt: string;
+  updateAt: string;
+};
+
+/** GetActualDetailsDto = Actual + hamai storyhoyash. */
+export type ActualDetails = Actual & {
+  /** Bo tartibi namoish: avval on ki peshtar ilova shudaast. */
+  stories: Story[];
+};
+
 export type UserProfile = {
   userId: string;
   userName: string;

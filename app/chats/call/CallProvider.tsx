@@ -4,15 +4,28 @@
 //  app/chats/call/CallProvider.tsx
 //  "Maghzi" zvanok: WebRTC + holati zvanok.
 //
-//  ROHI ZVANOK (ki chi mefiristad):
-//    A: "ring"   ->  B      (dar B oynai "Zang meoyad" kushoda meshavad)
-//    B: "accept" ->  A
-//    A: "offer"  ->  B      (SDP)
-//    B: "answer" ->  A      (SDP)
-//    A <-> B: "ice"         (rohhoi shabaka)
-//    har du:  "hangup" / "decline" / "busy"
+//  ================== CHI IVAZ SHUD ==================
+//  Peshtar in jo yak signaling-i KHUDSOKHTA istifoda meshud:
+//  app/chats/signal/route.ts (long polling, khotirai protsessi
+//  Next) + BroadcastChannel. On dar YAK browser kor mekard va
+//  dar YAK protsessi server - vale bayni DU DASTGOH qariyan
+//  hech goh. Baroi hamin "zang meravad..." menavisht va
+//  ba tarafi digar HECH CHIZ namerasid.
 //
-//  Signaling az ./signaling.ts meoyad (BroadcastChannel yo WebSocket).
+//  Hozir hama chiz az BACKEND-I HAQIQI meguzarad:
+//    - lifecycle: /Call/start-call, answer-call, decline-call,
+//                 end-call            (./callApi.ts)
+//    - SDP/ICE:   WebSocket /realtime (./realtime.ts)
+//    - STUN/TURN: /Call/get-ice-servers yo hamon chize ki
+//                 daruni "call:incoming" meoyad
+//
+//  ROHI ZVANOK:
+//    A: POST start-call        -> backend ba B "call:incoming"
+//    A: call:offer   (SDP)     -> B
+//    B: POST answer-call       -> backend ba A khabar medihad
+//    B: call:answer  (SDP)     -> A
+//    A <-> B: call:ice-candidate
+//    har du: POST end-call / decline-call
 // ============================================================
 
 import {
@@ -28,16 +41,25 @@ import {
 import type { Chat } from "../api";
 import { useChats } from "../providers";
 import {
-  ICE_SERVERS,
-  newCallId,
+  answerCall,
+  declineCall,
+  endCall,
+  FALLBACK_ICE,
+  getIceServers,
+  startCall,
+  type CallRecord,
+  type CallType,
+} from "./callApi";
+import {
+  Realtime,
   sameId,
-  Signaling,
-  SIGNALING_URL,
-  type CallMedia,
-  type Signal,
-  type SignalingStatus,
-} from "./signaling";
+  type RealtimeMessage,
+  type RealtimeStatus,
+} from "./realtime";
 import { Ringer } from "./ringtone";
+import { tr } from "@/components/appLang";
+
+export type CallMedia = CallType;
 
 export type CallPhase =
   | "idle" // zvanok nest
@@ -68,20 +90,20 @@ type CallState = {
 
   startedAt: number | null; // vaqti ulanish (baroi soat)
   note: string; // sababi tamomshavi yo khato
-  signalStatus: SignalingStatus;
+  signalStatus: RealtimeStatus;
 
   // ---------- REAL TIME baroi payomho ----------
-  // Ba hamsuhbat mego-em: "payomi nav guzoshtam, az nav bikhon"
+  // DIQQAT: hozir backend KHUDASH ba giranda "chat:message"
+  // mefiristad (hangomi send-message). Baroi hamin notifyChat
+  // digar chize nafiristad - faqat baroi hamon jo-hoe monda,
+  // ki onro sado mekunand.
   notifyChat: (toUserId: string, chatId: number) => void;
-  // Guş kardan: har bor ki hamsuhbat chize firistad, in sado medihad
   onChatEvent: (
     listener: (chatId: number, fromUserId: string) => void
   ) => () => void;
 
   // ---------- "PECHATAYET" ----------
-  // Ba hamsuhbat mego-em: "man hozir navishta istodaam" / "bas kardam"
   notifyTyping: (toUserId: string, chatId: number, on: boolean) => void;
-  // Gush kardan: hamsuhbat navishta istodaast yo ne
   onTypingEvent: (
     listener: (chatId: number, fromUserId: string, on: boolean) => void
   ) => () => void;
@@ -96,11 +118,11 @@ type CallState = {
 
 const CallContext = createContext<CallState | null>(null);
 
-const RING_TIMEOUT = 40_000; // 40 soniya sabr mekunem
-const RING_REPEAT_MS = 2_500; // har chand vaqt "ring"-ro takror mefiristem
+const RING_TIMEOUT = 45_000; // chand vaqt zang mezanem
+const END_VIEW_MS = 2_400; // "tamom shud" chand vaqt namoyon memonad
 
 export function CallProvider({ children }: { children: React.ReactNode }) {
-  const { me } = useChats();
+  const { me, token } = useChats();
 
   const [phase, setPhase] = useState<CallPhase>("idle");
   const [media, setMedia] = useState<CallMedia>("audio");
@@ -114,62 +136,48 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
 
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [note, setNote] = useState("");
-  const [signalStatus, setSignalStatus] = useState<SignalingStatus>("off");
+  const [signalStatus, setSignalStatus] = useState<RealtimeStatus>("off");
 
   // ---------- Chizhoe ki render-ro ivaz namekunand ----------
-  const hub = useRef<Signaling | null>(null);
+  const hub = useRef<Realtime | null>(null);
   const pc = useRef<RTCPeerConnection | null>(null);
   const local = useRef<MediaStream | null>(null);
-  const callId = useRef<string>("");
+
+  const callId = useRef<number | null>(null);
   const peerRef = useRef<CallPeer | null>(null);
   const mediaRef = useRef<CallMedia>("audio");
   const phaseRef = useRef<CallPhase>("idle");
   const isCaller = useRef(false);
+  const tokenRef = useRef(token);
+
+  const iceServers = useRef<RTCIceServer[]>(FALLBACK_ICE);
   const iceQueue = useRef<RTCIceCandidateInit[]>([]);
+  // Offer metavonad PESH az on rasad, ki korbar "qabul"-ro pahş kunad
+  const pendingOffer = useRef<RTCSessionDescriptionInit | null>(null);
+
   const ringTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // "ring"-ro takror mefiristem: agar hamsuhbat yak-du soniya
-  // dertar sahifaro kusod, zang boz ham ba u merasad.
-  const ringRepeat = useRef<ReturnType<typeof setInterval> | null>(null);
   const endTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const ringer = useRef<Ringer | null>(null);
 
-  // Onhoe ki payomhoi navro intizorand (ChatWindow, ChatsShell)
   const chatListeners = useRef(
     new Set<(chatId: number, fromUserId: string) => void>()
   );
-
-  // Onhoe ki "pechatayet"-ro intizorand (ChatWindow)
   const typingListeners = useRef(
     new Set<(chatId: number, fromUserId: string, on: boolean) => void>()
   );
+
+  useEffect(() => {
+    tokenRef.current = token;
+  }, [token]);
 
   const setPhaseSafe = useCallback((next: CallPhase) => {
     phaseRef.current = next;
     setPhase(next);
   }, []);
 
-  // ------------------------------------------------------------
-  //  Firistodani signal ba hamsuhbat
-  // ------------------------------------------------------------
-  const emit = useCallback(
-    (kind: Signal["kind"], payload?: unknown, target?: CallPeer) => {
-      const to = target ?? peerRef.current;
-      if (hub.current === null || me === null || to === null) return;
-
-      hub.current.send({
-        kind,
-        callId: callId.current,
-        chatId: to.chatId,
-        media: mediaRef.current,
-        from: me.userId,
-        fromName: me.fullName || me.userName,
-        fromImage: me.image,
-        to: to.userId,
-        payload,
-      });
-    },
-    [me]
-  );
+  const emit = useCallback((event: string, data: unknown) => {
+    hub.current?.send(event, data);
+  }, []);
 
   // ------------------------------------------------------------
   //  Tozakuni: mikrofon/kamera khomush, ulanish basta
@@ -178,10 +186,6 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     if (ringTimer.current !== null) {
       clearTimeout(ringTimer.current);
       ringTimer.current = null;
-    }
-    if (ringRepeat.current !== null) {
-      clearInterval(ringRepeat.current);
-      ringRepeat.current = null;
     }
 
     ringer.current?.stop();
@@ -200,6 +204,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
 
     setRemoteStream(null);
     iceQueue.current = [];
+    pendingOffer.current = null;
     setStartedAt(null);
     setMicOff(false);
     setCamOff(false);
@@ -216,24 +221,45 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
 
       if (endTimer.current !== null) clearTimeout(endTimer.current);
       endTimer.current = setTimeout(() => {
+        endTimer.current = null;
         setPhaseSafe("idle");
         setPeer(null);
         peerRef.current = null;
-        callId.current = "";
+        callId.current = null;
+        isCaller.current = false;
         setNote("");
-      }, 2200);
+      }, END_VIEW_MS);
     },
     [cleanup, setPhaseSafe]
   );
 
+  // Zvanoki peshina hanuz "ended"-ro nishon medihad? Taymerashro
+  // mekushem - be in, ba'di 2 soniya zvanoki NAV khomush meshud.
+  const clearEndTimer = useCallback(() => {
+    if (endTimer.current !== null) {
+      clearTimeout(endTimer.current);
+      endTimer.current = null;
+    }
+  }, []);
+
+  // "Zvanokro tamom kun" daruni RTCPeerConnection lozim ast, vale
+  // on poyontar e'lon meshavad -> az rohi ref megirem.
+  const hangupRef = useRef<(reason: string) => Promise<void>>(async () => {});
+
   // ------------------------------------------------------------
-  //  Soakhtani RTCPeerConnection
+  //  RTCPeerConnection
   // ------------------------------------------------------------
   const buildPeerConnection = useCallback(() => {
-    const connection = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+    const connection = new RTCPeerConnection({
+      iceServers: iceServers.current,
+    });
 
     connection.onicecandidate = (event) => {
-      if (event.candidate !== null) emit("ice", event.candidate.toJSON());
+      if (event.candidate === null || callId.current === null) return;
+      emit("call:ice-candidate", {
+        callId: callId.current,
+        candidate: event.candidate.toJSON(),
+      });
     };
 
     connection.ontrack = (event) => {
@@ -255,17 +281,19 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (state === "failed") {
-        finish("Ulanish nashud (shabaka band ast).");
+        void hangupRef.current("Ulanish nashud (shabaka band ast).");
       }
 
       if (state === "disconnected" || state === "closed") {
-        if (phaseRef.current === "active") finish("Ulanish qat' shud.");
+        if (phaseRef.current === "active") {
+          void hangupRef.current("Ulanish qat' shud.");
+        }
       }
     };
 
     pc.current = connection;
     return connection;
-  }, [emit, finish, setPhaseSafe]);
+  }, [emit, setPhaseSafe]);
 
   // Mikrofon/kamera pursidan
   const openDevices = useCallback(async (kind: CallMedia) => {
@@ -273,15 +301,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       typeof navigator === "undefined" ||
       navigator.mediaDevices === undefined
     ) {
-      // Sababi ASOSI: sahifa az rohi HTTP kushoda shudaast.
-      // Browser getUserMedia-ro FAQAT dar https:// yo localhost medihad.
-      // Agar telefonro bo http://192.168.x.x:3000 pay vast kuned,
-      // navigator.mediaDevices tamoman NEST -> zvanok nameshavad.
-      throw new Error(
-        typeof window !== "undefined" && !window.isSecureContext
-          ? "Zvanok faqat dar https:// (yo localhost) kor mekunad. Sahifaro bo https kushoed."
-          : "In browser mikrofon/kameraro dastgiri namekunad."
-      );
+      throw new Error(tr().micCamUnsupported);
     }
 
     const stream = await navigator.mediaDevices.getUserMedia({
@@ -301,71 +321,30 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     return stream;
   }, []);
 
-  // ------------------------------------------------------------
-  //  REAL TIME: khabar dodan ki payomi nav guzoshtam
-  //  (bе in, tarafi digar to obnovit nakunad chize nameбinad)
-  // ------------------------------------------------------------
-  const notifyChat = useCallback(
-    (toUserId: string, chatId: number) => {
-      if (hub.current === null || me === null) return;
-      if (toUserId === "" || sameId(toUserId, me.userId)) return;
+  const deviceError = (err: unknown) =>
+    err instanceof Error && err.name === "NotAllowedError"
+      ? tr().micCamDenied
+      : tr().mediaFailed;
 
-      hub.current.send({
-        kind: "chat",
-        callId: `chat-${chatId}`, // in signal ba zvanok robita nadorad
-        chatId,
-        media: "audio",
-        from: me.userId,
-        fromName: me.fullName || me.userName,
-        fromImage: me.image,
-        to: toUserId,
-      });
+  const stopCall = useCallback(
+    async (reason: string) => {
+      const id = callId.current;
+      finish(reason);
+
+      if (id !== null) {
+        try {
+          await endCall(tokenRef.current, id, reason);
+        } catch {
+          // zvanok dar har hol dar in taraf tamom shud
+        }
+      }
     },
-    [me]
+    [finish]
   );
 
-  const onChatEvent = useCallback(
-    (listener: (chatId: number, fromUserId: string) => void) => {
-      chatListeners.current.add(listener);
-      return () => {
-        chatListeners.current.delete(listener);
-      };
-    },
-    []
-  );
-
-  // ------------------------------------------------------------
-  //  "PECHATAYET": hamsuhbat mebinad ki man navishta istodaam
-  // ------------------------------------------------------------
-  const notifyTyping = useCallback(
-    (toUserId: string, chatId: number, on: boolean) => {
-      if (hub.current === null || me === null) return;
-      if (toUserId === "" || sameId(toUserId, me.userId)) return;
-
-      hub.current.send({
-        kind: "typing",
-        callId: `typing-${chatId}`, // ba zvanok robita nadorad
-        chatId,
-        media: "audio",
-        from: me.userId,
-        fromName: me.fullName || me.userName,
-        fromImage: me.image,
-        to: toUserId,
-        payload: { on },
-      });
-    },
-    [me]
-  );
-
-  const onTypingEvent = useCallback(
-    (listener: (chatId: number, fromUserId: string, on: boolean) => void) => {
-      typingListeners.current.add(listener);
-      return () => {
-        typingListeners.current.delete(listener);
-      };
-    },
-    []
-  );
+  useEffect(() => {
+    hangupRef.current = stopCall;
+  }, [stopCall]);
 
   // ------------------------------------------------------------
   //  1) MAN zang mezanam
@@ -373,15 +352,9 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   const callUser = useCallback(
     (chat: Chat, kind: CallMedia) => {
       if (phaseRef.current !== "idle" && phaseRef.current !== "ended") return;
-      if (me === null || hub.current === null) return;
+      if (me === null) return;
 
-      // Zvanoki peshina hanuz dar holati "ended" bud -> taymer-i onro
-      // MEKUSHEM. Be in, ba'di 2.2 soniya hamon taymer zvanoki NAVro
-      // ba "idle" mepartoft -> "zang mezanam, vale zang nameravad".
-      if (endTimer.current !== null) {
-        clearTimeout(endTimer.current);
-        endTimer.current = null;
-      }
+      clearEndTimer();
 
       const target: CallPeer = {
         userId: chat.userId,
@@ -391,68 +364,105 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         chatId: chat.chatId,
       };
 
-
-      // ------------------------------------------------------------
-      //  ADRESI HAMSUHBAT - in jo zvanok bestar gum meshud.
-      //  Du hol:
-      //   1) Backend dar /Chat/get-chats gohe ba joyi hamsuhbat
-      //      ID-i KHUDI moro medihad.
-      //   2) Har du taraf BE voridshavi kor mekunand -> ba har du
-      //      akkaunti KHIZMATI doda meshavad, yane yak GUID.
-      //  Dar har du hol signal "ba khudam" meraft va signaling onro
-      //  hamchun "sadoi khudam" mepartoft: ba hamsuhbat HECH CHIZ
-      //  namerasid (payomho kor mekardand - onho az rohi backend
-      //  meravand, na az signaling). Peshtar korbar 40 soniya
-      //  "Zang mezanad..."-ro medid. Hozir fori va OSHKORO mego-em.
-      // ------------------------------------------------------------
+      // Adresi hamsuhbat nodurust ast? (get-chats gohe ID-i KHUDI
+      // moro medihad). Be in sanjish signal ba khudam meraft.
       if (target.userId.trim() === "" || sameId(target.userId, me.userId)) {
         setPeer(target);
         peerRef.current = null;
         setMedia(kind);
-        setNote(
-          "Adresi hamsuhbat yofta nashud yo har du bo YAK akkaunt " +
-            "daromadaed. Bo akkaunti KHUDATON daroed (/Auth/login)."
-        );
+        setNote(tr().peerNotFound);
         setPhaseSafe("ended");
-
         endTimer.current = setTimeout(() => {
+          endTimer.current = null;
           setPhaseSafe("idle");
           setPeer(null);
           setNote("");
-        }, 2600);
+        }, END_VIEW_MS);
         return;
       }
 
-      callId.current = newCallId();
       peerRef.current = target;
       mediaRef.current = kind;
       isCaller.current = true;
       iceQueue.current = [];
+      pendingOffer.current = null;
+      callId.current = null;
 
       setPeer(target);
       setMedia(kind);
       setNote("");
       setPhaseSafe("outgoing");
-
-      emit("ring", null, target);
       ringer.current?.play("outgoing");
 
-      // TAKROR: har 2.5 soniya boz "ring" mefiristem to javob nagirem.
-      // Yak so-rov metavonad gum shavad, yo hamsuhbat mumkin ast
-      // aynan hozir saytro kusoda bosad - hamin takror onro megirad.
-      // Tarafi digar ba HAMON callId du bor javob namedihad.
-      if (ringRepeat.current !== null) clearInterval(ringRepeat.current);
-      ringRepeat.current = setInterval(() => {
-        if (phaseRef.current !== "outgoing") return;
-        emit("ring", null, target);
-      }, RING_REPEAT_MS);
+      void (async () => {
+        try {
+          // ---- 1. Ba backend mego-em: "zvanokro kusho" ----
+          const record = await startCall(
+            tokenRef.current,
+            target.userId,
+            kind
+          );
 
-      ringTimer.current = setTimeout(() => {
-        emit("hangup");
-        finish("Javob nadodand.");
-      }, RING_TIMEOUT);
+          if (phaseRef.current !== "outgoing") return; // qat' karda shud
+
+          callId.current = record.callId;
+
+          // Backend khudash mego-ed ki tarafi digar onlayn nest
+          if (record.status === "missed" || record.isPeerOnline === false) {
+            finish(tr().userOffline);
+            return;
+          }
+
+          // ---- 2. STUN/TURN ----
+          iceServers.current =
+            record.iceServers && record.iceServers.length > 0
+              ? record.iceServers
+              : await getIceServers(tokenRef.current).catch(() => FALLBACK_ICE);
+          if (iceServers.current.length === 0) {
+            iceServers.current = FALLBACK_ICE;
+          }
+
+          // ---- 3. Mikrofon/kamera + offer ----
+          const stream = await openDevices(kind);
+          if (phaseRef.current !== "outgoing") {
+            stream.getTracks().forEach((track) => track.stop());
+            return;
+          }
+
+          const connection = buildPeerConnection();
+          stream
+            .getTracks()
+            .forEach((track) => connection.addTrack(track, stream));
+
+          const offer = await connection.createOffer();
+          await connection.setLocalDescription(offer);
+          emit("call:offer", { callId: record.callId, sdp: offer });
+
+          // ---- 4. Chand vaqt zang mezanem ----
+          ringTimer.current = setTimeout(() => {
+            void stopCall(tr().noAnswer);
+          }, RING_TIMEOUT);
+        } catch (err) {
+          const text =
+            err instanceof Error && err.name === "NotAllowedError"
+              ? deviceError(err)
+              : err instanceof Error && err.message !== ""
+                ? err.message
+                : tr().callFailed;
+          void stopCall(text);
+        }
+      })();
     },
-    [emit, finish, me, setPhaseSafe]
+    [
+      buildPeerConnection,
+      clearEndTimer,
+      emit,
+      finish,
+      me,
+      openDevices,
+      setPhaseSafe,
+      stopCall,
+    ]
   );
 
   // ------------------------------------------------------------
@@ -460,6 +470,8 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   // ------------------------------------------------------------
   const accept = useCallback(async () => {
     if (phaseRef.current !== "incoming") return;
+    const id = callId.current;
+    if (id === null) return;
 
     ringer.current?.stop();
     if (ringTimer.current !== null) {
@@ -470,36 +482,51 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     setPhaseSafe("connecting");
 
     try {
+      // Ba backend: "qabul kardam" (u ba zangzananda khabar medihad)
+      await answerCall(tokenRef.current, id);
+
       const stream = await openDevices(mediaRef.current);
-      const connection = buildPeerConnection();
+      const connection = pc.current ?? buildPeerConnection();
       stream.getTracks().forEach((track) => connection.addTrack(track, stream));
 
-      // "accept" mefiristem -> tarafi digar offer mesozad
-      emit("accept");
+      // Offer allakay omadaast? -> hozir javob mesozem.
+      // Naomadaast? -> vaqte oyad, hamin kor dar handler mesavad.
+      const offer = pendingOffer.current;
+      if (offer !== null) {
+        pendingOffer.current = null;
+        await connection.setRemoteDescription(new RTCSessionDescription(offer));
+
+        for (const candidate of iceQueue.current) {
+          await connection.addIceCandidate(candidate).catch(() => {});
+        }
+        iceQueue.current = [];
+
+        const answer = await connection.createAnswer();
+        await connection.setLocalDescription(answer);
+        emit("call:answer", { callId: id, sdp: answer });
+      }
     } catch (err) {
-      emit("decline");
-      finish(
-        err instanceof Error && err.name === "NotAllowedError"
-          ? "Ijozati mikrofon/kamera doda nashud."
-          : err instanceof Error && err.message !== ""
-            ? err.message
-            : "Mikrofon yo kamera kushoda nashud."
-      );
+      try {
+        await declineCall(tokenRef.current, id);
+      } catch {
+        // guzoshtan
+      }
+      finish(deviceError(err));
     }
   }, [buildPeerConnection, emit, finish, openDevices, setPhaseSafe]);
 
   const decline = useCallback(() => {
-    emit("decline");
+    const id = callId.current;
     finish("Zvanok rad shud.");
-  }, [emit, finish]);
+    if (id !== null) void declineCall(tokenRef.current, id).catch(() => {});
+  }, [finish]);
 
   const hangup = useCallback(() => {
-    emit("hangup");
-    finish("Zvanok tamom shud.");
-  }, [emit, finish]);
+    void stopCall("Zvanok tamom shud.");
+  }, [stopCall]);
 
   // ------------------------------------------------------------
-  //  Mikrofon / kamera khomush - darginron
+  //  Mikrofon / kamera
   // ------------------------------------------------------------
   const toggleMic = useCallback(() => {
     const stream = local.current;
@@ -524,165 +551,128 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   }, [camOff]);
 
   // ------------------------------------------------------------
-  //  Gush kardani signalhoi daromada
+  //  Payomhoi zinda (WebSocket)
   // ------------------------------------------------------------
   useEffect(() => {
-    if (me === null) return;
+    if (token === "") {
+      // Holatro ba'di render meguzorem (hamon usuli boqii loyiha)
+      queueMicrotask(() => setSignalStatus("off"));
+      return;
+    }
 
-    const signaling = new Signaling(me.userId);
-    hub.current = signaling;
+    const realtime = new Realtime(token);
+    hub.current = realtime;
     ringer.current = new Ringer();
 
-    // Holati signaling ba'di render meguzorem (na daruni khudi effect)
-    queueMicrotask(() => setSignalStatus(signaling.status));
+    queueMicrotask(() => setSignalStatus(realtime.status));
+    const timer = setInterval(() => setSignalStatus(realtime.status), 2000);
 
-    const timer = setInterval(() => setSignalStatus(signaling.status), 3000);
+    const off = realtime.on((message) => {
+      void handleMessage(message);
+    });
 
-    const off = signaling.on(async (signal) => {
-      // --- PAYOMI NAV (real time) - pesh az hama ---
-      if (signal.kind === "chat") {
-        for (const listener of chatListeners.current) {
-          listener(signal.chatId, signal.from);
-        }
-        return;
-      }
+    async function handleMessage(message: RealtimeMessage) {
+      const { event } = message;
+      const data = (message.data ?? {}) as Record<string, unknown>;
 
-      // --- "PECHATAYET" ---
-      if (signal.kind === "typing") {
-        const on = (signal.payload as { on?: boolean } | null)?.on === true;
-        for (const listener of typingListeners.current) {
-          listener(signal.chatId, signal.from, on);
-        }
-        return;
-      }
-
-      // --- Zangi nav ---
-      if (signal.kind === "ring") {
-        // Takrori HAMON zvanok (zangzananda har 2.5s mefiristad) -
-        // in "band budan" NEST, faqat guzoshtan.
-        if (signal.callId === callId.current && phaseRef.current !== "idle") {
-          return;
-        }
-
-        // Zvanoki peshina hanuz 2 soniya "ended"-ro nishon medihad.
-        // In "BAND BUDAN" NEST - taymerro mekushem va zangi navro
-        // qabul mekunem (be in, du zvanoki pai ham namerasid).
-        if (phaseRef.current === "ended") {
-          if (endTimer.current !== null) {
-            clearTimeout(endTimer.current);
-            endTimer.current = null;
+      // ---------- Payomi nav (chat) ----------
+      if (event === "chat:message") {
+        const chatId = pickNumber(data, ["chatId"]);
+        const from = pickString(data, ["userId", "fromUserId", "senderUserId"]);
+        if (chatId !== null) {
+          for (const listener of [...chatListeners.current]) {
+            listener(chatId, from ?? "");
           }
-          phaseRef.current = "idle";
         }
+        return;
+      }
 
-        if (phaseRef.current !== "idle") {
-          // Man band hastam
-          signaling.send({
-            kind: "busy",
-            callId: signal.callId,
-            chatId: signal.chatId,
-            media: signal.media,
-            from: me.userId,
-            fromName: me.fullName || me.userName,
-            fromImage: me.image,
-            to: signal.from,
-          });
+      // ---------- "Menavisad" ----------
+      if (event === "chat:typing") {
+        const chatId = pickNumber(data, ["chatId"]);
+        const from = pickString(data, ["userId", "fromUserId"]);
+        const on =
+          data.isTyping === true || data.typing === true || data.on === true;
+        if (chatId !== null) {
+          for (const listener of [...typingListeners.current]) {
+            listener(chatId, from ?? "", on);
+          }
+        }
+        return;
+      }
+
+      if (!event.startsWith("call:")) return;
+
+      const incomingId = pickNumber(data, ["callId"]);
+
+      // ---------- Zangi nav ----------
+      if (event === "call:incoming") {
+        const record = message.data as CallRecord;
+        if (typeof record?.callId !== "number") return;
+
+        // Man band hastam -> backend khudash "band"-ro hisob mekunad,
+        // mo faqat rad mekunem.
+        if (phaseRef.current === "ended") clearEndTimer();
+        if (
+          phaseRef.current !== "idle" &&
+          phaseRef.current !== "ended" &&
+          callId.current !== record.callId
+        ) {
+          void declineCall(tokenRef.current, record.callId).catch(() => {});
           return;
         }
 
-        callId.current = signal.callId;
-        mediaRef.current = signal.media;
+        callId.current = record.callId;
+        mediaRef.current = record.type === "video" ? "video" : "audio";
         isCaller.current = false;
         iceQueue.current = [];
+        pendingOffer.current = null;
+
+        iceServers.current =
+          Array.isArray(record.iceServers) && record.iceServers.length > 0
+            ? record.iceServers
+            : FALLBACK_ICE;
 
         const from: CallPeer = {
-          userId: signal.from,
-          userName: signal.fromName,
-          fullName: signal.fromName,
-          image: signal.fromImage,
-          chatId: signal.chatId,
+          userId: record.callerUserId,
+          userName: record.callerUserName,
+          fullName: record.callerFullName || record.callerUserName,
+          image: record.callerImage,
+          chatId: record.chatId ?? 0,
         };
         peerRef.current = from;
 
         setPeer(from);
-        setMedia(signal.media);
+        setMedia(mediaRef.current);
         setNote("");
         setPhaseSafe("incoming");
-
         ringer.current?.play("incoming");
 
         ringTimer.current = setTimeout(() => {
           finish("Zvanoki nagirifta.");
         }, RING_TIMEOUT);
-
         return;
       }
 
       // Az in jo poyon - faqat signalhoi HAMIN zvanok
-      if (signal.callId !== callId.current) return;
+      if (incomingId === null || incomingId !== callId.current) return;
 
-      if (signal.kind === "busy") {
-        finish("Korbar band ast.");
-        return;
-      }
+      // ---------- SDP: offer ----------
+      if (event === "call:offer") {
+        const offer = pickSdp(data);
+        if (offer === null) return;
 
-      if (signal.kind === "decline") {
-        finish("Zvanok qabul nashud.");
-        return;
-      }
-
-      if (signal.kind === "hangup") {
-        finish("Hamsuhbat zvanokro tamom kard.");
-        return;
-      }
-
-      // --- Tarafi digar qabul kard -> MAN offer mesozam ---
-      if (signal.kind === "accept" && isCaller.current) {
-        ringer.current?.stop();
-        if (ringRepeat.current !== null) {
-          clearInterval(ringRepeat.current);
-          ringRepeat.current = null;
+        // Hanuz qabul nakardaam -> nigoh medoram
+        if (phaseRef.current === "incoming") {
+          pendingOffer.current = offer;
+          return;
         }
-        if (ringTimer.current !== null) {
-          clearTimeout(ringTimer.current);
-          ringTimer.current = null;
-        }
-        setPhaseSafe("connecting");
 
-        try {
-          const stream = await openDevices(mediaRef.current);
-          const connection = buildPeerConnection();
-          stream
-            .getTracks()
-            .forEach((track) => connection.addTrack(track, stream));
-
-          const offer = await connection.createOffer();
-          await connection.setLocalDescription(offer);
-          emit("offer", offer);
-        } catch (err) {
-          emit("hangup");
-          finish(
-            err instanceof Error && err.name === "NotAllowedError"
-              ? "Ijozati mikrofon/kamera doda nashud."
-              : err instanceof Error && err.message !== ""
-                ? err.message
-                : "Mikrofon yo kamera kushoda nashud."
-          );
-        }
-        return;
-      }
-
-      // --- Offer omad (man qabulkunanda hastam) ---
-      if (signal.kind === "offer" && !isCaller.current) {
         const connection = pc.current ?? buildPeerConnection();
-
         try {
           await connection.setRemoteDescription(
-            new RTCSessionDescription(
-              signal.payload as RTCSessionDescriptionInit
-            )
+            new RTCSessionDescription(offer)
           );
-
           for (const candidate of iceQueue.current) {
             await connection.addIceCandidate(candidate).catch(() => {});
           }
@@ -690,71 +680,176 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
 
           const answer = await connection.createAnswer();
           await connection.setLocalDescription(answer);
-          emit("answer", answer);
+          emit("call:answer", { callId: incomingId, sdp: answer });
         } catch {
-          emit("hangup");
-          finish("Ulanish soakhta nashud.");
+          void stopCall(tr().linkFailed);
         }
         return;
       }
 
-      // --- Answer omad (man zangzananda hastam) ---
-      if (signal.kind === "answer" && isCaller.current) {
+      // ---------- SDP: answer ----------
+      if (event === "call:answer") {
+        const answer = pickSdp(data);
         const connection = pc.current;
-        if (connection === null) return;
+        if (answer === null || connection === null) return;
 
         try {
-          await connection.setRemoteDescription(
-            new RTCSessionDescription(
-              signal.payload as RTCSessionDescriptionInit
-            )
-          );
+          if (connection.signalingState !== "stable") {
+            await connection.setRemoteDescription(
+              new RTCSessionDescription(answer)
+            );
+          }
           for (const candidate of iceQueue.current) {
             await connection.addIceCandidate(candidate).catch(() => {});
           }
           iceQueue.current = [];
+
+          if (phaseRef.current === "outgoing") setPhaseSafe("connecting");
         } catch {
-          finish("Ulanish soakhta nashud.");
+          void stopCall(tr().linkFailed);
         }
         return;
       }
 
-      // --- ICE ---
-      if (signal.kind === "ice") {
-        const candidate = signal.payload as RTCIceCandidateInit;
-        const connection = pc.current;
+      // ---------- ICE ----------
+      if (event === "call:ice-candidate") {
+        const raw = data.candidate;
+        if (raw === undefined || raw === null) return;
 
+        const candidate = (
+          typeof raw === "string"
+            ? {
+                candidate: raw,
+                sdpMid: pickString(data, ["sdpMid"]) ?? undefined,
+                sdpMLineIndex: pickNumber(data, ["sdpMLineIndex"]) ?? undefined,
+              }
+            : raw
+        ) as RTCIceCandidateInit;
+
+        const connection = pc.current;
         if (connection === null || connection.remoteDescription === null) {
           iceQueue.current.push(candidate);
+          if (iceQueue.current.length > 120) iceQueue.current.shift();
           return;
         }
         await connection.addIceCandidate(candidate).catch(() => {});
+        return;
       }
-    });
+
+      // ---------- Boqii "call:*" - holati zvanok ----------
+      // Sanjida shud: backend "call:accepted" (status "active"),
+      // "call:ended" (status "ended"), "call:declined" mefiristad.
+      // Mo ba NOMI hodisa vobasta nestem - az `status` mefahmem.
+      const status = pickString(data, ["status"]);
+      if (status === null) return;
+
+      // Allakay tamom shud - takror kor nakunem
+      if (phaseRef.current === "idle" || phaseRef.current === "ended") return;
+
+      if (status === "active") {
+        if (phaseRef.current === "outgoing") setPhaseSafe("connecting");
+        return;
+      }
+
+      if (status === "declined") {
+        finish(tr().callRejected);
+        return;
+      }
+      if (status === "missed") {
+        finish(tr().noAnswer);
+        return;
+      }
+      if (status === "cancelled") {
+        finish(tr().callCancelled);
+        return;
+      }
+      if (status === "failed") {
+        finish(tr().callFailed);
+        return;
+      }
+      if (status === "ended") {
+        finish("Zvanok tamom shud.");
+      }
+    }
 
     return () => {
       clearInterval(timer);
       off();
-      signaling.close();
+      realtime.close();
       hub.current = null;
       ringer.current?.dispose();
       ringer.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [me?.userId]);
+  }, [token]);
 
-  // Agar sahifa basta shavad - hamsuhbatro ogoh mekunem
+  // ------------------------------------------------------------
+  //  Payomho: hozir backend khudash "chat:message"-ro mefiristad
+  // ------------------------------------------------------------
+  const notifyChat = useCallback((_toUserId: string, _chatId: number) => {
+    // Kore lozim nest - server khudash ba giranda khabar medihad.
+  }, []);
+
+  const onChatEvent = useCallback(
+    (listener: (chatId: number, fromUserId: string) => void) => {
+      chatListeners.current.add(listener);
+      return () => {
+        chatListeners.current.delete(listener);
+      };
+    },
+    []
+  );
+
+  const notifyTyping = useCallback(
+    (toUserId: string, chatId: number, on: boolean) => {
+      if (hub.current === null || me === null) return;
+      if (toUserId === "" || sameId(toUserId, me.userId)) return;
+
+      hub.current.send("chat:typing", { chatId, isTyping: on, toUserId });
+    },
+    [me]
+  );
+
+  const onTypingEvent = useCallback(
+    (listener: (chatId: number, fromUserId: string, on: boolean) => void) => {
+      typingListeners.current.add(listener);
+      return () => {
+        typingListeners.current.delete(listener);
+      };
+    },
+    []
+  );
+
+  // Agar sahifa basta shavad - zvanokro tamom mekunem
   useEffect(() => {
     function onLeave() {
-      if (phaseRef.current !== "idle" && phaseRef.current !== "ended") {
-        emit("hangup");
+      const id = callId.current;
+      if (
+        id !== null &&
+        phaseRef.current !== "idle" &&
+        phaseRef.current !== "ended"
+      ) {
+        // "keepalive" - so-rov hangomi basta shudani sahifa ham meravad
+        const url = `/chats/proxy/Call/end-call?callId=${id}&reason=leave`;
+        try {
+          void fetch(url, {
+            method: "POST",
+            headers:
+              tokenRef.current === ""
+                ? undefined
+                : { Authorization: `Bearer ${tokenRef.current}` },
+            keepalive: true,
+          });
+        } catch {
+          // guzoshtan
+        }
       }
       cleanup();
     }
 
     window.addEventListener("beforeunload", onLeave);
     return () => window.removeEventListener("beforeunload", onLeave);
-  }, [cleanup, emit]);
+  }, [cleanup]);
 
   const value = useMemo<CallState>(
     () => ({
@@ -806,6 +901,58 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   return <CallContext.Provider value={value}>{children}</CallContext.Provider>;
 }
 
+// ------------------------------------------------------------
+//  Yordamchiho: payomi server har khel shakl doshta metavonad
+// ------------------------------------------------------------
+function pickNumber(
+  data: Record<string, unknown>,
+  keys: string[]
+): number | null {
+  for (const key of keys) {
+    const value = data[key];
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+    if (typeof value === "string" && value.trim() !== "") {
+      const parsed = Number(value);
+      if (Number.isFinite(parsed)) return parsed;
+    }
+  }
+  return null;
+}
+
+function pickString(
+  data: Record<string, unknown>,
+  keys: string[]
+): string | null {
+  for (const key of keys) {
+    const value = data[key];
+    if (typeof value === "string" && value.trim() !== "") return value;
+  }
+  return null;
+}
+
+// SDP metavonad "sdp", "offer", "answer" yo "description" nom doshta
+// bosad, va yo obekt bosad yo satr.
+function pickSdp(
+  data: Record<string, unknown>
+): RTCSessionDescriptionInit | null {
+  for (const key of ["sdp", "offer", "answer", "description"]) {
+    const value = data[key];
+
+    if (value !== null && typeof value === "object") {
+      const shape = value as RTCSessionDescriptionInit;
+      if (typeof shape.sdp === "string" && typeof shape.type === "string") {
+        return shape;
+      }
+    }
+
+    if (typeof value === "string" && value.includes("v=")) {
+      const type = data.type === "answer" || key === "answer" ? "answer" : "offer";
+      return { type, sdp: value };
+    }
+  }
+  return null;
+}
+
 export function useCall(): CallState {
   const value = useContext(CallContext);
   if (value === null) {
@@ -813,5 +960,3 @@ export function useCall(): CallState {
   }
   return value;
 }
-
-export { SIGNALING_URL };

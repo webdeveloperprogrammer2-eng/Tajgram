@@ -2,38 +2,42 @@
 
 // ============================================================
 //  ReelsGrid - turi VIDEOHOI (reels) man.
-//  In qism dar POYONTARI profil ast - monandi instagram.
 //
-//  ASOSI: vaqte mush ba boloi video meravad ->
-//  PROSMOTR (viewCount) va LIKE (likeCount) namoyon meshavand.
+//  Monandi instagram: khonaho AMUDI (9:16), hisobi PROSMOTR
+//  hamesha dar kunji poyoni chap meistad, va hangomi hover
+//  like ham namoyon meshavad.
+//
 //  Har du raqam az server meoyand (GET /Reels/get-my-reels).
 // ============================================================
 import { useState } from "react";
-import { Eye, Heart, Play } from "lucide-react";
+import { Clapperboard, Heart, Play } from "lucide-react";
 
 import { mediaUrl, type Reel } from "../api";
 import { shortNumber } from "../format";
-import styles from "../profile.module.css";
+
+import { ProfileEmpty, ProfileGrid } from "@/components/profile/ProfileTabs";
+
+import { useT } from "@/components/LocaleProvider";
 
 import ReelModal from "./ReelModal";
 
 export default function ReelsGrid({ reels }: { reels: Reel[] }) {
   const [openReel, setOpenReel] = useState<Reel | null>(null);
+  const { t } = useT();
 
   if (reels.length === 0) {
     return (
-      <p
-        className="py-24 text-center text-[13px]"
-        style={{ color: "var(--muted)" }}
-      >
-        Hanuz video nest
-      </p>
+      <ProfileEmpty
+        icon={<Clapperboard className="h-7 w-7" strokeWidth={1.6} />}
+        title={t.noReelsYet}
+        text={t.reelsEmptyText}
+      />
     );
   }
 
   return (
     <>
-      <div className="grid grid-cols-3 gap-2 py-2 sm:gap-3 sm:py-3">
+      <ProfileGrid>
         {reels.map((reel) => {
           const cover = mediaUrl(reel.coverName);
           const video = mediaUrl(reel.videoName);
@@ -43,7 +47,7 @@ export default function ReelsGrid({ reels }: { reels: Reel[] }) {
               key={reel.reelsId}
               type="button"
               onClick={() => setOpenReel(reel)}
-              className={styles.cellTall}
+              className="group relative aspect-[9/16] overflow-hidden bg-[var(--panel)]"
             >
               {/* Agar server surati ruyi video dihad - onro nishon medihem.
                   Agar nadihad - khudi videoro bo preload="metadata"
@@ -68,33 +72,28 @@ export default function ReelsGrid({ reels }: { reels: Reel[] }) {
                 )
               )}
 
-              {/* Nishonai "video" */}
-              <span className="absolute right-2 top-2 text-white drop-shadow">
+              {/* Raqami prosmotr - hamesha namoyon, monandi instagram */}
+              <span className="pointer-events-none absolute bottom-2 left-2 flex items-center gap-1.5 text-[13px] font-semibold tabular-nums text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.7)]">
                 <Play className="h-4 w-4 fill-current" strokeWidth={0} />
-              </span>
-
-              {/* Raqamho hamesha dar poyon - monandi instagram */}
-              <span className="pointer-events-none absolute bottom-2 left-2 flex items-center gap-1.5 text-xs tabular-nums text-white drop-shadow">
-                <Eye className="h-3.5 w-3.5" strokeWidth={1.8} />
                 {shortNumber(reel.reelsViewCount)}
               </span>
 
-              {/* Hangomi hover - har du raqam kalon */}
-              <span className={styles.cellOverlay}>
-                <span className="flex items-center gap-1.5 text-xs tabular-nums">
-                  <Eye className="h-4 w-4" strokeWidth={1.6} />
-                  {shortNumber(reel.reelsViewCount)}
+              {/* Hangomi hover - like ham namoyon meshavad */}
+              <span className="pointer-events-none absolute inset-0 hidden items-center justify-center gap-7 bg-black/35 text-[15px] font-bold text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100 md:flex">
+                <span className="flex items-center gap-1.5 tabular-nums">
+                  <Heart className="h-5 w-5 fill-current" strokeWidth={0} />
+                  {shortNumber(reel.reelsLikeCount)}
                 </span>
 
-                <span className="flex items-center gap-1.5 text-xs tabular-nums">
-                  <Heart className="h-4 w-4" strokeWidth={1.6} />
-                  {shortNumber(reel.reelsLikeCount)}
+                <span className="flex items-center gap-1.5 tabular-nums">
+                  <Play className="h-5 w-5 fill-current" strokeWidth={0} />
+                  {shortNumber(reel.reelsViewCount)}
                 </span>
               </span>
             </button>
           );
         })}
-      </div>
+      </ProfileGrid>
 
       <ReelModal reel={openReel} onClose={() => setOpenReel(null)} />
     </>

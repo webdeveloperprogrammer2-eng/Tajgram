@@ -5,6 +5,7 @@ import "./globals.css";
 import { THEME_KEY, type AppTheme } from "@/components/themeKeys";
 import { ThemeSync } from "@/components/ThemeSync";
 import { AppFrame } from "@/components/AppFrame";
+import { LocaleProvider } from "@/components/LocaleProvider";
 import GlobalCall from "./chats/call/GlobalCall";
 
 const geistSans = Geist({
@@ -45,13 +46,19 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full bg-[var(--bg)] text-[var(--fg)] transition-colors duration-300">
         <ThemeSync />
-        {/* Zvanok dar HAMAI sayt gush mekunad - na faqat dar /chats.
-            Be in, zang faqat ba kase merasid ki /chats kushoda dosht. */}
-        <GlobalCall>
-          {/* Sidebar YAK JOI - daruni <AppFrame>. Bakhshho
-              (chats, profile, reels, search) onro takror namekunand. */}
-          <AppFrame>{children}</AppFrame>
-        </GlobalCall>
+        {/* Zabon va naql - YAK JOI, bar boloi HAMA.
+            KHATO BUD: <LocaleProvider> daruni <AppFrame> bud, ya'ne
+            oynai zvanok (CallOverlay) va CallProvider BERUNI on
+            memondand - matni onho hech vaqt tarjuma nameshud. */}
+        <LocaleProvider>
+          {/* Zvanok dar HAMAI sayt gush mekunad - na faqat dar /chats.
+              Be in, zang faqat ba kase merasid ki /chats kushoda dosht. */}
+          <GlobalCall>
+            {/* Sidebar YAK JOI - daruni <AppFrame>. Bakhshho
+                (chats, profile, reels, search) onro takror namekunand. */}
+            <AppFrame>{children}</AppFrame>
+          </GlobalCall>
+        </LocaleProvider>
       </body>
     </html>
   );

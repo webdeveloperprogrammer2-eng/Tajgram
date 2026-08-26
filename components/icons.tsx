@@ -71,6 +71,16 @@ export function HeartIcon({ filled, ...props }: IconProps & { filled?: boolean }
   );
 }
 
+export function UserPlusIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <circle cx="9.6" cy="8" r="3.9" />
+      <path d="M2.9 20.2c.6-3.4 3.4-5.6 6.7-5.6 1.5 0 2.9.4 4 1.2" />
+      <path d="M17.4 14.6v5.4M20.1 17.3h-5.4" />
+    </Svg>
+  );
+}
+
 export function CreateIcon({ active, ...props }: IconProps & { active?: boolean }) {
   return (
     <Svg {...props}>
@@ -273,6 +283,35 @@ export function ImageIcon(props: IconProps) {
       <rect x="3" y="4.5" width="18" height="15" rx="2.4" />
       <circle cx="8.6" cy="10" r="1.7" />
       <path d="m3.5 17.5 5-4.6 4.2 3.6 3-2.6 4.8 3.9" />
+    </Svg>
+  );
+}
+
+/** Salib - bastani oynaho (modal, story, lightbox). */
+export function CloseIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M18 6 6 18M6 6l12 12" />
+    </Svg>
+  );
+}
+
+/** Turi 3x3 - tabi "Postho" dar profil (monandi instagram). */
+export function GridIcon(props: IconProps) {
+  return (
+    <Svg strokeWidth={2.4} {...props}>
+      <rect x="2" y="2" width="20" height="20" rx="1.5" />
+      <path d="M8.7 2v20M15.3 2v20M2 8.7h20M2 15.3h20" />
+    </Svg>
+  );
+}
+
+/** Zarfi film - tabi "Reels". */
+export function ClapperIcon(props: IconProps) {
+  return (
+    <Svg strokeWidth={2.1} {...props}>
+      <rect x="2.5" y="7" width="19" height="14.5" rx="2.4" />
+      <path d="m2.5 7 3.6-4.5h12.4L21.5 7M8.2 2.5 11.8 7M14.2 2.5 17.8 7" />
     </Svg>
   );
 }

@@ -27,7 +27,7 @@ import {
   type Story,
   type UserProfile,
 } from "./api";
-import { getToken, isTokenExpired, removeToken } from "./token";
+import { getToken, removeToken } from "./token";
 import { onThemeChange, toggleAppTheme } from "@/components/appTheme";
 
 export type Theme = "dark" | "light";
@@ -130,17 +130,22 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
       const savedTheme = localStorage.getItem(THEME_KEY);
       if (savedTheme === "dark" || savedTheme === "light") setTheme(savedTheme);
 
-      // 2) Token-i KHUDI korbar. Agar naboshad yo guzashta bosad -
-      // "guest" NAMESHAVEM: proxy khudash bo akkaunti khizmati medarod,
-      // aynan hamon tavr ki lentai asosi (/api/backend) kor mekunad.
-      // "Avval daroed" faqat on vaqt paydo meshavad, ki server-i
-      // haqiqi 401 dihad (dar catch-i loadEverything).
-      const savedToken = getToken();
-      const mine =
-        savedToken !== null && savedToken !== "" && !isTokenExpired(savedToken)
-          ? savedToken
-          : "";
-      if (savedToken !== null && mine === "") removeToken();
+      // 2) Token-i KHUDI korbar.
+      //
+      //    Peshtar in jo mantiqi khatarnok bud: agar token naboshad,
+      //    BOZ HAM so-rov merfat - chunki proxy khudash bo akkaunti
+      //    KHIZMATI (dilovar06) medaromad. Ya'ne dar sahifai "profili
+      //    MAN" ma'lumoti odami DIGAR namoyon meshud.
+      //
+      //    Hozir akkaunti khizmati nest, va korbari nadaromadaro
+      //    components/AppFrame.tsx allakay ba /Auth/login firistodaast -
+      //    baroi hamin in jo token qariban hamesha hast.
+      const mine = getToken();
+
+      if (mine === null) {
+        setStatus("guest");
+        return;
+      }
 
       setToken(mine);
       void loadEverything(mine);

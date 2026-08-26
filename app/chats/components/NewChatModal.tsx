@@ -18,6 +18,8 @@ import { createChat, errorText, type Chat } from "../api";
 import { useChats } from "../providers";
 import styles from "../chats.module.css";
 
+import { useT } from "@/components/LocaleProvider";
+
 import Avatar from "./Avatar";
 
 export default function NewChatModal({
@@ -30,6 +32,7 @@ export default function NewChatModal({
   onCreated: (chatId: number, userId: string) => void;
 }) {
   const { allowed, token, chats } = useChats();
+  const { t } = useT();
 
   const [query, setQuery] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -65,7 +68,7 @@ export default function NewChatModal({
       onCreated(Number(chatId), userId);
       onClose();
     } catch (err) {
-      setError(errorText(err, "Suhbat soakhta nashud."));
+      setError(errorText(err, t.chatCreateFailed));
     } finally {
       setBusyId(null);
     }
@@ -82,16 +85,16 @@ export default function NewChatModal({
           style={{ borderColor: "var(--line)" }}
         >
           <div>
-            <h2 className="text-base font-bold tracking-tight">Suhbati nav</h2>
+            <h2 className="text-base font-bold tracking-tight">{t.newChat}</h2>
             <p className="mt-0.5 text-[12px]" style={{ color: "var(--muted)" }}>
-              Faqat onhoe ki ba shumo podpiska kardaand yo shumo ba onho
+              {t.chatsIntro}
             </p>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            aria-label="Bastan"
+            aria-label={t.close}
             className={styles.iconBtn}
           >
             <X className="h-4 w-4" strokeWidth={2} />
@@ -113,7 +116,7 @@ export default function NewChatModal({
               autoFocus
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Nomi korbar..."
+              placeholder={t.usernamePlaceholder}
               className="w-full bg-transparent text-sm outline-none"
               style={{ color: "var(--fg)" }}
             />
@@ -128,8 +131,8 @@ export default function NewChatModal({
               style={{ color: "var(--muted)" }}
             >
               {allowed.length === 0
-                ? "Hanuz hech kas ba shumo podpiska nakardaast va shumo ham ba kase podpiska nakardaed."
-                : "Chunin korbar yoft nashud."}
+                ? t.noFollowersYet
+                : t.searchEmpty}
             </p>
           ) : (
             list.map((user) => (

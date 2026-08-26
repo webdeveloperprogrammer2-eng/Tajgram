@@ -1,65 +1,40 @@
 // ============================================================
 //  app/getInfoUsers/proxy/[...path]/route.ts
 //
+//  browser -> /getInfoUsers/proxy/<yak endpoint>
+//          -> server-i MO
+//          -> https://instagram-back-qibs.onrender.com/<hamon endpoint>
+//
 //  CHARO IN LOZIM AST?
-//  Backend sarlavhai "Access-Control-Allow-Origin" NAMEFIRISTAD.
-//  Baroi hamin browser so-rovhoi mustaqimro band mekunad (CORS).
+//  Backend sarlavhai "Access-Control-Allow-Origin" NAMEFIRISTAD,
+//  baroi hamin browser so-rovi mustaqimro band mekunad (CORS).
+//  Az server ba server CORS umuman nest.
 //
-//  HALL: so-rovro na az browser, balki az SERVER-i khudamon
-//  mefiristem. Az server ba server CORS umuman nest.
+//  ============================================================
+//  Peshtar in fayl NUSKHAI KOMILI hamon kod bud (yak khel dar
+//  /search, /getInfoUsers va /Auth). Farqi khatarnok: on
+//  fetch-ro daruni try/catch NAMEGIRIFT - agar backend khob
+//  bosad (Render), Next.js sahifai khatoi 500-i HTML medod,
+//  na javobi JSON. Sahifa on HTML-ro khonda nametavonist va
+//  "khatoi nomalum" menamud.
 //
-//  browser -> /getInfoUsers/proxy/Search/search-users
-//          -> server-i mo
-//          -> https://instagram-back-qibs.onrender.com/...
+//  Hozir hamai mantiq dar lib/backendProxy.ts ast - YAK JOI.
+//  ============================================================
 //
 //  DIQQAT: SURAT va VIDEO az in jo NAMEGUZARAND.
-//  <img src> va <video src> ba CORS ehtiyoj nadorand,
+//  <img src> va <video src> ba CORS ehtiyoj nadorand -
 //  onho rost az BACKEND_URL girifta meshavand.
 // ============================================================
 import type { NextRequest } from "next/server";
 
-const BACKEND = "https://instagram-back-qibs.onrender.com";
+import { forwardToBackend } from "@/lib/backendProxy";
 
 async function forward(
   request: NextRequest,
   context: RouteContext<"/getInfoUsers/proxy/[...path]">
 ) {
   const { path } = await context.params;
-
-  // /getInfoUsers/proxy/Search/search-users?Search=iso -> https://backend/Post/like-post?postId=1
-  const target = `${BACKEND}/${path.join("/")}${request.nextUrl.search}`;
-
-  // Faqat sarlavhahoi zarurro meguzaronem
-  const headers = new Headers();
-
-  const auth = request.headers.get("authorization");
-  if (auth) headers.set("authorization", auth);
-
-  const contentType = request.headers.get("content-type");
-  if (contentType) headers.set("content-type", contentType);
-
-  // GET va HEAD body nadorand
-  const hasBody = request.method !== "GET" && request.method !== "HEAD";
-
-  const response = await fetch(target, {
-    method: request.method,
-    headers,
-    // arrayBuffer -> JSON va surat (multipart) har du kor mekunand
-    body: hasBody ? await request.arrayBuffer() : undefined,
-    cache: "no-store",
-  });
-
-  const data = await response.arrayBuffer();
-
-  // Javobi backend-ro hamon tavr bar megardonem
-  return new Response(data, {
-    status: response.status,
-    headers: {
-      "content-type":
-        response.headers.get("content-type") ?? "application/json",
-      "cache-control": "no-store",
-    },
-  });
+  return forwardToBackend(request, path);
 }
 
 export const GET = forward;

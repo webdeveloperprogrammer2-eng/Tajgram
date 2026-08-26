@@ -33,6 +33,7 @@ import {
 } from "./api";
 import { getToken, isTokenExpired, removeToken } from "./token";
 import { onThemeChange, readTheme, toggleAppTheme } from "@/components/appTheme";
+import { tr } from "@/components/appLang";
 
 export type Theme = "dark" | "light";
 
@@ -55,6 +56,8 @@ type ChatsState = {
 
   reload: () => Promise<void>;
   reloadChats: () => Promise<void>;
+  /** Faqat ro-ykhati "bo ki navishtan mumkin" (ba'di obuna shudan). */
+  reloadAllowed: () => Promise<void>;
   logout: () => void;
 };
 
@@ -113,8 +116,38 @@ export function ChatsProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      setError(errorText(err, "Khatoi nomalum dar server."));
+      setError(errorText(err, tr().unknownError));
       setStatus("error");
+    }
+  }
+
+  // Faqat ro-ykhati IJOZAT.
+  //
+  // CHARO LOZIM AST: "allowed" faqat YAK BOR hangomi bor shudani
+  // sayt girifta meshud. Vaqte korbar dar profil "Obuna" mezad va
+  // darhol "Payom"-ro mekushod, in ro-ykhat hanuz KUHNA bud va
+  // ChatWindow mego-ft "Bo in korbar navishtan mumkin nest".
+  async function reloadAllowed() {
+    if (status === "guest" || me === null) return;
+
+    try {
+      const [subscribers, subscriptions] = await Promise.all([
+        getSubscribers(token, me.userId).catch(() => []),
+        getSubscriptions(token, me.userId).catch(() => []),
+      ]);
+
+      const merged = new Map<string, FollowUser>();
+      for (const user of [
+        ...(Array.isArray(subscribers) ? subscribers : []),
+        ...(Array.isArray(subscriptions) ? subscriptions : []),
+      ]) {
+        if (user && user.userId && user.userId !== me.userId) {
+          merged.set(user.userId, user);
+        }
+      }
+      setAllowed([...merged.values()]);
+    } catch {
+      // khomush - ro-ykhati kuhna dar joyash memonad
     }
   }
 
@@ -173,6 +206,7 @@ export function ChatsProvider({ children }: { children: React.ReactNode }) {
 
     reload: () => loadEverything(token),
     reloadChats,
+    reloadAllowed,
 
     logout: () => {
       removeToken();

@@ -23,6 +23,19 @@
   --shadow: 0 18px 45px -20px rgba(16, 16, 20, 0.35);
   --shadowSoft: 0 8px 24px -14px rgba(16, 16, 20, 0.28);
 
+  /* Ranghoi ma'noi: khato / durust / diqqat.
+     Peshtar in 8 tagyirebanda dar HECH JO muayyan nabudand -
+     baroi hamin dar /Auth matni khato va tugmahoi zabon
+     tamoman NOAYON budand. */
+  --danger: #e0245e;
+  --dangerSoft: rgba(224, 36, 94, 0.10);
+  --ok: #1d9a5b;
+  --okSoft: rgba(29, 154, 91, 0.10);
+  --gold: #c98a12;
+  --goldSoft: rgba(201, 138, 18, 0.12);
+  --onSignal: #ffffff;
+  --surface: #ffffff;
+
   /* Nomhoi kuhna - ba hamon rangho ishora mekunand */
   --background: var(--bg);
   --foreground: var(--fg);
@@ -58,6 +71,14 @@ html[data-theme="dark"] {
   --glass: rgba(10, 10, 12, 0.72);
   --shadow: 0 18px 45px -18px rgba(0, 0, 0, 0.9);
   --shadowSoft: 0 8px 24px -12px rgba(0, 0, 0, 0.85);
+  --danger: #ff4d7d;
+  --dangerSoft: rgba(255, 77, 125, 0.14);
+  --ok: #2ecc80;
+  --okSoft: rgba(46, 204, 128, 0.14);
+  --gold: #ffc65c;
+  --goldSoft: rgba(255, 198, 92, 0.16);
+  --onSignal: #ffffff;
+  --surface: #15151a;
 }
 
 /* ---------- NAQLI SISTEMA ----------
@@ -78,6 +99,14 @@ html[data-theme="dark"] {
   --glass: rgba(10, 10, 12, 0.72);
   --shadow: 0 18px 45px -18px rgba(0, 0, 0, 0.9);
   --shadowSoft: 0 8px 24px -12px rgba(0, 0, 0, 0.85);
+  --danger: #ff4d7d;
+  --dangerSoft: rgba(255, 77, 125, 0.14);
+  --ok: #2ecc80;
+  --okSoft: rgba(46, 204, 128, 0.14);
+  --gold: #ffc65c;
+  --goldSoft: rgba(255, 198, 92, 0.16);
+  --onSignal: #ffffff;
+  --surface: #15151a;
   }
 }
 

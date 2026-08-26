@@ -19,6 +19,7 @@ import { formatCount, timeAgo } from "@/lib/format";
 import type { PostComment } from "@/lib/types";
 import { Avatar } from "./Avatar";
 import { EmojiIcon } from "./icons";
+import { useT } from "./LocaleProvider";
 
 export function CommentsModal({
   postId,
@@ -42,16 +43,17 @@ export function CommentsModal({
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [failed, setFailed] = useState("");
+  const { t } = useT();
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => setMounted(true), []);
+  useEffect(() => queueMicrotask(() => setMounted(true)), []);
 
   // Har bor ki oyna kushoda meshavad - ruykhati purra
   useEffect(() => {
     if (!open) return;
     let alive = true;
 
-    setLoading(true);
+    queueMicrotask(() => setLoading(true));
     api
       .postComments(postId, { page: 1, pageSize: 100 })
       .then((response) => {
@@ -103,7 +105,7 @@ export function CommentsModal({
       inputRef.current?.focus();
     } catch (cause: unknown) {
       // Matni navishtaro NAMEBAREM - kas metavonad boz kushish kunad
-      setFailed(cause instanceof Error ? cause.message : "Firistoda nashud");
+      setFailed(cause instanceof Error ? cause.message : t.sendFailed);
     } finally {
       setSending(false);
     }
@@ -126,13 +128,13 @@ export function CommentsModal({
           <span className="absolute top-1.5 left-1/2 h-1 w-10 -translate-x-1/2 rounded-full bg-[var(--lineStrong)] sm:hidden" />
 
           <h2 className="text-[15px] font-semibold">
-            Komentho{count > 0 && ` · ${formatCount(count)}`}
+            {t.comments}{count > 0 && ` · ${formatCount(count)}`}
           </h2>
 
           <button
             type="button"
             onClick={onClose}
-            aria-label="Pushidan"
+            aria-label={t.close}
             className="absolute right-3 flex h-8 w-8 items-center justify-center rounded-full text-[var(--muted)] transition-colors duration-200 hover:bg-[var(--panel)] hover:text-[var(--fg)]"
           >
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -157,9 +159,9 @@ export function CommentsModal({
             </ul>
           ) : comments.length === 0 ? (
             <div className="flex h-full min-h-[180px] flex-col items-center justify-center gap-2 text-center">
-              <p className="text-[17px] font-semibold">Hanuz koment nest</p>
+              <p className="text-[17px] font-semibold">{t.noComments}</p>
               <p className="text-[13px] text-[var(--muted)]">
-                Avvalin shuda fikratonro navised.
+                {t.beFirstComment}
               </p>
             </div>
           ) : (
@@ -208,7 +210,7 @@ export function CommentsModal({
           <div className="flex items-center gap-2 rounded-full bg-[var(--panelSoft)] px-4 py-2.5 transition-colors focus-within:bg-[var(--panel)]">
             <button
               type="button"
-              aria-label="Emoji"
+              aria-label={t.emoji}
               className="shrink-0 text-[var(--muted)] transition-all duration-200 hover:scale-110 hover:text-[var(--fg)]"
             >
               <EmojiIcon size={20} />
@@ -221,7 +223,7 @@ export function CommentsModal({
               onKeyDown={(event) => {
                 if (event.key === "Enter") void send();
               }}
-              placeholder="Koment navised..."
+              placeholder={t.addComment}
               className="min-w-0 flex-1 bg-transparent text-[14px] text-[var(--fg)] outline-none placeholder:text-[var(--muted)]"
             />
 
@@ -231,7 +233,7 @@ export function CommentsModal({
               disabled={sending || draft.trim() === ""}
               className="shrink-0 rounded-full bg-[linear-gradient(115deg,var(--accentA),var(--accentB))] px-4 py-1.5 text-[13px] font-semibold text-white transition-all duration-200 active:scale-95 disabled:opacity-40 disabled:shadow-none"
             >
-              {sending ? "..." : "Firistodan"}
+              {sending ? "..." : t.sendAction}
             </button>
           </div>
         </div>

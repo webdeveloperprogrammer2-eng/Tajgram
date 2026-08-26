@@ -23,6 +23,7 @@ import {
 import { initials, shortNumber, timeAgo } from "../format";
 import { useReels } from "../providers";
 import styles from "../reels.module.css";
+import { useT } from "@/components/LocaleProvider";
 
 export default function CommentsSheet({
   reel,
@@ -31,6 +32,7 @@ export default function CommentsSheet({
   reel: Reel | null;
   onClose: () => void;
 }) {
+  const { t } = useT();
   const { token, patchReel } = useReels();
 
   const [comments, setComments] = useState<Comment[]>([]);
@@ -45,9 +47,12 @@ export default function CommentsSheet({
     if (reelsId === null) return;
 
     let alive = true;
-    setLoading(true);
-    setError("");
-    setComments([]);
+    queueMicrotask(() => {
+      if (!alive) return;
+      setLoading(true);
+      setError("");
+      setComments([]);
+    });
 
     getReelComments(token, reelsId)
       .then((list) => {
@@ -56,7 +61,7 @@ export default function CommentsSheet({
       })
       .catch((err) => {
         if (!alive) return;
-        setError(errorText(err, "Kommentho bor nashudand."));
+        setError(errorText(err, t.commentsLoadFailed));
       })
       .finally(() => {
         if (alive) setLoading(false);
@@ -65,7 +70,7 @@ export default function CommentsSheet({
     return () => {
       alive = false;
     };
-  }, [token, reelsId]);
+  }, [token, reelsId, t.commentsLoadFailed]);
 
   if (reel === null) return null;
 
@@ -88,7 +93,7 @@ export default function CommentsSheet({
       patchReel(reel.reelsId, { commentCount: reel.commentCount + 1 });
       setText("");
     } catch (err) {
-      setError(errorText(err, "Komment guzoshta nashud."));
+      setError(errorText(err, t.commentFailed));
     } finally {
       setSending(false);
     }
@@ -133,7 +138,7 @@ export default function CommentsSheet({
           style={{ borderColor: "var(--line)" }}
         >
           <h2 className="text-[15px] font-bold tracking-tight">
-            Kommentho{" "}
+            {t.comments}{" "}
             <span className="font-normal" style={{ color: "var(--muted)" }}>
               {shortNumber(reel.commentCount)}
             </span>
@@ -142,7 +147,7 @@ export default function CommentsSheet({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Bastan"
+            aria-label={t.close}
             className={styles.iconBtn}
           >
             <X className="h-4 w-4" strokeWidth={2} />
@@ -166,7 +171,7 @@ export default function CommentsSheet({
               className="py-14 text-center text-[13px]"
               style={{ color: "var(--muted)" }}
             >
-              Hanuz komment nest. Avvalin komment az shumo boshad.
+              {t.firstComment}
             </p>
           ) : (
             <div className="space-y-5">
@@ -209,7 +214,7 @@ export default function CommentsSheet({
                     <button
                       type="button"
                       onClick={() => handleLike(comment)}
-                      aria-label="Bayan"
+                      aria-label={t.likeAction}
                       className="flex shrink-0 flex-col items-center gap-0.5 text-[11px]"
                       style={{
                         color: comment.isLiked
@@ -246,7 +251,7 @@ export default function CommentsSheet({
             <input
               value={text}
               onChange={(event) => setText(event.target.value)}
-              placeholder="Komment navised..."
+              placeholder={t.addComment}
               className={styles.composerInput}
               maxLength={300}
             />
@@ -254,7 +259,7 @@ export default function CommentsSheet({
             <button
               type="submit"
               disabled={sending || text.trim() === ""}
-              aria-label="Firistodan"
+              aria-label={t.sendAction}
               className={styles.sendBtn}
             >
               {sending ? (

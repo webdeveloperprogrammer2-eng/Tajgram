@@ -45,6 +45,7 @@ import {
 } from "./api";
 import { getToken } from "./token";
 import styles from "./user.module.css";
+import { useT } from "@/components/LocaleProvider";
 
 export default function Page() {
   // useSearchParams -> Suspense talab mekunad
@@ -56,6 +57,7 @@ export default function Page() {
 }
 
 function UserProfilePage() {
+  const { t } = useT();
   const router = useRouter();
   const params = useSearchParams();
   const userId = params.get("id") ?? "";
@@ -75,7 +77,7 @@ function UserProfilePage() {
   const [list, setList] = useState<ShortUser[]>([]);
 
   useEffect(() => {
-    setToken(getToken() ?? "");
+    queueMicrotask(() => setToken(getToken() ?? ""));
   }, []);
 
   // ---------- Hamai ma'lumotro megirem ----------
@@ -83,8 +85,11 @@ function UserProfilePage() {
     if (token === "" || userId === "") return;
 
     let alive = true;
-    setLoading(true);
-    setError("");
+    queueMicrotask(() => {
+      if (!alive) return;
+      setLoading(true);
+      setError("");
+    });
 
     getUserProfile(token, userId)
       .then(async (data) => {
@@ -161,7 +166,7 @@ function UserProfilePage() {
   async function openList(kind: "followers" | "following") {
     if (profile === null) return;
 
-    setListTitle(kind === "followers" ? "Podpischikho" : "Podpiskaho");
+    setListTitle(kind === "followers" ? t.titleFollowers : t.titleFollowing);
     setList([]);
 
     try {
@@ -175,11 +180,11 @@ function UserProfilePage() {
     }
   }
 
-  if (userId === "") return <Message>Korbar intikhob nashudaast.</Message>;
-  if (token === "") return <Message>Avval ba account daroed.</Message>;
+  if (userId === "") return <Message>{t.userNotPicked}</Message>;
+  if (token === "") return <Message>{t.loginFirst}</Message>;
   if (loading) return <Loading />;
   if (error !== "" && profile === null) return <Message>{error}</Message>;
-  if (profile === null) return <Message>Korbar yoft nashud.</Message>;
+  if (profile === null) return <Message>{t.userNotFound}</Message>;
 
   const avatar = mediaUrl(profile.image);
 
@@ -212,14 +217,14 @@ function UserProfilePage() {
 
           {/* --- Hisobho --- */}
           <div className={`${styles.card} mt-7 grid max-w-lg grid-cols-3 px-2 py-1`}>
-            <Stat label="Postho" value={profile.postCount} />
+            <Stat label={t.tabPosts} value={profile.postCount} />
             <Stat
-              label="Folowers"
+              label={t.titleFollowers}
               value={profile.subscribersCount}
               onClick={() => openList("followers")}
             />
             <Stat
-              label="Folowing"
+              label={t.titleFollowing}
               value={profile.subscriptionsCount}
               onClick={() => openList("following")}
             />
@@ -235,7 +240,7 @@ function UserProfilePage() {
               </p>
             ) : (
               <p className="text-[13px] italic" style={{ color: "var(--muted)" }}>
-                In korbar hanuz dar borai khud chize nanavishtaast
+                {t.noBio}
               </p>
             )}
           </div>
@@ -253,7 +258,7 @@ function UserProfilePage() {
             className={`${styles.gradBg} flex h-12 w-full items-center justify-center gap-2 rounded-full text-[15px] font-semibold transition-all duration-200 hover:brightness-110 active:scale-[0.99] disabled:opacity-50`}
           >
             <UserPlus className="h-4 w-4" strokeWidth={2.2} />
-            Podpiska
+            {t.follow}
           </button>
         ) : (
           // Ba DU tugma taqsim meshavad
@@ -266,7 +271,7 @@ function UserProfilePage() {
               style={{ background: "var(--panel)", color: "var(--fg)" }}
             >
               <UserMinus className="h-4 w-4" strokeWidth={2.2} />
-              Otpiska
+              {t.unfollow}
             </button>
 
             <button
@@ -276,7 +281,7 @@ function UserProfilePage() {
               className={`${styles.gradBg} flex h-12 flex-1 items-center justify-center gap-2 rounded-full text-[15px] font-semibold transition-all duration-200 hover:brightness-110 active:scale-[0.99] disabled:opacity-50`}
             >
               <MessageSquare className="h-4 w-4" strokeWidth={2.2} />
-              Chat
+              {t.chat}
             </button>
           </div>
         )}
@@ -297,19 +302,19 @@ function UserProfilePage() {
           active={tab === "posts"}
           onClick={() => setTab("posts")}
           icon={<Grid3x3 className="h-4 w-4" strokeWidth={1.8} />}
-          label="Postho"
+          label={t.tabPosts}
         />
         <TabButton
           active={tab === "reels"}
           onClick={() => setTab("reels")}
           icon={<Bookmark className="h-4 w-4" strokeWidth={1.8} />}
-          label="Reels"
+          label={t.tabReels}
         />
       </div>
 
       {tab === "posts" ? (
         posts.length === 0 ? (
-          <Message>Hanuz post nest</Message>
+          <Message>{t.noPostsTitle}</Message>
         ) : (
           <div className="mt-3 grid grid-cols-3 gap-2 sm:gap-3">
             {posts.map((post) => {
@@ -343,7 +348,7 @@ function UserProfilePage() {
           </div>
         )
       ) : reels.length === 0 ? (
-        <Message>Hanuz video nest</Message>
+        <Message>{t.noVideosYet}</Message>
       ) : (
         <div className="mt-3 grid grid-cols-3 gap-2 sm:gap-3">
           {reels.map((reel) => {
@@ -416,7 +421,7 @@ function UserProfilePage() {
                   className="py-10 text-center text-[13px]"
                   style={{ color: "var(--muted)" }}
                 >
-                  Ro-ykhat kholi ast.
+                  {t.emptyList}
                 </p>
               ) : (
                 list.map((person) => {

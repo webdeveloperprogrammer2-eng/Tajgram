@@ -1,159 +1,25 @@
 /* ============================================================
    app/profile/profile.module.css
-   Sabk: MODERN SOCIAL - monandi instagram, vale tozatar.
-   Qoidaho: kunjhoi gird, soyahoi narm, harakathoi ravon.
-   RANG: faqat neytral (siyoh/safed/khokistari) + YAK gradient
-   az DU rang (--accentA -> --accentB). Ranghoi digar NEST.
+   Sabk: monandi INSTAGRAM - sof, be zeboihoi ortiqcha.
 
-   Hamai rangho in jo hastand - do naql: DARK va LIGHT.
-   Component-ho ranghoro FAQAT tavassuti var(--...) megirand.
+   ============================================================
+   IN JO 33 SINF HAZF SHUD.
+   Peshtar in fayl fon-i khudashro (.shell), muqovai mavhum
+   (.cover, .blob*), halqahoi gardishkunanda (.spinRing),
+   khonahoi omor-i gradienti (.statCard), kartai shishagin
+   (.glass) va HATTO sidebar-i khudashro (.navItem*, .topBar,
+   .bottomBar) dosht - garchi sidebar allakay YAK JOI umumi
+   ast (components/Sidebar.tsx). Hamai onho ba HECH JO
+   ishora namekardand, vale dar har bori bor shudani sahifa
+   ba browser mefiristodand.
+
+   Hozir faqat on chize mondaast ki VOQEAN kor mekunad:
+   khonahoi tur, oynaho (modal) va sahnai story.
+   Rangho hamesha az var(--...)-i globals.css meoyand.
    ============================================================ */
-
-.shell {
-  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
-  background: var(--bg);
-  color: var(--fg);
-  transition: background-color 0.25s ease, color 0.25s ease;
-}
-
-
-
-
 
 .mono {
   font-family: var(--font-geist-mono), ui-monospace, monospace;
-}
-
-/* ---------- YAGONA GRADIENT (2 rang) ---------- */
-.gradText {
-  background: linear-gradient(115deg, var(--accentA), var(--accentB));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-.gradBg {
-  background: linear-gradient(135deg, var(--accentA), var(--accentB));
-  color: #ffffff;
-}
-
-.gradBar {
-  background: linear-gradient(90deg, var(--accentA), var(--accentB));
-}
-
-/* Nuri narmi gradient dar fon */
-.aura {
-  position: fixed;
-  top: -22rem;
-  right: -14rem;
-  z-index: 0;
-  width: 46rem;
-  height: 46rem;
-  pointer-events: none;
-  border-radius: 50%;
-  opacity: 0.16;
-  background: radial-gradient(circle at center, var(--accentB) 0%, transparent 68%);
-}
-
-.auraLow {
-  position: fixed;
-  bottom: -26rem;
-  left: -12rem;
-  z-index: 0;
-  width: 40rem;
-  height: 40rem;
-  pointer-events: none;
-  border-radius: 50%;
-  opacity: 0.12;
-  background: radial-gradient(circle at center, var(--accentA) 0%, transparent 68%);
-}
-
-/* ---------- Sidebar ---------- */
-.sidebar {
-  background: var(--bg);
-  border-right: 1px solid var(--line);
-}
-
-.navItem {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  width: 100%;
-  padding: 0.7rem 0.75rem;
-  border-radius: 14px;
-  color: var(--fg);
-  transition: background-color 0.18s ease, transform 0.18s ease;
-}
-.navItem:hover {
-  background: var(--panel);
-}
-.navItem:active {
-  transform: scale(0.97);
-}
-
-.navItemActive {
-  font-weight: 700;
-  background: var(--panel);
-}
-.navItemActive::before {
-  content: "";
-  position: absolute;
-  left: -0.6rem;
-  top: 50%;
-  height: 22px;
-  width: 3px;
-  border-radius: 999px;
-  transform: translateY(-50%);
-  background: linear-gradient(180deg, var(--accentA), var(--accentB));
-}
-
-.navItemSoon {
-  opacity: 0.45;
-  cursor: default;
-}
-.navItemSoon:hover {
-  background: transparent;
-}
-
-/* Panelhoi shishagi: bolo (telefon) va poyon (telefon) */
-.bottomBar {
-  background: var(--glass);
-  backdrop-filter: blur(18px) saturate(140%);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
-  border-top: 1px solid var(--line);
-}
-
-.topBar {
-  background: var(--glass);
-  backdrop-filter: blur(18px) saturate(140%);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
-  border-bottom: 1px solid var(--line);
-}
-
-/* ---------- Karta ---------- */
-.card {
-  background: var(--panelSoft);
-  border: 1px solid var(--line);
-  border-radius: 24px;
-  box-shadow: var(--shadowSoft);
-}
-
-/* ---------- Kushodashavii narm ---------- */
-.rise {
-  animation: rise 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-@keyframes rise {
-  from { opacity: 0; transform: translateY(14px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.fade {
-  animation: fadeIn 0.3s ease both;
-}
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
 }
 
 /* ---------- Khato: larzishi sabuk ---------- */
@@ -167,32 +33,12 @@
   40%, 60% { transform: translateX(5px); }
 }
 
-/* ---------- Bloki "loading" - se nuqta ---------- */
-.blocks {
-  display: inline-flex;
-  gap: 4px;
-  align-items: center;
-}
-.blocks i {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: currentColor;
-  animation: bounce 0.9s ease-in-out infinite;
-}
-.blocks i:nth-child(2) { animation-delay: 0.15s; }
-.blocks i:nth-child(3) { animation-delay: 0.3s; }
-@keyframes bounce {
-  0%, 100% { opacity: 0.25; transform: translateY(0); }
-  50%      { opacity: 1; transform: translateY(-3px); }
-}
-
 /* ---------- Skelet: darakhshishi ravon ---------- */
 .skeleton {
-  background: var(--panel);
-  border-radius: 16px;
   position: relative;
   overflow: hidden;
+  border-radius: 8px;
+  background: var(--panel);
 }
 .skeleton::after {
   content: "";
@@ -206,18 +52,16 @@
   to { transform: translateX(100%); }
 }
 
-/* ---------- Khonai grid ---------- */
+/* ============================================================
+   KHONAHOI TUR
+   Instagram kunji GIRD nadorad va khona hangomi hover az
+   joyash namejunbad - faqat pardai siyoh paydo meshavad.
+   ============================================================ */
 .cell {
   position: relative;
   aspect-ratio: 1 / 1;
   overflow: hidden;
-  border-radius: 16px;
   background: var(--panel);
-  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease;
-}
-.cell:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow);
 }
 
 /* Reels: kvadrat NE - amudi (9:16), monandi instagram */
@@ -225,81 +69,23 @@
   position: relative;
   aspect-ratio: 9 / 16;
   overflow: hidden;
-  border-radius: 16px;
   background: var(--panel);
-  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease;
-}
-.cellTall:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow);
 }
 
-/* Vaqte mush ba boloi khona meravad - sathi torik bo raqamho */
-.cellOverlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1.25rem;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.72));
-  color: #ffffff;
-  font-weight: 600;
-}
-.cell:hover .cellOverlay,
-.cellTall:hover .cellOverlay,
-.cell:focus-visible .cellOverlay,
-.cellTall:focus-visible .cellOverlay {
-  opacity: 1;
-}
-
-/* ---------- Khalqai story: gird + gradient ---------- */
+/* ---------- Khalqai story: gird + gradienti instagram ---------- */
 .ring {
   display: block;
   padding: 2.5px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--accentA), var(--accentB));
+  background: linear-gradient(45deg, #f9ce34, #ee2a7b 45%, #6228d7);
   transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .ring:hover {
   transform: scale(1.05);
 }
-.ringInner {
-  display: block;
-  height: 100%;
-  width: 100%;
-  overflow: hidden;
-  border-radius: 50%;
-  border: 2px solid var(--bg);
-  background: var(--panel);
-}
-.ringSeen {
-  display: block;
-  padding: 2.5px;
-  border-radius: 50%;
-  background: var(--lineStrong);
-}
-
-/* Tugmai "+" baroi storyi nav */
-.storyAdd {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  border: 1.5px dashed var(--lineStrong);
-  background: var(--panelSoft);
-  color: var(--muted);
-  transition: border-color 0.2s ease, transform 0.2s ease, color 0.2s ease;
-}
-.storyAdd:hover {
-  border-color: var(--accentB);
-  color: var(--accentB);
-  transform: scale(1.05);
-}
-
-/* ---------- Modal ---------- */
+/* ============================================================
+   OYNAHO (modal)
+   ============================================================ */
 .overlay {
   position: fixed;
   inset: 0;
@@ -308,6 +94,10 @@
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   animation: fadeIn 0.2s ease both;
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 .modal {
@@ -318,21 +108,28 @@
   transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
-  /* Bе in modal az ekran berun mezad va sari on burida meshud */
+  /* Be in, modal az ekran berun mezad va sari on burida meshud */
   max-height: calc(100dvh - 2rem);
   background: var(--bg);
   color: var(--fg);
   border: 1px solid var(--line);
-  border-radius: 24px;
+  border-radius: 12px;
   box-shadow: var(--shadow);
   overflow: hidden;
   animation: pop 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+@keyframes pop {
+  from { opacity: 0; transform: translate(-50%, -46%) scale(0.96); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
 
-/* ---------- Sahnai story: surat har andoza bosad ham "sozgor" ----------
-   Suratho gohe amudi, gohe uftoda meshavand. Peshtar quti 9:16 QAT'I bud
-   va girdi surati uftoda navori siyohi kalon memond. Hozir hamon surat
-   dar pasazamina mahv (blur) karda meshavad - joi kholi por meshavad. */
+/* ============================================================
+   SAHNAI STORY
+   Suratho gohe amudi, gohe uftoda meshavand. Quti 9:16-i QAT'I
+   girdi surati uftoda navori siyohi kalon meguzosht. Hozir
+   hamon surat dar pasazamina mahv (blur) karda meshavad -
+   joi kholi por meshavad.
+   ============================================================ */
 .stage {
   position: relative;
   display: flex;
@@ -360,7 +157,7 @@
   object-fit: contain;
 }
 
-/* Scrim-i bolo va poyon - to matni safed dar surati ravshan hono bosad */
+/* Scrim-i bolo - to matni safed dar surati ravshan ham khonda shavad */
 .stageTopScrim {
   position: absolute;
   inset: 0 0 auto 0;
@@ -378,7 +175,16 @@
   overflow: hidden;
 }
 .trackOn {
-  background: linear-gradient(90deg, var(--accentA), var(--accentB));
+  background: #ffffff;
+}
+/* Qismi purshuda - hamrohi taymer az chap ba rost meravad */
+.trackFill {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: 999px;
+  background: #ffffff;
+  transition: width 80ms linear;
 }
 
 /* Tugmahoi chap/rost - faqat vaqte mush nazdik oyad namoyon meshavand */
@@ -413,10 +219,6 @@
   background: rgba(0, 0, 0, 0.75);
   transform: scale(1.08);
 }
-@keyframes pop {
-  from { opacity: 0; transform: translate(-50%, -46%) scale(0.96); }
-  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-}
 
 /* ---------- Scrollbar-i tunuk ---------- */
 .scroll {
@@ -433,187 +235,11 @@
   border-radius: 999px;
 }
 
-/* Qatori uftii story - scrollbar penhon */
-.scrollX {
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.scrollX::-webkit-scrollbar {
-  display: none;
-}
-
-/* ---------- Khati progress-i story ---------- */
-.storyBar {
-  height: 2.5px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.28);
-  overflow: hidden;
-}
-.storyBar > i {
-  display: block;
-  height: 100%;
-  border-radius: 999px;
-  background: #ffffff;
-  animation: grow 6s linear both;
-}
-@keyframes grow {
-  from { width: 0%; }
-  to   { width: 100%; }
-}
-
-/* ============================================================
-   MUQOVAI PROFIL - qismi nav
-   Ghoya: bolo-i sahifa "zinda" boshad - surati profil mavhum
-   shuda fon meshavad, doghhoi rangin ohista shino mekunand,
-   va kartai shishagin ba on medaroyad.
-   ============================================================ */
-
-.cover {
-  position: relative;
-  height: 168px;
-  overflow: hidden;
-  pointer-events: none;
-}
-@media (min-width: 640px) {
-  .cover {
-    height: 210px;
-  }
-}
-
-/* Surati profil - kalon, mavhum, purrang: fon-i shakhsi */
-.coverImg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transform: scale(1.3);
-  filter: blur(58px) saturate(170%);
-  opacity: 0.5;
-}
-
-/* Poyon-i muqova narm ba rangi sahifa meguzarad */
-.coverFade {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to bottom, transparent 18%, var(--bg) 100%);
-}
-
-.blob {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(64px);
-}
-.blobA {
-  width: 25rem;
-  height: 25rem;
-  top: -9rem;
-  left: -6rem;
-  opacity: 0.5;
-  background: radial-gradient(circle, var(--accentA), transparent 66%);
-  animation: drift 18s ease-in-out infinite alternate;
-}
-.blobB {
-  width: 29rem;
-  height: 29rem;
-  top: -12rem;
-  right: -5rem;
-  opacity: 0.45;
-  background: radial-gradient(circle, var(--accentB), transparent 66%);
-  animation: drift 26s ease-in-out infinite alternate-reverse;
-}
-.blobC {
-  width: 19rem;
-  height: 19rem;
-  top: -5rem;
-  left: 40%;
-  opacity: 0.24;
-  background: radial-gradient(circle, #29d0ff, transparent 70%);
-  animation: floaty 9s ease-in-out infinite;
-}
-
-@keyframes drift {
-  0% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  50% {
-    transform: translate3d(7%, -9%, 0) scale(1.18);
-  }
-  100% {
-    transform: translate3d(-8%, 6%, 0) scale(1.06);
-  }
-}
-
-@keyframes floaty {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-14px);
-  }
-}
-
-/* ---------- Kartai shishagin ---------- */
-.glass {
-  position: relative;
-  border: 1px solid var(--line);
-  border-radius: 30px;
-  background: var(--glass);
-  backdrop-filter: blur(26px) saturate(150%);
-  -webkit-backdrop-filter: blur(26px) saturate(150%);
-  box-shadow: var(--shadow);
-}
-
-/* ---------- Halqai gardishkunanda gird-i avatar ---------- */
-.spinRing {
-  position: absolute;
-  border-radius: 50%;
-  background: conic-gradient(
-    from 0deg,
-    var(--accentA),
-    #ffb84d,
-    var(--accentB),
-    #29d0ff,
-    var(--accentA)
-  );
-  animation: spin 7s linear infinite;
-}
-.spinGlow {
-  filter: blur(14px);
-  opacity: 0.6;
-}
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* ---------- Khonai omor ---------- */
-.statCard {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  padding: 14px 8px;
-  border-radius: 20px;
-  border: 1px solid var(--line);
-  background: var(--panelSoft);
-  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 0.28s ease, border-color 0.28s ease;
-}
-.statCard:hover {
-  transform: translateY(-4px);
-  border-color: var(--lineStrong);
-  box-shadow: var(--shadowSoft);
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .blobA,
-  .blobB,
-  .blobC,
-  .spinRing {
+  .skeleton::after,
+  .snap,
+  .modal,
+  .overlay {
     animation: none !important;
   }
 }

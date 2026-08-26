@@ -40,10 +40,13 @@ import {
   type Message,
 } from "../api";
 import { useCall } from "../call/CallProvider";
-import { sameId } from "../call/signaling";
+import { sameId } from "../call/realtime";
 import { clockTime, dayLabel } from "../format";
 import { useChats } from "../providers";
 import styles from "../chats.module.css";
+
+import { tr } from "@/components/appLang";
+import { useT } from "@/components/LocaleProvider";
 
 import Avatar from "./Avatar";
 import VoiceMessage from "./VoiceMessage";
@@ -59,6 +62,7 @@ export default function ChatWindow({
   chat: Chat;
   onBack: () => void;
 }) {
+  const { t } = useT();
   const { token, allowedIds, reloadChats, me } = useChats();
   const { callUser, phase, notifyChat, onChatEvent, notifyTyping, onTypingEvent } =
     useCall();
@@ -160,7 +164,7 @@ export default function ChatWindow({
         setMessages(Array.isArray(list) ? list : []);
       } catch (err) {
         if (!alive || !first) return;
-        setError(errorText(err, "Payomho bor nashudand."));
+        setError(errorText(err, t.messagesLoadFailed));
       } finally {
         if (alive && first) setLoading(false);
       }
@@ -175,7 +179,7 @@ export default function ChatWindow({
       alive = false;
       clearInterval(timer);
     };
-  }, [token, chat.chatId]);
+  }, [token, chat.chatId, t.messagesLoadFailed]);
 
   // ------------------------------------------------------------
   //  REAL TIME
@@ -295,13 +299,13 @@ export default function ChatWindow({
         item.type.startsWith("audio/");
 
       if (!ok) {
-        setError(`"${item.name}" surat yo video nest.`);
+        setError(`"${item.name}" ${t.notImageOrVideo}`);
         continue;
       }
 
       // Videohoi az 40 MB kalon - backend qabul namekunad
       if (item.type.startsWith("video/") && item.size > 40 * 1024 * 1024) {
-        setError(`"${item.name}" khele kalon ast (az 40 MB ziyod).`);
+        setError(`"${item.name}" ${t.fileTooBig}`);
         continue;
       }
 
@@ -365,7 +369,7 @@ export default function ChatWindow({
       ping(); // REAL TIME: matn / surat / video
       await reloadChats(); // dar ro-ykhat "payomi okhirin" nav shavad
     } catch (err) {
-      setError(errorText(err, "Payom firistoda nashud."));
+      setError(errorText(err, t.messageSendFailed));
     } finally {
       setSending(false);
     }
@@ -395,7 +399,7 @@ export default function ChatWindow({
       ping(); // REAL TIME: payomi ovozi
       await reloadChats();
     } catch (err) {
-      setError(errorText(err, "Payomi ovozi firistoda nashud."));
+      setError(errorText(err, t.voiceSendFailed));
     } finally {
       setSending(false);
     }
@@ -410,7 +414,7 @@ export default function ChatWindow({
       ping(); // REAL TIME: payom tark shud
       await reloadChats();
     } catch (err) {
-      setError(errorText(err, "Payom tark nashud."));
+      setError(errorText(err, t.messageDeleteFailed));
     }
   }
 
@@ -424,7 +428,7 @@ export default function ChatWindow({
         <button
           type="button"
           onClick={onBack}
-          aria-label="Bozgasht"
+          aria-label={t.back}
           className={`${styles.iconBtn} md:hidden`}
         >
           <ArrowLeft className="h-5 w-5" strokeWidth={1.8} />
@@ -446,7 +450,7 @@ export default function ChatWindow({
               className={`${styles.typing} truncate text-[12px]`}
               aria-live="polite"
             >
-              menavisad
+              {t.typing}
               <span className={styles.typingDot} />
               <span className={styles.typingDot} />
               <span className={styles.typingDot} />
@@ -467,8 +471,8 @@ export default function ChatWindow({
             type="button"
             onClick={() => callUser(peerChat, "audio")}
             disabled={!canWrite || busy}
-            aria-label="Zvanoki sadoi"
-            title={canWrite ? "Zvanoki sadoi" : "Bo in korbar zvanok mumkin nest"}
+            aria-label={t.audioCall}
+            title={canWrite ? t.audioCall : t.callNotAllowed}
             className={styles.headBtn}
           >
             <Phone className="h-5 w-5" strokeWidth={1.8} />
@@ -478,8 +482,8 @@ export default function ChatWindow({
             type="button"
             onClick={() => callUser(peerChat, "video")}
             disabled={!canWrite || busy}
-            aria-label="Zvanoki video"
-            title={canWrite ? "Zvanoki video" : "Bo in korbar zvanok mumkin nest"}
+            aria-label={t.videoCall}
+            title={canWrite ? t.videoCall : t.callNotAllowed}
             className={styles.headBtn}
           >
             <Video className="h-5 w-5" strokeWidth={1.8} />
@@ -508,7 +512,7 @@ export default function ChatWindow({
             className="py-20 text-center text-[13px]"
             style={{ color: "var(--muted)" }}
           >
-            Hanuz payom nest. Avvalin payomro shumo navised.
+            {t.noMessagesStart}
           </p>
         ) : (
           <div className="flex flex-col gap-2">
@@ -555,10 +559,7 @@ export default function ChatWindow({
             style={{ background: "var(--panel)", color: "var(--muted)" }}
           >
             <Lock className="h-4 w-4 shrink-0" strokeWidth={1.8} />
-            <span>
-              Bo in korbar navishtan mumkin nest: na u ba shumo podpiska
-              kardaast, na shumo ba u.
-            </span>
+            <span>{t.cannotWrite}</span>
           </div>
         ) : (
           <form onSubmit={handleSend}>
@@ -580,7 +581,7 @@ export default function ChatWindow({
                     onClick={() => fileInput.current?.click()}
                     className={`${styles.shot} flex items-center justify-center`}
                     style={{ color: "var(--muted)" }}
-                    aria-label="Boz surat guzored"
+                    aria-label={t.addMorePhotos}
                   >
                     <ImagePlus className="h-5 w-5" strokeWidth={1.8} />
                   </button>
@@ -626,7 +627,7 @@ export default function ChatWindow({
                     void handleSend();
                   }
                 }}
-                placeholder="Payom navised..."
+                placeholder={t.messagePlaceholder}
                 className={styles.composerInput}
               />
 
@@ -634,8 +635,8 @@ export default function ChatWindow({
                 type="button"
                 onClick={() => fileInput.current?.click()}
                 disabled={files.length >= MAX_FILES}
-                aria-label="Surat yo video guzored"
-                title="Surat yo video"
+                aria-label={t.attachMedia}
+                title={t.photoOrVideo}
                 className={styles.iconBtn}
               >
                 <ImagePlus className="h-5 w-5" strokeWidth={1.8} />
@@ -659,7 +660,7 @@ export default function ChatWindow({
                 disabled={
                   sending || (text.trim() === "" && files.length === 0)
                 }
-                aria-label="Firistodan"
+                aria-label={t.sendAction}
                 className={styles.sendBtn}
               >
                 {sending ? (
@@ -692,6 +693,7 @@ function Shot({
   busy: boolean;
   onKill: () => void;
 }) {
+  const { t } = useT();
   // Manzili peshnamoish - yakbora soakhta meshavad va ba'd ozod
   const url = useMemo(() => URL.createObjectURL(file), [file]);
 
@@ -716,7 +718,7 @@ function Shot({
         <button
           type="button"
           onClick={onKill}
-          aria-label="Faylro tark kuned"
+          aria-label={t.removeFile}
           className={styles.shotKill}
         >
           <X className="h-3 w-3" strokeWidth={2.6} />
@@ -736,6 +738,7 @@ function Bubble({
   message: Message;
   onDelete: (id: number) => void;
 }) {
+  const { t } = useT();
   const mine = message.isMine;
   const src = mediaUrl(message.fileName);
 
@@ -751,7 +754,7 @@ function Bubble({
         <button
           type="button"
           onClick={() => onDelete(message.messageId)}
-          aria-label="Payomro tark kuned"
+          aria-label={t.deleteMessage}
           className="mb-1 opacity-0 transition-opacity duration-150 group-hover:opacity-100"
           style={{ color: "var(--muted)" }}
         >
@@ -874,7 +877,7 @@ function loadBitmap(
     };
     image.onerror = () => {
       URL.revokeObjectURL(url);
-      reject(new Error("surat kushoda nashud"));
+      reject(new Error(tr().photoUploadFailed));
     };
 
     image.src = url;

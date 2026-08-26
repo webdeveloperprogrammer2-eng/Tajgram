@@ -37,13 +37,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Faqat YAK bor, ba'di kushodani sahifa:
   // az localStorage intikhobi kuhnai korbarro megirem.
   useEffect(() => {
-    const savedTheme = localStorage.getItem(THEME_KEY);
-    const savedLang = localStorage.getItem(LANG_KEY);
+    queueMicrotask(() => {
+      const savedTheme = localStorage.getItem(THEME_KEY);
+      const savedLang = localStorage.getItem(LANG_KEY);
 
-    if (savedTheme === "dark" || savedTheme === "light") setTheme(savedTheme);
-    if (savedLang === "tj" || savedLang === "ru" || savedLang === "en") {
-      setLang(savedLang);
-    }
+      if (savedTheme === "dark" || savedTheme === "light") setTheme(savedTheme);
+      if (savedLang === "tj" || savedLang === "ru" || savedLang === "en") {
+        setLang(savedLang);
+      }
+    });
   }, []);
 
   // Ivaz kardani theme + darhol nigoh doshtan

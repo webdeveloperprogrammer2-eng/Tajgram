@@ -41,6 +41,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
 import { Input } from "../ui/input";
+import { useT } from "@/components/LocaleProvider";
 
 export default function PostModal({
   post,
@@ -49,6 +50,7 @@ export default function PostModal({
   post: Post | null;
   onClose: () => void;
 }) {
+  const { t } = useT();
   const { token, patchPost, reload } = useProfile();
 
   // Nuskhai post dar in modal (ki like-ro darhol nishon dihem)
@@ -61,10 +63,12 @@ export default function PostModal({
 
   // Vaqte posti nav kushoda meshavad -> hama chizro az nav meguzorem
   useEffect(() => {
-    setData(post);
-    setImageIndex(0);
-    setComments([]);
-    setCommentText("");
+    queueMicrotask(() => {
+      setData(post);
+      setImageIndex(0);
+      setComments([]);
+      setCommentText("");
+    });
 
     if (post === null || token === "") return;
 
@@ -161,7 +165,7 @@ export default function PostModal({
     >
       <DialogContent className="max-w-4xl p-0">
         <DialogTitle className="sr-only">
-          {data.title ?? "Post"}
+          {data.title ?? t.tabPosts}
         </DialogTitle>
 
         <div className="grid md:grid-cols-[1.15fr_1fr]">
@@ -175,7 +179,7 @@ export default function PostModal({
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={currentImage}
-                  alt={data.title ?? "Post"}
+                  alt={data.title ?? t.photoAlt}
                   className="h-full w-full object-contain"
                 />
               )}
@@ -187,7 +191,7 @@ export default function PostModal({
                     <button
                       type="button"
                       onClick={() => setImageIndex(imageIndex - 1)}
-                      aria-label="Surati peshina"
+                      aria-label={t.previous}
                       className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 p-1.5 text-white"
                     >
                       <ChevronLeft className="h-4 w-4" strokeWidth={1.8} />
@@ -198,7 +202,7 @@ export default function PostModal({
                     <button
                       type="button"
                       onClick={() => setImageIndex(imageIndex + 1)}
-                      aria-label="Surati oyanda"
+                      aria-label={t.next}
                       className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 p-1.5 text-white"
                     >
                       <ChevronRight className="h-4 w-4" strokeWidth={1.8} />
@@ -354,7 +358,7 @@ export default function PostModal({
               <Input
                 value={commentText}
                 onChange={(event) => setCommentText(event.target.value)}
-                placeholder="Komment navised..."
+                placeholder={t.addComment}
                 maxLength={300}
                 className="text-sm"
               />
@@ -364,7 +368,7 @@ export default function PostModal({
                 size="icon"
                 variant="ghost"
                 disabled={busy || commentText.trim() === ""}
-                aria-label="Firistodan"
+                aria-label={t.sendAction}
               >
                 <Send className="h-4 w-4" strokeWidth={1.6} />
               </Button>

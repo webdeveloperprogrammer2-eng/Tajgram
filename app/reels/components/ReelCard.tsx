@@ -35,6 +35,7 @@ import {
 import { initials, shortNumber, timeAgo } from "../format";
 import { useReels } from "../providers";
 import styles from "../reels.module.css";
+import { useT } from "@/components/LocaleProvider";
 
 export default function ReelCard({
   reel,
@@ -44,6 +45,7 @@ export default function ReelCard({
   onOpenComments: (reel: Reel) => void;
 }) {
   const { token, muted, toggleMuted, patchReel } = useReels();
+  const { t } = useT();
 
   const frame = useRef<HTMLDivElement>(null);
   const video = useRef<HTMLVideoElement>(null);
@@ -266,7 +268,7 @@ export default function ReelCard({
           <button
             type="button"
             onClick={() => handleLike(false)}
-            aria-label="Bayan"
+            aria-label={t.likeAction}
             className={styles.railBtn}
           >
             <span
@@ -285,7 +287,7 @@ export default function ReelCard({
           <button
             type="button"
             onClick={() => onOpenComments(reel)}
-            aria-label="Kommentho"
+            aria-label={t.comments}
             className={styles.railBtn}
           >
             <span className={styles.railIcon}>
@@ -297,7 +299,7 @@ export default function ReelCard({
           <button
             type="button"
             onClick={handleFavorite}
-            aria-label="Saql kuned"
+            aria-label={t.saveAction}
             className={styles.railBtn}
           >
             <span
@@ -316,7 +318,7 @@ export default function ReelCard({
           <button
             type="button"
             onClick={toggleMuted}
-            aria-label="Sadọ"
+            aria-label={t.sound}
             className={styles.railBtn}
           >
             <span className={styles.railIcon}>
@@ -338,7 +340,7 @@ export default function ReelCard({
           <button
             type="button"
             onClick={handleTap}
-            aria-label={playing ? "Ist" : "Boz"}
+            aria-label={playing ? t.pause : t.play}
             className={`${styles.railBtn} md:hidden`}
           >
             <span className={styles.railIcon}>

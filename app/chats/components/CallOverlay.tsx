@@ -22,6 +22,7 @@ import { useCall } from "../call/CallProvider";
 import styles from "../chats.module.css";
 
 import Avatar from "./Avatar";
+import { useT } from "@/components/LocaleProvider";
 
 export default function CallOverlay() {
   const {
@@ -41,6 +42,10 @@ export default function CallOverlay() {
     toggleMic,
     toggleCam,
   } = useCall();
+
+  // DIQQAT: useT() boyad PESH az `return null`-i poyontar bosad -
+  // vagarna React "Rendered fewer hooks than expected" mepartoyad.
+  const { t } = useT();
 
   const remoteVideo = useRef<HTMLVideoElement>(null);
   const localVideo = useRef<HTMLVideoElement>(null);
@@ -97,19 +102,19 @@ export default function CallOverlay() {
 
   const status =
     phase === "outgoing"
-      ? "Zang meravad..."
+      ? t.callingOut
       : phase === "incoming"
         ? video
-          ? "Zvanoki video"
-          : "Zvanoki sadoi"
+          ? t.videoCall
+          : t.audioCall
         : phase === "connecting"
-          ? "Ulanish soakhta meshavad..."
+          ? t.connecting
           : phase === "active"
             ? clock(startedAt === null ? 0 : seconds)
             : note;
 
   return (
-    <div className={styles.callRoot} role="dialog" aria-label="Zvanok">
+    <div className={styles.callRoot} role="dialog" aria-label={t.call}>
       {/* Sadoi hamsuhbat - hamesha (ham baroi audio, ham video) */}
       <audio ref={remoteAudio} autoPlay playsInline hidden />
 
@@ -179,17 +184,17 @@ export default function CallOverlay() {
         {signalStatus === "online" ? (
           <>
             <Wifi className="h-3.5 w-3.5" strokeWidth={2} />
-            <span>Server-i zvanok</span>
+            <span>{t.serverLink}</span>
           </>
-        ) : signalStatus === "local" ? (
+        ) : signalStatus === "connecting" ? (
           <>
             <WifiOff className="h-3.5 w-3.5" strokeWidth={2} />
-            <span>Rejimi mahalli (yak browser)</span>
+            <span>{t.connecting}</span>
           </>
         ) : (
           <>
             <WifiOff className="h-3.5 w-3.5" strokeWidth={2} />
-            <span>Signaling nest</span>
+            <span>{t.noLink}</span>
           </>
         )}
       </div>
@@ -201,7 +206,7 @@ export default function CallOverlay() {
             <button
               type="button"
               onClick={decline}
-              aria-label="Rad kardan"
+              aria-label={t.decline}
               className={`${styles.callBtn} ${styles.callBtnEnd}`}
             >
               <PhoneOff className="h-6 w-6" strokeWidth={2} />
@@ -210,7 +215,7 @@ export default function CallOverlay() {
             <button
               type="button"
               onClick={accept}
-              aria-label="Qabul kardan"
+              aria-label={t.accept}
               className={`${styles.callBtn} ${styles.callBtnPick}`}
             >
               {video ? (
@@ -229,7 +234,7 @@ export default function CallOverlay() {
             <button
               type="button"
               onClick={toggleMic}
-              aria-label={micOff ? "Mikrofonro darginron" : "Mikrofonro khomush kuned"}
+              aria-label={micOff ? t.micOn : t.micOff}
               className={`${styles.callBtn} ${micOff ? styles.callBtnOff : ""}`}
               disabled={localStream === null}
             >
@@ -244,7 +249,7 @@ export default function CallOverlay() {
               <button
                 type="button"
                 onClick={toggleCam}
-                aria-label={camOff ? "Kameraro darginron" : "Kameraro khomush kuned"}
+                aria-label={camOff ? t.camOn : t.camOff}
                 className={`${styles.callBtn} ${camOff ? styles.callBtnOff : ""}`}
                 disabled={localStream === null}
               >
@@ -259,7 +264,7 @@ export default function CallOverlay() {
             <button
               type="button"
               onClick={hangup}
-              aria-label="Zvanokro tamom kuned"
+              aria-label={t.endCall}
               className={`${styles.callBtn} ${styles.callBtnEnd}`}
             >
               <PhoneOff className="h-6 w-6" strokeWidth={2} />

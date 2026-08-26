@@ -66,12 +66,12 @@ export default function RegisterPage() {
     if (file === undefined) return;
 
     if (!file.type.startsWith("image/")) {
-      setErrors(["Faqat surat guzoshtan mumkin ast."]);
+      setErrors([t.profileNotImage]);
       return;
     }
     // 5 MB - ki server rad nakunad
     if (file.size > 5 * 1024 * 1024) {
-      setErrors(["Surat az 5 MB kalontar ast."]);
+      setErrors([t.profileTooBig]);
       return;
     }
 
@@ -149,7 +149,7 @@ export default function RegisterPage() {
       }
 
       setSuccess(t.okCreated);
-      router.push("/profile");
+      router.replace("/");
     } catch (err) {
       if (err instanceof ApiError) {
         setErrors(err.messages[0] === "NETWORK" ? [t.errNetwork] : err.messages);
@@ -181,7 +181,7 @@ export default function RegisterPage() {
             type="button"
             onClick={() => avatarInput.current?.click()}
             className={styles.avatarPick}
-            aria-label="Surati profil guzored"
+            aria-label={t.profilePick}
           >
             {avatar === null ? (
               <span className={styles.avatarPickPlus}>+</span>
@@ -192,9 +192,9 @@ export default function RegisterPage() {
           </button>
 
           <div className="min-w-0">
-            <p className="text-[14px] font-semibold">Surati profil</p>
+            <p className="text-[14px] font-semibold">{t.profilePhoto}</p>
             <p className="text-[12px]" style={{ color: "var(--muted)" }}>
-              Ikhtiyori — ba&apos;d ham ivaz kardan mumkin
+              {t.profileOptional}
             </p>
 
             {avatar !== null && (
@@ -204,7 +204,7 @@ export default function RegisterPage() {
                 className="mt-1 text-[12px] underline"
                 style={{ color: "var(--muted)" }}
               >
-                Tark kardan
+                {t.profileRemove}
               </button>
             )}
           </div>
