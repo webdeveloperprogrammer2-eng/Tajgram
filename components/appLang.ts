@@ -479,6 +479,22 @@ const en = {
   highlightLoadFailed: "Could not load highlights.",
   highlightRemoveStory: "REMOVE",
   highlightEmpty: "This highlight is empty.",
+
+  // ---- Menyui chat (ChatMenu.tsx) ----
+  chatSettings: "Chat settings",
+  soundOn: "Sound on",
+  soundOff: "Sound off",
+  soundHint: "Play a sound for new messages",
+  notifyOn: "Notifications on",
+  notifyOff: "Notifications off",
+  notifyHint: "Show a banner for new messages",
+  blockUser: "Block user",
+  blockAsk: "Block this user?",
+  blockFailed: "Could not block the user.",
+  deleteChat: "Delete chat",
+  deleteChatAsk: "Delete this chat?",
+  chatDeleteFailed: "Could not delete the chat.",
+  confirmYes: "Yes",
 };
 
 export type Dict = typeof en;
@@ -919,6 +935,22 @@ const tj: Dict = {
   highlightLoadFailed: "Актуалиҳо бор нашуданд.",
   highlightRemoveStory: "БАРОВАРДАН",
   highlightEmpty: "Ин актуалӣ холӣ аст.",
+
+  // ---- Menyui chat (ChatMenu.tsx) ----
+  chatSettings: "Танзимоти чат",
+  soundOn: "Садо фаъол",
+  soundOff: "Садо хомӯш",
+  soundHint: "Барои паёмҳои нав садо дода шавад",
+  notifyOn: "Огоҳиномаҳо фаъол",
+  notifyOff: "Огоҳиномаҳо хомӯш",
+  notifyHint: "Барои паёми нав огоҳинома нишон дода шавад",
+  blockUser: "Баста кардан",
+  blockAsk: "Ин корбарро баста кунем?",
+  blockFailed: "Баста кардан нашуд.",
+  deleteChat: "Чатро нест кардан",
+  deleteChatAsk: "Ин чатро нест кунем?",
+  chatDeleteFailed: "Чат нест нашуд.",
+  confirmYes: "Ҳа",
 };
 
 const ru: Dict = {
@@ -1356,6 +1388,22 @@ const ru: Dict = {
   highlightLoadFailed: "Не удалось загрузить актуальное.",
   highlightRemoveStory: "УБРАТЬ",
   highlightEmpty: "Это актуальное пустое.",
+
+  // ---- Menyui chat (ChatMenu.tsx) ----
+  chatSettings: "Настройки чата",
+  soundOn: "Звук включён",
+  soundOff: "Звук выключен",
+  soundHint: "Звук для новых сообщений",
+  notifyOn: "Уведомления включены",
+  notifyOff: "Уведомления выключены",
+  notifyHint: "Показывать баннер о новых сообщениях",
+  blockUser: "Заблокировать",
+  blockAsk: "Заблокировать пользователя?",
+  blockFailed: "Не удалось заблокировать пользователя.",
+  deleteChat: "Удалить чат",
+  deleteChatAsk: "Удалить этот чат?",
+  chatDeleteFailed: "Не удалось удалить чат.",
+  confirmYes: "Да",
 };
 
 export const dictionary: Record<Lang, Dict> = { tj, ru, en };
