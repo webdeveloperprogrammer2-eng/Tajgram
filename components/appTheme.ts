@@ -62,11 +62,5 @@ export function onThemeChange(listener: (theme: AppTheme) => void): () => void {
   return () => window.removeEventListener(THEME_EVENT, handler);
 }
 
-export function logoutEverywhere() {
-  try {
-    localStorage.removeItem(TOKEN_KEY);
-  } catch {
-    // guzoshtan
-  }
-  window.location.href = "/Auth/login";
-}
+// Baromadan - kor dar lib/auth.ts ast (yak joi umumi).
+export { logout as logoutEverywhere } from "@/lib/auth";

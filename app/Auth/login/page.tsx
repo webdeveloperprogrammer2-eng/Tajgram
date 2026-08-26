@@ -6,7 +6,7 @@
 // ============================================================
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { ApiError, getMyProfile, loginUser } from "../api";
 import { saveToken } from "../token";
@@ -17,9 +17,66 @@ import Field from "../components/Field";
 import Submit from "../components/Submit";
 import { Alert } from "../ui/alert";
 
+// ------------------------------------------------------------
+//  Ban - dar server-i KHUDAMON nigoh doshta meshavad
+//  (backend inро namedonad). /api/admin/ban-status kushoda ast.
+// ------------------------------------------------------------
+type BanInfo = { until: number | null; reason: string };
+
+async function checkBan(userId: string): Promise<BanInfo | null> {
+  try {
+    const res = await fetch(
+      `/api/admin/ban-status?userId=${encodeURIComponent(userId)}`,
+      { cache: "no-store" },
+    );
+    if (!res.ok) return null;
+    const data = (await res.json()) as {
+      banned: boolean;
+      until: number | null;
+      reason: string;
+    };
+    return data.banned ? { until: data.until, reason: data.reason } : null;
+  } catch {
+    // Agar sanjish nashud - roҳро naməbandem (server-i mahalli).
+    return null;
+  }
+}
+
+function humanLeft(until: number | null): string {
+  if (until === null) return "";
+  const ms = until - Date.now();
+  if (ms <= 0) return "";
+  const min = Math.floor(ms / 60_000);
+  const h = Math.floor(min / 60);
+  const d = Math.floor(h / 24);
+  if (d > 0) return `${d} ruz ${h % 24} soat`;
+  if (h > 0) return `${h} soat ${min % 60} daq`;
+  return `${min} daqiqa`;
+}
+
+function formatBan(
+  ban: BanInfo,
+  t: { bannedTitle: string; bannedForever: string; bannedFor: string },
+): string {
+  const parts = [t.bannedTitle + "."];
+  if (ban.reason) parts.push(`«${ban.reason}»`);
+  parts.push(
+    ban.until === null
+      ? t.bannedForever
+      : `${t.bannedFor}: ${humanLeft(ban.until)}.`,
+  );
+  return parts.join(" ");
+}
+
 export default function LoginPage() {
   const router = useRouter();
+  const params = useSearchParams();
   const { t } = useSettings();
+
+  // AppFrame korbari nadaromadaro ba in jo mefiristad va
+  // sahifai avvalaro dar ?next= menavisad. Ba'di daromadan
+  // uro ba HAMON jo bar megardonem - monandi instagram.
+  const next = params.get("next");
 
   const [userName, setUserName] = useState("");
   const [password, setPassword] = useState("");
@@ -52,9 +109,35 @@ export default function LoginPage() {
 
     try {
       const token = await loginUser({ userName, password });
-      await getMyProfile(token);
+
+      // 2) darhol mesanjem: token dar haqiqat kor mekunad?
+      const profile = await getMyProfile(token);
+
+      // 3) BAN? Backend banро namedonad - mo dar server-i khud
+      //    (/api/admin/ban-status) nigoh medorem. Agar ban zinda
+      //    boshad, korbar ba dohil dohil nameshavad.
+      const ban = await checkBan(profile.userId);
+      if (ban !== null) {
+        setErrors([formatBan(ban, t)]);
+        return;
+      }
+
+      // 4) faqat ba'di sanjish nigoh medorem
       saveToken(token);
-      router.push("/profile");
+
+      // Korbari "admin" ба paneli idora meravad, na ba lentai Tajgram.
+      if (profile.userName === "admin") {
+        router.replace("/admin");
+        return;
+      }
+
+      // Faqat adresi DARUNI sayt - to kase bo ?next=https://...
+      // korbarro ba sayti begona nafiristad.
+      const back = next !== null && next.startsWith("/") && !next.startsWith("//")
+        ? next
+        : "/";
+
+      router.replace(back);
     } catch (err) {
       if (err instanceof ApiError) {
         setErrors(err.messages[0] === "NETWORK" ? [t.errNetwork] : err.messages);

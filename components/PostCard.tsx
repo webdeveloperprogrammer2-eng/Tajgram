@@ -8,6 +8,7 @@ import type { Post, PostComment } from "@/lib/types";
 import { Avatar } from "./Avatar";
 import { CommentsModal } from "./CommentsModal";
 import { PostMedia } from "./PostMedia";
+import { useT } from "./LocaleProvider";
 import {
   BookmarkIcon,
   ChevronLeftIcon,
@@ -23,22 +24,43 @@ const CAPTION_LIMIT = 125;
 export function PostCard({
   post,
   showFollow = false,
+  initialFollowing = false,
   index = 0,
 }: {
   post: Post;
   showFollow?: boolean;
+  /**
+   * Man ba sohibi in post obuna hastam?
+   *
+   * KHATO BUD: peshtar in jo hamesha `false` bud, chunki server
+   * dar khudi post chunin maidon namedihad. Natija: dar "Suggested
+   * Posts" tugma HAMESHA "Follow" meguft - hatto ba onhoe ki
+   * allakay obuna budi. Zadan khato medod ("allakay obuna").
+   * Hozir <Feed> ro-ykhati obunahoi maro yak bor megirad
+   * va in jo meguzoronad.
+   */
+  initialFollowing?: boolean;
   index?: number;
 }) {
+  const { t } = useT();
   const [liked, setLiked] = useState(post.postLike);
   const [likeCount, setLikeCount] = useState(post.postLikeCount);
   const [saved, setSaved] = useState(post.postFavorite);
-  const [following, setFollowing] = useState(false);
+  const [following, setFollowing] = useState(initialFollowing);
   const [comments, setComments] = useState<PostComment[]>(post.comments ?? []);
   const [commentCount, setCommentCount] = useState(post.commentCount);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [slide, setSlide] = useState(0);
   const [burst, setBurst] = useState(false);
+
+  // Ro-ykhati obunaho az server DERTAR meoyad - to on dam
+  // initialFollowing "false" ast. Be in useEffect tugma dar
+  // holati nodurust memond.
+  useEffect(
+    () => queueMicrotask(() => setFollowing(initialFollowing)),
+    [initialFollowing],
+  );
 
   // Nisbati qutti-i media. To surat naomadaast 4/5 (monandi instagram),
   // ba'd az omadan - nisbati TABI'II, vale mahdud: az 4/5 to 16/9.
@@ -177,7 +199,7 @@ export function PostCard({
 
         <button
           type="button"
-          aria-label="More options"
+          aria-label={t.moreOptions}
           className="rounded-full p-1.5 text-[var(--fg)] transition-colors hover:bg-[var(--panel)]"
         >
           <DotsIcon size={20} />
@@ -212,7 +234,7 @@ export function PostCard({
               <button
                 type="button"
                 onClick={() => setSlide((current) => current - 1)}
-                aria-label="Previous"
+                aria-label={t.previous}
                 className="absolute left-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-[var(--bg)]/85 text-[var(--fg)] opacity-0 shadow-md backdrop-blur-sm transition-all duration-200 hover:scale-110 group-hover/media:opacity-100"
               >
                 <ChevronLeftIcon size={16} />
@@ -222,7 +244,7 @@ export function PostCard({
               <button
                 type="button"
                 onClick={() => setSlide((current) => current + 1)}
-                aria-label="Next"
+                aria-label={t.next}
                 className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-[var(--bg)]/85 text-[var(--fg)] opacity-0 shadow-md backdrop-blur-sm transition-all duration-200 hover:scale-110 group-hover/media:opacity-100"
               >
                 <ChevronRightIcon size={16} />
@@ -246,7 +268,7 @@ export function PostCard({
         <button
           type="button"
           onClick={() => void sendLike(!liked)}
-          aria-label={liked ? "Unlike" : "Like"}
+          aria-label={liked ? t.unlike : t.likeAction}
           className={`rounded-full p-1.5 transition-all duration-200 hover:bg-[var(--panel)] active:scale-90 ${
             liked ? "text-[#ff3040]" : "text-[var(--fg)]"
           }`}
@@ -258,14 +280,14 @@ export function PostCard({
         <button
           type="button"
           onClick={() => setCommentsOpen(true)}
-          aria-label="Comments"
+          aria-label={t.comments}
           className="rounded-full p-1.5 text-[var(--fg)] transition-all duration-200 hover:bg-[var(--panel)] active:scale-90"
         >
           <CommentIcon />
         </button>
         <button
           type="button"
-          aria-label="Share"
+          aria-label={t.share}
           className="rounded-full p-1.5 text-[var(--fg)] transition-all duration-200 hover:bg-[var(--panel)] active:scale-90 hover:-rotate-12"
         >
           <ShareIcon />
@@ -273,7 +295,7 @@ export function PostCard({
         <button
           type="button"
           onClick={toggleSave}
-          aria-label={saved ? "Remove from saved" : "Save"}
+          aria-label={saved ? t.unsave : t.saveAction}
           className="ml-auto rounded-full p-1.5 text-[var(--fg)] transition-all duration-200 hover:bg-[var(--panel)] active:scale-90"
         >
           <span className={saved ? "block animate-pop" : "block"}>

@@ -62,11 +62,11 @@ export default function RegisterPage() {
   function pickAvatar(file: File | undefined) {
     if (file === undefined) return;
     if (!file.type.startsWith("image/")) {
-      setErrors(["Фақат акс гузоштан мумкин аст."]);
+      setErrors([t.profileNotImage]);
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      setErrors(["Акос аз 5 МБ калон аст."]);
+      setErrors([t.profileTooBig]);
       return;
     }
     setErrors([]);
@@ -148,7 +148,7 @@ export default function RegisterPage() {
       }
 
       setSuccess(t.okCreated);
-      router.push("/profile");
+      router.replace("/");
     } catch (err) {
       if (err instanceof ApiError) {
         setErrors(err.messages[0] === "NETWORK" ? [t.errNetwork] : err.messages);
@@ -178,7 +178,7 @@ export default function RegisterPage() {
             type="button"
             onClick={() => avatarInput.current?.click()}
             className={styles.avatarPick}
-            aria-label="Сурати профил гузоред"
+            aria-label={t.profilePick}
           >
             {avatar === null ? (
               <span className={styles.avatarPickPlus}>+</span>
@@ -189,9 +189,9 @@ export default function RegisterPage() {
           </button>
 
           <div className="min-w-0">
-            <p className="text-[13px] font-bold text-[var(--fg)]">Сурати профил</p>
-            <p className="text-[11px] font-medium" style={{ color: "var(--muted)" }}>
-              Ихтиёрӣ — баъд ҳам иваз кардан мумкин аст
+            <p className="text-[14px] font-semibold">{t.profilePhoto}</p>
+            <p className="text-[12px]" style={{ color: "var(--muted)" }}>
+              {t.profileOptional}
             </p>
 
             {avatar !== null && (
@@ -201,7 +201,7 @@ export default function RegisterPage() {
                 className="mt-1 text-[11px] font-bold underline cursor-pointer"
                 style={{ color: "var(--danger)" }}
               >
-                Тоза кардан
+                {t.profileRemove}
               </button>
             )}
           </div>

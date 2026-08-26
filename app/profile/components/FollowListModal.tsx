@@ -10,6 +10,7 @@
 //  POST/DELETE .../[add|delete]-following-relation-ship
 // ============================================================
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 import {
   errorText,
@@ -35,18 +36,24 @@ import {
   DialogTitle,
 } from "../ui/dialog";
 import { Skeleton } from "../ui/skeleton";
+import { useT } from "@/components/LocaleProvider";
 
 export type FollowTab = "followers" | "following";
 
 export default function FollowListModal({
   tab,
   userId,
+  myUserId,
   onClose,
 }: {
   tab: FollowTab | null;
+  /** Profili KI-ro meboinem (ro-ykhat az HAMIN odam ast). */
   userId: string;
+  /** KI man hastam - ba KHUDAM tugmai "Obuna" lozim nest. */
+  myUserId: string;
   onClose: () => void;
 }) {
+  const { t } = useT();
   const { token, reload } = useProfile();
 
   const [list, setList] = useState<FollowUser[]>([]);
@@ -68,7 +75,7 @@ export default function FollowListModal({
       setList(Array.isArray(data) ? data : []);
     } catch (err) {
       setError(
-        errorText(err, "Ro-ykhat bor nashud.")
+        errorText(err, t.listLoadFailed)
       );
       setList([]);
     } finally {
@@ -79,7 +86,7 @@ export default function FollowListModal({
   // Har bor ki modal kushoda meshavad -> ro-ykhatro az nav megirem
   useEffect(() => {
     if (tab === null || token === "") return;
-    void loadList(tab);
+    queueMicrotask(() => void loadList(tab));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, token, userId]);
 
@@ -107,13 +114,13 @@ export default function FollowListModal({
       // Hisobhoi profil (folowing) ham nav meshavand
       await reload();
     } catch (err) {
-      setError(errorText(err, "Amal ijro nashud."));
+      setError(errorText(err, t.actionFailed));
     } finally {
       setPendingId("");
     }
   }
 
-  const title = tab === "followers" ? "FOLOWERS" : "FOLOWING";
+  const title = tab === "followers" ? t.titleFollowers : t.titleFollowing;
   const endpoint =
     tab === "followers"
       ? "GET / FOLLOWINGRELATIONSHIP / GET-SUBSCRIBERS"
@@ -160,7 +167,7 @@ export default function FollowListModal({
               className={`${styles.mono} p-8 text-center text-[10px] uppercase tracking-[0.24em]`}
               style={{ color: "var(--muted)" }}
             >
-              — HANUZ KAS NEST —
+              — {t.nobodyYet} —
             </p>
           )}
 
@@ -168,25 +175,42 @@ export default function FollowListModal({
             list.map((user) => {
               const avatar = mediaUrl(user.image);
 
+              // Ba profili KHUDAM -> /profile, ba digaron -> /profile/[userId]
+              const href =
+                user.userId === myUserId
+                  ? "/profile"
+                  : `/profile/${user.userId}`;
+
               return (
                 <div
                   key={user.userId}
                   className="flex items-center gap-3 border-b px-5 py-3 last:border-b-0"
                   style={{ borderColor: "var(--line)" }}
                 >
-                  <Avatar
-                    className="h-11 w-11 border"
-                    style={{ borderColor: "var(--line)" }}
+                  <Link
+                    href={href}
+                    onClick={onClose}
+                    className="shrink-0"
+                    aria-label={user.userName}
                   >
-                    {avatar !== null && (
-                      <AvatarImage src={avatar} alt={user.userName} />
-                    )}
-                    <AvatarFallback className="text-xs">
-                      {initials(user.fullName || user.userName)}
-                    </AvatarFallback>
-                  </Avatar>
+                    <Avatar
+                      className="h-11 w-11 border transition-opacity duration-200 hover:opacity-80"
+                      style={{ borderColor: "var(--line)" }}
+                    >
+                      {avatar !== null && (
+                        <AvatarImage src={avatar} alt={user.userName} />
+                      )}
+                      <AvatarFallback className="text-xs">
+                        {initials(user.fullName || user.userName)}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Link>
 
-                  <div className="min-w-0 flex-1">
+                  <Link
+                    href={href}
+                    onClick={onClose}
+                    className="min-w-0 flex-1 transition-opacity duration-200 hover:opacity-80"
+                  >
                     <p className="truncate text-xs font-bold uppercase tracking-[0.12em]">
                       {user.userName}
                     </p>
@@ -196,17 +220,21 @@ export default function FollowListModal({
                     >
                       {user.fullName}
                     </p>
-                  </div>
+                  </Link>
 
-                  {/* Ba khudi khud obuna shudan ma'ni nadorad */}
-                  {user.userId !== userId && (
+                  {/* KHATO BUD: in jo bo `userId` mesanjid - ya'ne bo
+                      SOHIBI profil, na bo KHUDI MAN. Dar profili
+                      kasi digar natija chunin meshud: tugmai on odam
+                      penhon mешud, vale tugmai KHUDAM memond va
+                      server "ba khud obuna shudan mumkin nest" megift. */}
+                  {user.userId !== myUserId && (
                     <Button
                       size="sm"
                       variant={user.isFollowing ? "outline" : "default"}
                       disabled={pendingId === user.userId}
                       onClick={() => toggleFollow(user)}
                     >
-                      {user.isFollowing ? "OBUNA SHUDA" : "OBUNA"}
+                      {user.isFollowing ? t.unfollowShort : t.followShort}
                     </Button>
                   )}
                 </div>

@@ -24,6 +24,8 @@ import { useRouter } from "next/navigation";
 
 import { api } from "@/lib/api";
 import { CameraIcon, ImageIcon, ReelsIcon } from "./icons";
+import { useT } from "./LocaleProvider";
+import type { Dict } from "./appLang";
 
 type Format = "post" | "reel" | "moment" | "actual";
 
@@ -38,11 +40,12 @@ type FormatCard = {
   ready: boolean;
 };
 
-const FORMATS: FormatCard[] = [
+function buildFormats(t: Dict): FormatCard[] {
+  return [
   {
     id: "post",
-    title: "Post",
-    hint: "Surat yo video ba lenta",
+    title: t.fmtPost,
+    hint: t.fmtPostHint,
     accept: "image/*,video/*",
     multiple: true,
     gradient: "linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045)",
@@ -51,8 +54,8 @@ const FORMATS: FormatCard[] = [
   },
   {
     id: "reel",
-    title: "Reel",
-    hint: "Videoi kutohi amudi",
+    title: t.fmtReel,
+    hint: t.fmtReelHint,
     accept: "video/*",
     multiple: false,
     gradient: "linear-gradient(135deg,#8a2be2,#e1306c)",
@@ -61,8 +64,8 @@ const FORMATS: FormatCard[] = [
   },
   {
     id: "moment",
-    title: "Momentalniy snimok",
-    hint: "Story - 24 soat memonad",
+    title: t.fmtStory,
+    hint: t.fmtStoryHint,
     accept: "image/*",
     multiple: false,
     gradient: "linear-gradient(135deg,#f09433,#dc2743)",
@@ -71,15 +74,16 @@ const FORMATS: FormatCard[] = [
   },
   {
     id: "actual",
-    title: "Actualniy",
-    hint: "Dar server hanuz nest",
+    title: t.fmtHighlight,
+    hint: t.fmtHighlightHint,
     accept: "image/*",
     multiple: false,
     gradient: "linear-gradient(135deg,#4b5563,#6b7280)",
     icon: <StarGlyph />,
     ready: false,
   },
-];
+  ];
+}
 
 export default function CreateMenu({
   open,
@@ -89,6 +93,7 @@ export default function CreateMenu({
   onClose: () => void;
 }) {
   const router = useRouter();
+  const { t } = useT();
   const fileInput = useRef<HTMLInputElement>(null);
 
   const [format, setFormat] = useState<Format | null>(null);
@@ -98,7 +103,8 @@ export default function CreateMenu({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
-  const card = FORMATS.find((item) => item.id === format) ?? null;
+  const formats = buildFormats(t);
+  const card = formats.find((item) => item.id === format) ?? null;
 
   // Peshnamoyishho khotira band mekunand - ozod mekunem
   useEffect(
@@ -141,7 +147,7 @@ export default function CreateMenu({
 
   function choose(item: FormatCard) {
     if (!item.ready) {
-      setError("In namud dar server hanuz nest.");
+      setError(t.typeUnsupported);
       return;
     }
     setError("");
@@ -153,7 +159,7 @@ export default function CreateMenu({
     if (busy || card === null) return;
 
     if (picked.length === 0) {
-      setError("Aval fayl gured.");
+      setError(t.pickFileFirst);
       return;
     }
 
@@ -197,16 +203,16 @@ export default function CreateMenu({
     card === null
       ? ""
       : card.id === "reel"
-        ? "Video gured"
+        ? t.pickVideo
         : card.id === "moment"
-          ? "Surat gured"
-          : "Surat yo video gured";
+          ? t.pickPhoto
+          : t.pickPhotoOrVideo;
 
   return (
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Chizi nav soakhtan"
+      aria-label={t.createSomething}
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) closeAll();
       }}
@@ -223,7 +229,7 @@ export default function CreateMenu({
             <button
               type="button"
               onClick={reset}
-              aria-label="Bozgasht"
+              aria-label={t.back}
               className="grid h-8 w-8 place-items-center rounded-full text-[18px] text-[var(--sb-fg)] transition hover:bg-[var(--sb-hover)]"
             >
               &#8249;
@@ -231,13 +237,13 @@ export default function CreateMenu({
           )}
 
           <p className="flex-1 text-[16px] font-semibold text-[var(--sb-fg)]">
-            {card === null ? "Chizi nav" : card.title}
+            {card === null ? t.createThing : card.title}
           </p>
 
           <button
             type="button"
             onClick={closeAll}
-            aria-label="Pushidan"
+            aria-label={t.close}
             className="grid h-8 w-8 place-items-center rounded-full text-[15px] text-[var(--sb-fg)] transition hover:bg-[var(--sb-hover)]"
           >
             &#10005;
@@ -248,7 +254,7 @@ export default function CreateMenu({
         {card === null && (
           <div className="p-4">
             <div className="grid gap-2.5 sm:grid-cols-2">
-              {FORMATS.map((item, index) => (
+              {formats.map((item, index) => (
                 <button
                   key={item.id}
                   type="button"
@@ -299,7 +305,7 @@ export default function CreateMenu({
               <span className="text-[13px]">
                 {picked.length === 0
                   ? pickLabel
-                  : `Gurifta shud: ${picked.length}`}
+                  : `${t.chosen}: ${picked.length}`}
               </span>
             </button>
 
@@ -353,14 +359,14 @@ export default function CreateMenu({
                 <input
                   value={title}
                   onChange={(event) => setTitle(event.target.value)}
-                  placeholder="Sarlavha"
+                  placeholder={t.reelTitleLabel}
                   className="w-full rounded-xl border border-[var(--sb-line)] bg-transparent px-3 py-2.5 text-[14px] text-[var(--sb-fg)] outline-none transition focus:border-[var(--sb-accent)]"
                 />
 
                 <textarea
                   value={content}
                   onChange={(event) => setContent(event.target.value)}
-                  placeholder="Ta&apos;rif"
+                  placeholder={t.captionText}
                   rows={3}
                   className="w-full resize-none rounded-xl border border-[var(--sb-line)] bg-transparent px-3 py-2.5 text-[14px] text-[var(--sb-fg)] outline-none transition focus:border-[var(--sb-accent)]"
                 />
@@ -377,7 +383,7 @@ export default function CreateMenu({
               className="w-full rounded-xl py-2.5 text-[14px] font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-60 disabled:hover:translate-y-0"
               style={{ background: card.gradient }}
             >
-              {busy ? "Guzoshta istodaast..." : "Guzoshtan"}
+              {busy ? t.posting : t.post}
             </button>
           </form>
         )}

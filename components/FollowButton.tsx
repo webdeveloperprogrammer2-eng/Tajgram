@@ -20,7 +20,7 @@ export function FollowButton({
   // Profil az server dertar meoyad - to on vaqt initialFollowing
   // "false" ast. Bе in useEffect tugma dar holati kuhna memonad.
   useEffect(() => {
-    setFollowing(initialFollowing);
+    queueMicrotask(() => setFollowing(initialFollowing));
   }, [initialFollowing]);
 
   const toggle = async () => {

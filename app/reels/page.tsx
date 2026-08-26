@@ -24,12 +24,7 @@ import styles from "./reels.module.css";
 
 import ReelCard from "./components/ReelCard";
 import CommentsSheet from "./components/CommentsSheet";
-
-const TABS: { key: Feed; label: string }[] = [
-  { key: "all", label: "Hama" },
-  { key: "following", label: "Podpiskaho" },
-  { key: "saved", label: "Saqlshuda" },
-];
+import { useT } from "@/components/LocaleProvider";
 
 export default function ReelsPage() {
   const {
@@ -43,6 +38,14 @@ export default function ReelsPage() {
     loadingMore,
     hasMore,
   } = useReels();
+
+  const { t } = useT();
+
+  const tabs: { key: Feed; label: string }[] = [
+    { key: "all", label: t.filterAll },
+    { key: "following", label: t.filterFollowing },
+    { key: "saved", label: t.filterSaved },
+  ];
 
   const [openComments, setOpenComments] = useState<Reel | null>(null);
   const feedBox = useRef<HTMLDivElement>(null);
@@ -66,20 +69,20 @@ export default function ReelsPage() {
           <LockKeyhole className="h-6 w-6" strokeWidth={1.8} />
         </span>
 
-        <h1 className="text-2xl font-bold tracking-tight">Avval daroed</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t.loginFirst}</h1>
 
         <p
           className="max-w-sm text-sm leading-relaxed"
           style={{ color: "var(--muted)" }}
         >
-          Baroi didani reels boyad ba account daroed.
+          {t.reelsGuestText}
         </p>
 
         <Link
           href="/Auth/login"
           className={`${styles.gradBg} rounded-full px-6 py-3 text-sm font-semibold`}
         >
-          Ba login raftan
+          {t.signIn}
         </Link>
       </Center>
     );
@@ -103,7 +106,7 @@ export default function ReelsPage() {
           className="rounded-full px-6 py-3 text-sm font-semibold"
           style={{ background: "var(--panel)", color: "var(--fg)" }}
         >
-          Boz yak bor sanjed
+          {t.retry}
         </button>
       </Center>
     );
@@ -114,7 +117,7 @@ export default function ReelsPage() {
       {/* ---------- Tabho (bar boloi lenta) ---------- */}
       <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex justify-center p-3">
         <div className={`${styles.tabs} pointer-events-auto`}>
-          {TABS.map((tab) => (
+          {tabs.map((tab) => (
             <button
               key={tab.key}
               type="button"
@@ -141,17 +144,17 @@ export default function ReelsPage() {
             <Film className="h-7 w-7" strokeWidth={1.5} />
           </span>
 
-          <h2 className="text-xl font-bold tracking-tight">Video nest</h2>
+          <h2 className="text-xl font-bold tracking-tight">{t.noVideo}</h2>
 
           <p
             className="max-w-xs text-sm leading-relaxed"
             style={{ color: "var(--muted)" }}
           >
             {feed === "following"
-              ? "Onhoe ki shumo podpiska kardaed hanuz reels naguzoshtaand."
+              ? t.reelsEmptyFollowing
               : feed === "saved"
-                ? "Shumo hanuz hech reelsro saql nakardaed."
-                : "Dar server hanuz hech reels nest."}
+                ? t.reelsEmptySaved
+                : t.reelsEmptyAll}
           </p>
         </Center>
       ) : (

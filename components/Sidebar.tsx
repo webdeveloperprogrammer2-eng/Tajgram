@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation";
 import { Avatar } from "./Avatar";
 import CreateMenu from "./CreateMenu";
 import { logoutEverywhere, readTheme, toggleAppTheme, type AppTheme } from "./appTheme";
+import { useT } from "./LocaleProvider";
+import { LANGS } from "./appLang";
 import { useSession } from "./SessionProvider";
 import {
   BookmarkIcon,
@@ -32,6 +34,7 @@ type NavItem = {
 export function Sidebar() {
   const pathname = usePathname();
   const { me, unread } = useSession();
+  const { t, lang, setLang } = useT();
   const [menuOpen, setMenuOpen] = useState(false);
   // Oynai "Chizi nav" (Post / Reel / Moment) - az tugmai Create
   const [createOpen, setCreateOpen] = useState(false);
@@ -59,24 +62,24 @@ export function Sidebar() {
   const items: NavItem[] = [
     {
       href: "/",
-      label: "Home",
+      label: t.navHome,
       render: (active) => <HomeIcon active={active} />,
       mobile: true,
     },
     {
       href: "/search",
-      label: "Search",
+      label: t.navSearch,
       render: () => <SearchIcon />,
       mobile: true,
     },
     {
       href: "/explore",
-      label: "Explore",
+      label: t.navExplore,
       render: () => <CompassIcon />,
     },
     {
       href: "/reels",
-      label: "Reels",
+      label: t.navReels,
       render: () => <ReelsIcon />,
       mobile: true,
     },
@@ -84,25 +87,25 @@ export function Sidebar() {
       // Razdeli chat: layout va provider-i khudash.
       // Peshtar yak sahifai "/messages" ham bud - hozir faqat /chats mond.
       href: "/chats",
-      label: "Chats",
+      label: t.navMessages,
       render: () => <CommentIcon />,
       badge: messages,
       mobile: true,
     },
     {
       href: "/notifications",
-      label: "Notifications",
+      label: t.navNotifications,
       render: (active) => <HeartIcon filled={active} />,
       badge: activity,
     },
     {
       href: "/create",
-      label: "Create",
+      label: t.navCreate,
       render: (active) => <CreateIcon active={active} />,
     },
     {
       href: "/profile",
-      label: "Profile",
+      label: t.navProfile,
       render: () => <Avatar src={me?.image} name={me?.fullName ?? me?.userName} size={24} />,
       mobile: true,
     },
@@ -111,6 +114,12 @@ export function Sidebar() {
   const isActive = (href: string) => {
     // "Create" sahifai alohida nadorad -> hech goh active nest
     if (href === "/create") return false;
+
+    // KHATO BUD: startsWith("/profile") ba /profile/<korbari DIGAR>
+    // ham mefoid - ya'ne vaqte profili kasi digarro medidi,
+    // dar sidebar surati KHUDAT "faol" menamud.
+    if (href === "/profile") return pathname === "/profile";
+
     return href === "/" ? pathname === "/" : pathname.startsWith(href);
   };
 
@@ -121,7 +130,7 @@ export function Sidebar() {
         <Logo />
         <Link
           href="/notifications"
-          aria-label="Notifications"
+          aria-label={t.navNotifications}
           className="relative p-2 text-[var(--sb-fg)]"
         >
           <HeartIcon />
@@ -163,7 +172,7 @@ export function Sidebar() {
                   <span className="relative flex h-6 w-6 items-center justify-center transition-transform duration-300 ease-out group-hover:scale-110">
                     {item.render(active)}
                     {!!item.badge && item.badge > 0 && (
-                      <span className="animate-scale-in absolute -right-1.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#ff3040] px-1 text-[10px] font-semibold text-white shadow-[0_0_0_2px_#fff]">
+                      <span className="animate-scale-in absolute -right-1.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#ff3040] px-1 text-[10px] font-semibold text-white shadow-[0_0_0_2px_var(--sb-bg)]">
                         {item.badge > 99 ? "99+" : item.badge}
                       </span>
                     )}
@@ -190,20 +199,20 @@ export function Sidebar() {
               <span className="flex h-6 w-6 items-center justify-center transition-transform duration-300 group-hover:scale-110">
                 <MoreIcon />
               </span>
-              <span className="text-[15px]">More</span>
+              <span className="text-[15px]">{t.navMore}</span>
             </button>
 
             {menuOpen && (
               <div className="animate-menu-in absolute bottom-[calc(100%+8px)] left-0 w-[266px] origin-bottom-left overflow-hidden rounded-2xl border border-[var(--sb-line)] bg-[var(--sb-bg)] shadow-[0_12px_40px_-8px_rgba(0,0,0,0.22)]">
                 <MenuLink
                   href="/settings"
-                  label="Settings"
+                  label={t.navSettings}
                   icon={<SettingsIcon size={18} />}
                   onSelect={() => setMenuOpen(false)}
                 />
                 <MenuLink
                   href="/saved"
-                  label="Saved"
+                  label={t.navSaved}
                   icon={<BookmarkIcon size={18} />}
                   onSelect={() => setMenuOpen(false)}
                 />
@@ -219,8 +228,37 @@ export function Sidebar() {
                   <span className="flex h-[18px] w-[18px] items-center justify-center text-[13px]">
                     {theme === "dark" ? "☀" : "☽"}
                   </span>
-                  {theme === "dark" ? "Naqli ravshan" : "Naqli torik"}
+                  {theme === "dark" ? t.themeLight : t.themeDark}
                 </button>
+
+                {/* Zabon - HAMIN JO, na faqat dar /settings.
+                    Peshtar ivaz kardani zabon faqat daruni sahifai
+                    tanzimot bud va hech kas onro nameyoft. */}
+                <div className="flex items-center gap-3 border-t border-[var(--sb-line)] px-4 py-3 text-[14px]">
+                  <span className="flex h-[18px] w-[18px] items-center justify-center text-[13px]">
+                    {"\u2295"}
+                  </span>
+
+                  <span className="flex-1">{t.navLanguage}</span>
+
+                  <span className="flex gap-1">
+                    {LANGS.map((item) => (
+                      <button
+                        key={item.code}
+                        type="button"
+                        title={item.label}
+                        onClick={() => setLang(item.code)}
+                        className={`rounded-full px-2.5 py-1 text-[12px] font-semibold transition-colors ${
+                          lang === item.code
+                            ? "bg-[var(--sb-fg)] text-[var(--sb-bg)]"
+                            : "border border-[var(--sb-line)] hover:bg-[var(--sb-hover)]"
+                        }`}
+                      >
+                        {item.short}
+                      </button>
+                    ))}
+                  </span>
+                </div>
 
                 <button
                   type="button"
@@ -230,7 +268,7 @@ export function Sidebar() {
                   <span className="flex h-[18px] w-[18px] items-center justify-center text-[13px]">
                     {"↪"}
                   </span>
-                  Baromadan
+                  {t.logout}
                 </button>
               </div>
             )}

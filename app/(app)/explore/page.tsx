@@ -45,7 +45,7 @@ export default function ExplorePage() {
 
       {!loading && posts.length === 0 && (
         <div className="animate-fade-up flex flex-col items-center gap-3 py-16 text-center text-[var(--muted)]">
-          <span className="flex h-20 w-20 items-center justify-center rounded-full bg-[linear-gradient(135deg,#fdf2f8,#eef2ff)] text-[#c084fc]">
+          <span className="flex h-20 w-20 items-center justify-center rounded-full bg-[var(--panel)] text-[var(--muted)]">
             <ImageIcon size={40} />
           </span>
           <p className="text-[14px]">{t.noPostsTitle}</p>

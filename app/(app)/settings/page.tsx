@@ -40,6 +40,8 @@ import { api } from "@/lib/api";
 import type { BlockedUser, Settings } from "@/lib/types";
 import { Avatar } from "@/components/Avatar";
 import { useSession } from "@/components/SessionProvider";
+import { useT } from "@/components/LocaleProvider";
+import { LANGS, type Dict, type Lang } from "@/components/appLang";
 import {
   logoutEverywhere,
   readTheme,
@@ -50,50 +52,26 @@ import {
 // ------------------------------------------------------------
 //  Ro-ykhathoi togglho - du guruh
 // ------------------------------------------------------------
-const PRIVACY: { key: keyof Settings; label: string; hint: string }[] = [
-  {
-    key: "isPrivateAccount",
-    label: "Hisobi pushida",
-    hint: "Faqat podpischikho postho-i shumoro mebinand",
-  },
-  {
-    key: "showActivityStatus",
-    label: "Holati faoliyat",
-    hint: "Digaron mebinand ki shumo onlayn hasted",
-  },
-  {
-    key: "allowComments",
-    label: "Izhorho ijozat",
-    hint: "Digaron ba postho-i shumo izhor navishta metavonand",
-  },
-  {
-    key: "allowMessages",
-    label: "Payomho ijozat",
-    hint: "Digaron ba shumo payom firistoda metavonand",
-  },
-  {
-    key: "allowTags",
-    label: "Belgizani ijozat",
-    hint: "Digaron shumoro dar postho belgi karda metavonand",
-  },
+// Matn dar lughat ast (components/appLang.ts) - in jo faqat KALID.
+const PRIVACY: { key: keyof Settings; label: keyof Dict; hint: keyof Dict }[] = [
+  { key: "isPrivateAccount", label: "setPrivate", hint: "setPrivateHint" },
+  { key: "showActivityStatus", label: "setActivity", hint: "setActivityHint" },
+  { key: "allowComments", label: "setComments", hint: "setCommentsHint" },
+  { key: "allowMessages", label: "setMessages", hint: "setMessagesHint" },
+  { key: "allowTags", label: "setTags", hint: "setTagsHint" },
 ];
 
-const NOTIFY: { key: keyof Settings; label: string }[] = [
-  { key: "notifyLikes", label: "Bayanho" },
-  { key: "notifyComments", label: "Izhorho" },
-  { key: "notifyFollows", label: "Podpischikhoi nav" },
-  { key: "notifyMessages", label: "Payomho" },
-  { key: "emailNotifications", label: "Ba email firistodan" },
-];
-
-const LANGUAGES: { code: string; label: string; flag: string }[] = [
-  { code: "tj", label: "Tojiki", flag: "TJ" },
-  { code: "ru", label: "Russkiy", flag: "RU" },
-  { code: "en", label: "English", flag: "EN" },
+const NOTIFY: { key: keyof Settings; label: keyof Dict }[] = [
+  { key: "notifyLikes", label: "setNotifyLikes" },
+  { key: "notifyComments", label: "setNotifyComments" },
+  { key: "notifyFollows", label: "setNotifyFollows" },
+  { key: "notifyMessages", label: "setNotifyMessages" },
+  { key: "emailNotifications", label: "setEmail" },
 ];
 
 export default function SettingsPage() {
   const { me, refresh } = useSession();
+  const { t, lang, setLang } = useT();
 
   const [settings, setSettings] = useState<Settings | null>(null);
   const [loading, setLoading] = useState(true);
@@ -146,7 +124,7 @@ export default function SettingsPage() {
       .catch((cause: unknown) => {
         if (alive) {
           setError(
-            cause instanceof Error ? cause.message : "Nastroyka bor nashud"
+            cause instanceof Error ? cause.message : t.settingsLoadFailed
           );
         }
       })
@@ -157,7 +135,7 @@ export default function SettingsPage() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [t.settingsLoadFailed]);
 
   // Profil omad -> maidonhoro pur mekunem
   useEffect(() => {
@@ -207,13 +185,13 @@ export default function SettingsPage() {
 
         // Haqiqat az server - na taxmini mo
         if (response.data !== null) setSettings(response.data);
-        flash("Saql shud");
+        flash(t.settingsSaved);
       } catch {
         setSettings(before);
-        setError("Saql nashud");
+        setError(t.settingsSaveFailed);
       }
     },
-    [settings, flash]
+    [settings, flash, t.settingsSaved, t.settingsSaveFailed]
   );
 
   // ---------- Yak toggle ----------
@@ -223,7 +201,10 @@ export default function SettingsPage() {
   }
 
   // ---------- Zabon ----------
-  function pickLanguage(code: string) {
+  //  KHATO BUD: in jo faqat ba SERVER menavisht, vale <LocaleProvider>
+  //  khabar namegirift - baroi hamin matni sayt ivaz nameshud.
+  function pickLanguage(code: Lang) {
+    setLang(code);
     void save({ language: code });
   }
 
@@ -242,9 +223,9 @@ export default function SettingsPage() {
     try {
       await api.updateAvatar(file);
       await refresh();
-      flash("Surat ivaz shud");
+      flash(t.photoChanged);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Surat guzoshta nashud");
+      setError(cause instanceof Error ? cause.message : t.photoUploadError);
     } finally {
       setAvatarBusy(false);
     }
@@ -255,9 +236,9 @@ export default function SettingsPage() {
     try {
       await api.deleteAvatar();
       await refresh();
-      flash("Surat tark shud");
+      flash(t.photoRemoved);
     } catch {
-      setError("Surat tark nashud");
+      setError(t.photoRemoveError);
     } finally {
       setAvatarBusy(false);
     }
@@ -271,9 +252,9 @@ export default function SettingsPage() {
     try {
       await api.updateProfile({ about: about.trim() || null, gender });
       await refresh();
-      flash("Profil saql shud");
+      flash(t.profileSaved);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Profil saql nashud");
+      setError(cause instanceof Error ? cause.message : t.profileSaveFailed);
     } finally {
       setSavingProfile(false);
     }
@@ -284,7 +265,7 @@ export default function SettingsPage() {
     event.preventDefault();
 
     if (newPass.length < 6) {
-      setError("Paroli nav kam az 6 harf ast");
+      setError(t.passwordTooShort);
       return;
     }
 
@@ -295,9 +276,9 @@ export default function SettingsPage() {
       await api.changePassword(oldPass, newPass);
       setOldPass("");
       setNewPass("");
-      flash("Parol ivaz shud");
+      flash(t.passwordChanged);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Parol ivaz nashud");
+      setError(cause instanceof Error ? cause.message : t.passwordChangeFailed);
     } finally {
       setPassBusy(false);
     }
@@ -308,9 +289,9 @@ export default function SettingsPage() {
     try {
       await api.unblockUser(userId);
       setBlocked((old) => old.filter((item) => item.userId !== userId));
-      flash("Kushoda shud");
+      flash(t.opened);
     } catch {
-      setError("Kushoda nashud");
+      setError(t.openFailed);
     }
   }
 
@@ -318,7 +299,7 @@ export default function SettingsPage() {
     <div className="mx-auto w-full max-w-[720px] px-4 pb-24 pt-6 md:pt-10">
       {/* ================= SARLAVHA ================= */}
       <div className="mb-6 flex items-center justify-between gap-4">
-        <h1 className="text-[26px] font-bold tracking-tight">Nastroyka</h1>
+        <h1 className="text-[26px] font-bold tracking-tight">{t.settingsTitle}</h1>
 
         {saved !== "" && (
           <span className="flex items-center gap-1.5 rounded-full bg-[color-mix(in_srgb,var(--accentA)_14%,transparent)] px-3 py-1.5 text-[12px] font-semibold text-[var(--accentA)]">
@@ -335,7 +316,7 @@ export default function SettingsPage() {
       )}
 
       {/* ================= 1. PROFIL ================= */}
-      <Section icon={UserRound} title="Profil">
+      <Section icon={UserRound} title={t.secProfile}>
         {/* Surat */}
         <div className="flex items-center gap-4 px-5 py-5">
           <span className="relative shrink-0">
@@ -369,7 +350,7 @@ export default function SettingsPage() {
                 className="flex items-center gap-1.5 rounded-full bg-[linear-gradient(135deg,var(--accentA),var(--accentB))] px-3.5 py-2 text-[12px] font-semibold text-white transition-transform active:scale-95 disabled:opacity-50"
               >
                 <Camera className="h-3.5 w-3.5" strokeWidth={2.2} />
-                Surati nav
+                {t.newPhoto}
               </button>
 
               {me?.image && (
@@ -380,7 +361,7 @@ export default function SettingsPage() {
                   className="flex items-center gap-1.5 rounded-full border border-[var(--line)] px-3.5 py-2 text-[12px] font-semibold text-[var(--muted)] transition-colors hover:text-[var(--signal)] disabled:opacity-50"
                 >
                   <Trash2 className="h-3.5 w-3.5" strokeWidth={2.2} />
-                  Tark kardan
+                  {t.delete}
                 </button>
               )}
             </div>
@@ -400,13 +381,13 @@ export default function SettingsPage() {
         </div>
 
         {/* Nom va email - faqat khondan (backend ivaz kardanro namedihad) */}
-        <Row icon={AtSign} label="Nomi korbar" hint="Backend ivazashro namedihad">
+        <Row icon={AtSign} label={t.fieldUserName} hint={t.backendLocked}>
           <span className="text-[13px] text-[var(--muted)]">
             @{me?.userName ?? "—"}
           </span>
         </Row>
 
-        <Row icon={Mail} label="Email" hint="Backend ivazashro namedihad">
+        <Row icon={Mail} label={t.fieldEmail} hint={t.backendLocked}>
           <span className="truncate text-[13px] text-[var(--muted)]">
             {me?.email ?? "—"}
           </span>
@@ -418,7 +399,7 @@ export default function SettingsPage() {
             htmlFor="about"
             className="mb-2 block text-[13px] font-semibold"
           >
-            Dar borai man
+            {t.aboutMe}
           </label>
           <textarea
             id="about"
@@ -426,7 +407,7 @@ export default function SettingsPage() {
             value={about}
             maxLength={200}
             onChange={(event) => setAbout(event.target.value)}
-            placeholder="Chand kalima dar borai khud..."
+            placeholder={t.aboutPlaceholder}
             className="w-full resize-none rounded-2xl border border-[var(--line)] bg-[var(--panelSoft)] px-4 py-3 text-[14px] outline-none transition-colors focus:border-[var(--accentB)]"
           />
           <p className="mt-1 text-right text-[11px] text-[var(--muted)]">
@@ -434,12 +415,12 @@ export default function SettingsPage() {
           </p>
 
           {/* Jins */}
-          <p className="mb-2 mt-3 text-[13px] font-semibold">Jins</p>
+          <p className="mb-2 mt-3 text-[13px] font-semibold">{t.gender}</p>
           <div className="flex flex-wrap gap-2">
             {[
-              { value: 0 as const, label: "Mard" },
-              { value: 1 as const, label: "Zan" },
-              { value: null, label: "Nagufta" },
+              { value: 0 as const, label: t.genderMale },
+              { value: 1 as const, label: t.genderFemale },
+              { value: null, label: t.genderUnset },
             ].map((item) => (
               <button
                 key={String(item.value)}
@@ -467,19 +448,19 @@ export default function SettingsPage() {
             ) : (
               <UserRoundCheck className="h-4 w-4" strokeWidth={2.2} />
             )}
-            Saql kardan
+            {t.save}
           </button>
         </div>
       </Section>
 
       {/* ================= 2. ZOHIR ================= */}
-      <Section icon={Palette} title="Zohir">
-        <Row icon={theme === "dark" ? Moon : Sun} label="Naql">
+      <Section icon={Palette} title={t.secAppearance}>
+        <Row icon={theme === "dark" ? Moon : Sun} label={t.theme}>
           <div className="flex gap-1.5">
             {(
               [
-                { value: "dark" as const, label: "Torik", Icon: Moon },
-                { value: "light" as const, label: "Ravshan", Icon: Sun },
+                { value: "dark" as const, label: t.themeDarkShort, Icon: Moon },
+                { value: "light" as const, label: t.themeLightShort, Icon: Sun },
               ]
             ).map(({ value, label, Icon }) => (
               <button
@@ -499,22 +480,21 @@ export default function SettingsPage() {
           </div>
         </Row>
 
-        <Row icon={Globe} label="Zabon">
+        <Row icon={Globe} label={t.language}>
           <div className="flex gap-1.5">
-            {LANGUAGES.map((item) => (
+            {LANGS.map((item) => (
               <button
                 key={item.code}
                 type="button"
                 onClick={() => pickLanguage(item.code)}
-                disabled={settings === null}
-                className={`rounded-full px-3.5 py-2 text-[12px] font-semibold transition-colors disabled:opacity-40 ${
-                  settings?.language === item.code
+                className={`rounded-full px-3.5 py-2 text-[12px] font-semibold transition-colors ${
+                  lang === item.code
                     ? "bg-[var(--invBg)] text-[var(--invFg)]"
                     : "border border-[var(--line)] text-[var(--muted)] hover:text-[var(--fg)]"
                 }`}
                 title={item.label}
               >
-                {item.flag}
+                {item.short}
               </button>
             ))}
           </div>
@@ -522,15 +502,15 @@ export default function SettingsPage() {
       </Section>
 
       {/* ================= 3. MAKHFIYAT ================= */}
-      <Section icon={Lock} title="Makhfiyat">
+      <Section icon={Lock} title={t.secPrivacy}>
         {loading ? (
           <Skeleton rows={5} />
         ) : (
           PRIVACY.map((item) => (
             <ToggleRow
               key={String(item.key)}
-              label={item.label}
-              hint={item.hint}
+              label={t[item.label]}
+              hint={t[item.hint]}
               on={Boolean(settings?.[item.key])}
               onClick={() => flip(item.key)}
               disabled={settings === null}
@@ -540,14 +520,14 @@ export default function SettingsPage() {
       </Section>
 
       {/* ================= 4. OGOHINO ================= */}
-      <Section icon={Bell} title="Ogohino">
+      <Section icon={Bell} title={t.secNotifications}>
         {loading ? (
           <Skeleton rows={5} />
         ) : (
           NOTIFY.map((item) => (
             <ToggleRow
               key={String(item.key)}
-              label={item.label}
+              label={t[item.label]}
               on={Boolean(settings?.[item.key])}
               onClick={() => flip(item.key)}
               disabled={settings === null}
@@ -557,13 +537,13 @@ export default function SettingsPage() {
       </Section>
 
       {/* ================= 5. PAROL ================= */}
-      <Section icon={Lock} title="Ivaz kardani parol">
+      <Section icon={Lock} title={t.secPassword}>
         <form onSubmit={savePassword} className="space-y-3 px-5 py-5">
           <input
             type="password"
             value={oldPass}
             onChange={(event) => setOldPass(event.target.value)}
-            placeholder="Paroli kuhna"
+            placeholder={t.oldPassword}
             autoComplete="current-password"
             className="w-full rounded-2xl border border-[var(--line)] bg-[var(--panelSoft)] px-4 py-3 text-[14px] outline-none transition-colors focus:border-[var(--accentB)]"
           />
@@ -571,7 +551,7 @@ export default function SettingsPage() {
             type="password"
             value={newPass}
             onChange={(event) => setNewPass(event.target.value)}
-            placeholder="Paroli nav (kam az kam 6 harf)"
+            placeholder={t.newPassword}
             autoComplete="new-password"
             className="w-full rounded-2xl border border-[var(--line)] bg-[var(--panelSoft)] px-4 py-3 text-[14px] outline-none transition-colors focus:border-[var(--accentB)]"
           />
@@ -586,7 +566,7 @@ export default function SettingsPage() {
             ) : (
               <Lock className="h-4 w-4" strokeWidth={2.2} />
             )}
-            Ivaz kardan
+            {t.changeAction}
           </button>
         </form>
       </Section>
@@ -594,11 +574,11 @@ export default function SettingsPage() {
       {/* ================= 6. BLOKSHUDA ================= */}
       <Section
         icon={ShieldBan}
-        title={`Korbarhoi blokshuda${blocked.length > 0 ? ` (${blocked.length})` : ""}`}
+        title={`${t.blockedUsers}${blocked.length > 0 ? ` (${blocked.length})` : ""}`}
       >
         {blocked.length === 0 ? (
           <p className="px-5 py-5 text-[13px] text-[var(--muted)]">
-            Hech kas blok nashudaast.
+            {t.nobodyBlocked}
           </p>
         ) : (
           blocked.map((item) => (
@@ -622,7 +602,7 @@ export default function SettingsPage() {
                 onClick={() => unblock(item.userId)}
                 className="shrink-0 rounded-full border border-[var(--line)] px-3.5 py-2 text-[12px] font-semibold text-[var(--muted)] transition-colors hover:text-[var(--fg)]"
               >
-                Kushodan
+                {t.unblock}
               </button>
             </div>
           ))
@@ -636,7 +616,7 @@ export default function SettingsPage() {
         className="mt-2 flex w-full items-center justify-center gap-2 rounded-3xl border border-[var(--line)] px-5 py-4 text-[14px] font-semibold text-[var(--signal)] transition-colors hover:bg-[color-mix(in_srgb,var(--signal)_8%,transparent)]"
       >
         <LogOut className="h-4 w-4" strokeWidth={2.2} />
-        Baromadan
+        {t.logout}
       </button>
     </div>
   );
@@ -725,17 +705,15 @@ function ToggleRow({
         aria-label={label}
         onClick={onClick}
         disabled={disabled}
-        className={`group relative h-[24px] w-[44px] shrink-0 rounded-full border transition-all duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accentA)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)] disabled:opacity-40 ${
+        className={`group inline-flex h-[26px] w-[46px] shrink-0 items-center rounded-full p-[3px] transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accentA)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)] disabled:cursor-not-allowed disabled:opacity-40 ${
           on
-            ? "border-transparent bg-[linear-gradient(135deg,var(--accentA),var(--accentB))] shadow-[0_2px_10px_-2px_color-mix(in_srgb,var(--accentA)_65%,transparent)]"
-            : "border-[var(--line)] bg-[var(--lineStrong)]"
+            ? "bg-[var(--accentA)]"
+            : "bg-[var(--lineStrong)] hover:bg-[color-mix(in_srgb,var(--lineStrong)_70%,var(--muted))]"
         }`}
       >
         <span
-          className={`absolute top-1/2 h-[18px] w-[18px] -translate-y-1/2 rounded-full bg-white transition-[transform,box-shadow] duration-300 ease-out group-active:scale-90 ${
-            on
-              ? "translate-x-[21px] shadow-[0_1px_3px_rgba(0,0,0,0.28)]"
-              : "translate-x-[3px] shadow-[0_1px_2px_rgba(0,0,0,0.18)]"
+          className={`block h-[20px] w-[20px] rounded-full bg-white shadow-[0_1px_2px_rgba(16,16,20,0.25)] transition-transform duration-200 ease-out group-active:scale-90 ${
+            on ? "translate-x-[20px]" : "translate-x-0"
           }`}
         />
       </button>

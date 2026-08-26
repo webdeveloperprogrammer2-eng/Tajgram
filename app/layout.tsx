@@ -7,6 +7,7 @@ import { AuthProvider } from "./Auth/providers";
 import { THEME_KEY, type AppTheme } from "@/components/themeKeys";
 import { ThemeSync } from "@/components/ThemeSync";
 import { AppFrame } from "@/components/AppFrame";
+import { LocaleProvider } from "@/components/LocaleProvider";
 import GlobalCall from "./chats/call/GlobalCall";
 
 const geistSans = Geist({
@@ -51,15 +52,15 @@ export default async function RootLayout({
     >
       <body className="min-h-full bg-[var(--bg)] text-[var(--fg)] transition-colors duration-300">
         <ThemeSync />
-        <AuthProvider>
+        <LocaleProvider>
+          {/* Zvanok dar HAMAI sayt gush mekunad - na faqat dar /chats.
+              Be in, zang faqat ba kase merasid ki /chats kushoda dosht. */}
           <GlobalCall>
-            {/* Zvanok dar HAMAI sayt gush mekunad - na faqat dar /chats.
-                Be in, zang faqat ba kase merasid ki /chats kushoda dosht. */}
             {/* Sidebar YAK JOI - daruni <AppFrame>. Bakhshho
                 (chats, profile, reels, search) onro takror namekunand. */}
             <AppFrame>{children}</AppFrame>
           </GlobalCall>
-        </AuthProvider>
+        </LocaleProvider>
       </body>
     </html>
   );

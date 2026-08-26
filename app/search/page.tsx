@@ -19,8 +19,10 @@ import { Search as SearchIcon, X } from "lucide-react";
 import { initials, mediaUrl, searchUsers, type SearchUser } from "./api";
 import { getToken } from "./token";
 import styles from "./search.module.css";
+import { useT } from "@/components/LocaleProvider";
 
 export default function SearchPage() {
+  const { t } = useT();
   const [token, setToken] = useState("");
   const [text, setText] = useState("");
   const [users, setUsers] = useState<SearchUser[]>([]);
@@ -29,7 +31,7 @@ export default function SearchPage() {
 
   // Token faqat dar browser hast
   useEffect(() => {
-    setToken(getToken() ?? "");
+    queueMicrotask(() => setToken(getToken() ?? ""));
   }, []);
 
   // ---------- Justuju ----------
@@ -37,12 +39,14 @@ export default function SearchPage() {
     const clean = text.trim();
 
     if (clean === "" || token === "") {
-      setUsers([]);
-      setError("");
+      queueMicrotask(() => {
+        setUsers([]);
+        setError("");
+      });
       return;
     }
 
-    setLoading(true);
+    queueMicrotask(() => setLoading(true));
 
     // 400ms sabr - agar korbar boz harf zanad, so-rovi kuhna bekor meshavad
     const timer = setTimeout(() => {
@@ -66,7 +70,7 @@ export default function SearchPage() {
 
   return (
     <div className={`${styles.rise} pt-6`}>
-      <h1 className="mb-5 text-2xl font-bold tracking-tight">Justuju</h1>
+      <h1 className="mb-5 text-2xl font-bold tracking-tight">{t.searchTitle}</h1>
 
       {/* ---------- Maidoni justuju ---------- */}
       <div
@@ -83,7 +87,7 @@ export default function SearchPage() {
           autoFocus
           value={text}
           onChange={(event) => setText(event.target.value)}
-          placeholder="Nomi korbarro navised..."
+          placeholder={t.searchPlaceholder}
           className="w-full bg-transparent text-[15px] outline-none"
           style={{ color: "var(--fg)" }}
         />
@@ -92,7 +96,7 @@ export default function SearchPage() {
           <button
             type="button"
             onClick={() => setText("")}
-            aria-label="Toza kuned"
+            aria-label={t.clear}
             style={{ color: "var(--muted)" }}
           >
             <X className="h-4 w-4" strokeWidth={2} />
@@ -104,11 +108,9 @@ export default function SearchPage() {
       <div className="mt-6">
         {token === "" ? (
           <Message>
-            Baroi justuju avval{" "}
             <Link href="/Auth/login" className="underline">
-              daroed
+              {t.searchGuest}
             </Link>
-            .
           </Message>
         ) : loading ? (
           <div className="space-y-3">
@@ -123,9 +125,9 @@ export default function SearchPage() {
         ) : error !== "" ? (
           <Message color="var(--signal)">{error}</Message>
         ) : text.trim() === "" ? (
-          <Message>Nomi kasero navised - mo uro meyobem.</Message>
+          <Message>{t.searchHint}</Message>
         ) : users.length === 0 ? (
-          <Message>Chunin korbar yoft nashud.</Message>
+          <Message>{t.searchEmpty}</Message>
         ) : (
           <div className="space-y-1">
             {users.map((user) => (

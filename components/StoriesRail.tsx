@@ -8,6 +8,7 @@ import type { Story } from "@/lib/types";
 import { Avatar } from "./Avatar";
 import { useSession } from "./SessionProvider";
 import { ChevronLeftIcon, ChevronRightIcon } from "./icons";
+import { useT } from "./LocaleProvider";
 
 /** Сколько держится фото. У видео время своё. */
 const PHOTO_MS = 5000;
@@ -22,6 +23,7 @@ type StoryGroup = {
 
 /** Истории за 24 часа, сгруппированные по автору. */
 export function StoriesRail() {
+  const { t } = useT();
   const { me } = useSession();
   const [groups, setGroups] = useState<StoryGroup[]>([]);
   const [loading, setLoading] = useState(true);
@@ -118,7 +120,7 @@ export function StoriesRail() {
 
         {!loading && groups.length === 0 && (
           <div className="flex items-center px-3 text-[13px] text-[var(--muted)]">
-            No new stories in the last 24 hours.
+            {t.noStories}
           </div>
         )}
       </div>
@@ -127,7 +129,7 @@ export function StoriesRail() {
         <button
           type="button"
           onClick={() => slide(-1)}
-          aria-label="Scroll stories left"
+          aria-label={t.scrollLeft}
           className="animate-fade-in absolute left-1 top-[44px] flex h-[28px] w-[28px] items-center justify-center rounded-full bg-[var(--bg)] text-[var(--fg)] shadow-[0_2px_8px_rgba(0,0,0,0.18)] transition-transform duration-200 hover:scale-110 active:scale-95"
         >
           <ChevronLeftIcon size={14} />
@@ -137,7 +139,7 @@ export function StoriesRail() {
         <button
           type="button"
           onClick={() => slide(1)}
-          aria-label="Scroll stories right"
+          aria-label={t.scrollRight}
           className="animate-fade-in absolute right-1 top-[44px] flex h-[28px] w-[28px] items-center justify-center rounded-full bg-[var(--bg)] text-[var(--fg)] shadow-[0_2px_8px_rgba(0,0,0,0.18)] transition-transform duration-200 hover:scale-110 active:scale-95"
         >
           <ChevronRightIcon size={14} />
@@ -171,6 +173,7 @@ function StoryViewer({
   onChangeIndex: (next: number) => void;
   onClose: () => void;
 }) {
+  const { t } = useT();
   const group = groups[index];
   const [step, setStep] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -199,9 +202,11 @@ function StoryViewer({
 
   // Новый автор — начинаем с его первой истории.
   useEffect(() => {
-    setStep(0);
-    setProgress(0);
     elapsed.current = 0;
+    queueMicrotask(() => {
+      setStep(0);
+      setProgress(0);
+    });
   }, [index]);
 
   // Таймер для фото. У видео время своё — там onTimeUpdate.
@@ -254,7 +259,7 @@ function StoryViewer({
       <button
         type="button"
         onClick={onClose}
-        aria-label="Close story"
+        aria-label={t.closeStory}
         className="absolute right-4 top-4 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-[16px] leading-none text-white transition hover:bg-white/20"
       >
         ✕
@@ -288,12 +293,12 @@ function StoryViewer({
             <img
               key={src}
               src={src}
-              alt="Story"
+              alt={t.story}
               className="h-full w-full object-contain"
             />
           ) : (
             <div className="flex h-full items-center justify-center text-[13px] text-white/50">
-              Story unavailable
+              {t.storyUnavailable}
             </div>
           )}
         </div>
@@ -339,13 +344,13 @@ function StoryViewer({
         <button
           type="button"
           onClick={prev}
-          aria-label="Previous story"
+          aria-label={t.prevStory}
           className="absolute bottom-0 left-0 top-16 w-1/3"
         />
         <button
           type="button"
           onClick={next}
-          aria-label="Next story"
+          aria-label={t.nextStory}
           className="absolute bottom-0 right-0 top-16 w-2/3"
         />
       </div>

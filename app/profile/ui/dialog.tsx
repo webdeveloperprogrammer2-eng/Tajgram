@@ -16,6 +16,7 @@ import { X } from "lucide-react";
 
 import { cn } from "./utils";
 import styles from "../profile.module.css";
+import { tr } from "@/components/appLang";
 
 const Dialog = DialogPrimitive.Root;
 const DialogTrigger = DialogPrimitive.Trigger;
@@ -68,7 +69,7 @@ function DialogContent({
             )}
           >
             <X className="h-4 w-4" strokeWidth={2} />
-            <span className="sr-only">Bastan</span>
+            <span className="sr-only">{tr().close}</span>
           </DialogPrimitive.Close>
         )}
       </DialogPrimitive.Content>

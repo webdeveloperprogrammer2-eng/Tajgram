@@ -5,7 +5,7 @@
 //
 //  CHARO IN LOZIM AST?
 //  Peshtar <CallProvider> FAQAT daruni ChatsShell (/chats) bud.
-//  Yane signaling (long polling) faqat on vaqt kor mekard,
+//  Yane payvasti zinda (WebSocket) faqat on vaqt kor mekard,
 //  ki hamsuhbat AYNI HAMON DAM sahifai /chats-ro kushoda bosad.
 //  Agar u dar lenta, profil, reels yo justuju bosad - hech kas
 //  napursid "baroi man zvanok hast?" -> ZANG BA U NAMERASID

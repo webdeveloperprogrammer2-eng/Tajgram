@@ -11,6 +11,8 @@ import { chatTime } from "../format";
 import { useChats } from "../providers";
 import styles from "../chats.module.css";
 
+import { useT } from "@/components/LocaleProvider";
+
 import Avatar from "./Avatar";
 
 export default function ChatList({
@@ -23,6 +25,7 @@ export default function ChatList({
   onNewChat: () => void;
 }) {
   const { chats, allowedIds, me } = useChats();
+  const { t } = useT();
   const [query, setQuery] = useState("");
 
   const text = query.trim().toLowerCase();
@@ -40,14 +43,13 @@ export default function ChatList({
       {/* ---------- Sarlavha ---------- */}
       <div className="flex items-center justify-between px-5 pb-3 pt-5">
         <h1 className="text-xl font-bold tracking-tight">
-          {me?.userName ?? "Паёмҳо"}
+          {me?.userName ?? t.navMessages}
         </h1>
 
         <button
           type="button"
           onClick={onNewChat}
-          aria-label="Сӯҳбати нав"
-          title="Сӯҳбати нав"
+          aria-label={t.newChat}
           className={styles.iconBtn}
         >
           <PenSquare className="h-5 w-5" strokeWidth={1.8} />
@@ -64,7 +66,7 @@ export default function ChatList({
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Ҷустуҷӯ"
+            placeholder={t.search}
             className="w-full bg-transparent text-sm outline-none"
             style={{ color: "var(--fg)" }}
           />
@@ -79,8 +81,8 @@ export default function ChatList({
             style={{ color: "var(--muted)" }}
           >
             {chats.length === 0
-              ? "Ҳанӯз сӯҳбат нест. Тугмаи болоро пахш карда бо як нафар сӯҳбат оғоз кунед."
-              : "Ҳеҷ чиз ёфт нашуд."}
+              ? t.noChatsYet
+              : t.nothingFound}
           </p>
         ) : (
           list.map((chat) => {
@@ -120,7 +122,7 @@ export default function ChatList({
                     className="mt-0.5 block truncate text-[13px]"
                     style={{ color: "var(--muted)" }}
                   >
-                    {chat.lastMessage ?? "Ҳанӯз паём нест"}
+                    {chat.lastMessage ?? t.noMessagesYet}
                   </span>
                 </span>
 

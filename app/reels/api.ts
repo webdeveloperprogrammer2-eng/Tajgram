@@ -17,6 +17,7 @@
 //  QOIDA: hech ma'lumoti soakhta (demo/test) in jo NEST.
 //  Har chize ki dar sahifa namoyon meshavad - az server meoyad.
 // ============================================================
+import { tr } from "@/components/appLang";
 
 // Manzili VOQEI-i backend - faqat baroi VIDEO va SURAT
 export const BACKEND_URL = "https://instagram-back-qibs.onrender.com";
@@ -119,7 +120,7 @@ function toApiError(err: unknown, path: string): ApiError {
     typeof navigator !== "undefined" && navigator.onLine === false;
 
   if (offline) {
-    return new ApiError(["Internet nest. Ulanishro sanjed."], 0);
+    return new ApiError([tr().offline], 0);
   }
 
   console.error(`[reels] so-rov narasid: ${path}`, err);
@@ -135,12 +136,12 @@ function toApiError(err: unknown, path: string): ApiError {
 }
 
 function describeStatus(status: number, path: string): string {
-  if (status === 401) return "Token guzashtaast. Az nav daroed.";
-  if (status === 403) return "Ijozat nest.";
-  if (status === 404) return `Chunin ma'lumot yoft nashud: ${path}`;
+  if (status === 401) return tr().errTokenExpired;
+  if (status === 403) return tr().errForbidden;
+  if (status === 404) return `${tr().errNotFound}: ${path}`;
   if (status === 502 || status === 503)
-    return "Backend hozir khob ast (Render). 30-60 soniya sabr kuned.";
-  if (status >= 500) return `Khatoi daruni server (HTTP ${status}).`;
+    return tr().errServerAsleep;
+  if (status >= 500) return `${tr().errServer} (HTTP ${status}).`;
 
   return `HTTP ${status} - ${path}`;
 }

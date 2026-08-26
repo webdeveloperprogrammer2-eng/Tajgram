@@ -15,6 +15,7 @@ import { useEffect, useRef, useState } from "react";
 import { Mic, Send, Trash2 } from "lucide-react";
 
 import styles from "../chats.module.css";
+import { useT } from "@/components/LocaleProvider";
 
 type Props = {
   disabled: boolean;
@@ -42,6 +43,7 @@ function pickMime(): { mime: string; ext: string } {
 const MAX_SECONDS = 120; // 2 daqiqa - basta
 
 export default function VoiceRecorder({ disabled, onReady, onError }: Props) {
+  const { t } = useT();
   const [recording, setRecording] = useState(false);
   const [seconds, setSeconds] = useState(0);
   const [level, setLevel] = useState<number[]>(new Array(14).fill(0.15));
@@ -94,7 +96,7 @@ export default function VoiceRecorder({ disabled, onReady, onError }: Props) {
       navigator.mediaDevices === undefined ||
       typeof MediaRecorder === "undefined"
     ) {
-      onError("In browser navishtani ovozro dastgiri namekunad.");
+      onError(t.recorderUnsupported);
       return;
     }
 
@@ -130,7 +132,7 @@ export default function VoiceRecorder({ disabled, onReady, onError }: Props) {
 
         if (cancelled.current) return;
         if (blob.size < 900) {
-          onError("Ovoz khele kutoh ast - tugmaro dartar dored.");
+          onError(t.recordingTooShort);
           return;
         }
 
@@ -158,8 +160,8 @@ export default function VoiceRecorder({ disabled, onReady, onError }: Props) {
       stopAll();
       onError(
         err instanceof Error && err.name === "NotAllowedError"
-          ? "Ijozati mikrofon doda nashud."
-          : "Mikrofon kushoda nashud."
+          ? t.micDenied
+          : t.micFailed
       );
     }
   }
@@ -226,8 +228,8 @@ export default function VoiceRecorder({ disabled, onReady, onError }: Props) {
         type="button"
         onClick={start}
         disabled={disabled}
-        aria-label="Payomi ovozi navised"
-        title="Payomi ovozi"
+        aria-label={t.recordVoice}
+        title={t.voiceMessage}
         className={styles.iconBtn}
       >
         <Mic className="h-5 w-5" strokeWidth={1.8} />
@@ -240,7 +242,7 @@ export default function VoiceRecorder({ disabled, onReady, onError }: Props) {
       <button
         type="button"
         onClick={cancel}
-        aria-label="Tark kuned"
+        aria-label={t.cancel}
         className={styles.iconBtn}
         style={{ color: "var(--signal)" }}
       >
@@ -263,7 +265,7 @@ export default function VoiceRecorder({ disabled, onReady, onError }: Props) {
       <button
         type="button"
         onClick={finish}
-        aria-label="Ovozro firisted"
+        aria-label={t.sendVoice}
         className={styles.sendBtn}
       >
         <Send className="h-4 w-4" strokeWidth={2} />

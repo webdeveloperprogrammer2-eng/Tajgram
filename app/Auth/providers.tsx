@@ -15,7 +15,6 @@ import { writeTheme, readTheme, onThemeChange } from "@/components/appTheme";
 
 export type Theme = "dark" | "light";
 
-const THEME_KEY = "tajgram_theme";
 const LANG_KEY = "tajgram_lang";
 
 // Shakli ma'lumoti ki taqsim mekunem

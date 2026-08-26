@@ -1,4 +1,6 @@
 import type {
+  Actual,
+  ActualDetails,
   AppNotification,
   Chat,
   Envelope,
@@ -14,6 +16,8 @@ import type {
   UserProfile,
   BlockedUser,
 } from "./types";
+import { getToken, onUnauthorized } from "./auth";
+import { tr } from "@/components/appLang";
 
 import {
   MOCK_MY_PROFILE,
@@ -41,19 +45,13 @@ export const API_URL = (
   .replace(/\/docs$/i, "");
 
 /**
- * So-rovho az proxy-i khudamon meguzarand.
+ * So-rovho az proxy-i khudamon meguzarand (CORS).
  *
- * DIQQAT: token-i KHUDI KORBAR (hamon "tajgram_token"-e ki
- * /Auth, /chats va /profile istifoda mebarand) mefiristem.
- * Bе in, proxy bo akkaunti KHIZMATI (dilovar06) medaromad va
- * dar sidebar nomi odami DIGAR namoyon meshud.
+ * Token FAQAT az khudi korbar meoyad (lib/auth.ts).
+ * Akkaunti khizmati digar NEST - agar token naboshad,
+ * proxy 401 medihad va mo ba /Auth/login mefiristem.
  */
 const API_BASE = "/api/backend";
-
-function myToken(): string | null {
-  if (typeof localStorage === "undefined") return null;
-  return localStorage.getItem("tajgram_token");
-}
 
 export class ApiError extends Error {
   statusCode: number;
@@ -139,9 +137,9 @@ export async function request<T>(
 ): Promise<Envelope<T>> {
   const headers: Record<string, string> = { Accept: "application/json" };
 
-  // Token-i khudam - to ma'lumoti MAN oyad, na akkaunti khizmati
-  const bearer = myToken();
-  if (bearer) headers.Authorization = `Bearer ${bearer}`;
+  // Token-i khudam - to ma'lumoti MAN oyad, na kasi digar
+  const bearer = getToken();
+  if (bearer !== null) headers.Authorization = `Bearer ${bearer}`;
 
   let body: BodyInit | undefined;
   if (options.body instanceof FormData) {
@@ -183,13 +181,20 @@ export async function request<T>(
 
   const errors = envelope?.errors?.filter(Boolean) ?? [];
 
+  // Token guzasht yo qalb ast -> ba sahifai voridshavi.
+  // Peshtar in jo hech chiz nabud va sahifa "kholi" memond.
+  if (response.status === 401) {
+    onUnauthorized();
+    throw new ApiError(tr().loginFirst, 401, errors);
+  }
+
   if (!response.ok || errors.length > 0) {
     const mock = getMockDataForPath(path, options.query);
     if (mock !== null) {
       return { data: mock as T, errors: null, statusCode: 200 };
     }
     throw new ApiError(
-      errors.join(", ") || `Ошибка запроса (${response.status})`,
+      errors.join(", ") || `${tr().errRequest} (${response.status})`,
       response.status,
       errors,
     );
@@ -272,6 +277,13 @@ export const api = {
 
   myStories: () => request<Story[]>("/Story/get-my-stories"),
 
+  /** POST /Story/add-story-view -> "man in storyro didam" */
+  viewStory: (storyId: number) =>
+    request<string>("/Story/add-story-view", {
+      method: "POST",
+      query: { StoryId: storyId },
+    }),
+
   // POST /Story/AddStories - "momentalniy snimok"
   // DIQQAT: server nomi maidonro qat'i talab mekunad, vale dar
   // swagger on aniq nest. Baroi hamin nomhoro yak-yak mesanjem
@@ -317,15 +329,56 @@ export const api = {
   addReel: (form: FormData) =>
     request<string>("/Reels/add-reels", { method: "POST", body: form }),
 
+  // --- Actualniy (Highlights) ---
+  // Backend inro 26.08.2026 ilova kard.
+  myActuals: () => request<Actual[]>("/Actual/get-my-actuals"),
+
+  userActuals: (userId: string) =>
+    request<Actual[]>("/Actual/get-actuals", {
+      query: { UserId: userId, ...paging({ pageSize: 50 }) },
+    }),
+
+  /** Yak actual hamrohi HAMAI storyhoyash. */
+  actualById: (id: number) =>
+    request<ActualDetails>("/Actual/get-actual-by-id", { query: { id } }),
+
   // --- Люди ---
   searchUsers: (search?: string, p?: Paged) =>
     request<ProfileUser[]>("/Search/search-users", {
       query: { Search: search, ...paging(p) },
     }),
 
-  users: (p?: Paged & { userName?: string }) =>
+  users: (p?: Paged & { userName?: string; email?: string }) =>
     request<User[]>("/User/get-users", {
-      query: { ...paging(p), UserName: p?.userName },
+      query: { ...paging(p), UserName: p?.userName, Email: p?.email },
+    }),
+
+  // --- Admin (faqat baroi paneli admin) ---
+  // Backend nақши "admin"-i alohida nadorad: hamin so-rovho barои
+  // HAR korbari daromada kor mekunand, vale mo onhoro faqat dar
+  // /admin (ki faqat korbari "admin" mebinad) istifoda mebarem.
+
+  /** Reelhoi yak korbari mushakhas. */
+  userReels: (userId: string) =>
+    request<Reel[]>("/Reels/get-user-reels", { query: { userId } }),
+
+  /** DELETE /User/delete-user -> korbarro purra pok mekunad. */
+  deleteUser: (userId: string) =>
+    request<string>("/User/delete-user", {
+      method: "DELETE",
+      query: { userId },
+    }),
+
+  /** GET /FollowingRelationShip/get-subscribers -> KI ba U obuna ast */
+  followers: (userId: string) =>
+    request<ProfileUser[]>("/FollowingRelationShip/get-subscribers", {
+      query: { UserId: userId },
+    }),
+
+  /** GET /FollowingRelationShip/get-subscriptions -> U ba KI obuna ast */
+  followings: (userId: string) =>
+    request<ProfileUser[]>("/FollowingRelationShip/get-subscriptions", {
+      query: { UserId: userId },
     }),
 
   follow: (followingUserId: string) =>

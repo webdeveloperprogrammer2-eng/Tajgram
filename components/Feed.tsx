@@ -4,7 +4,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import type { Post } from "@/lib/types";
+import type { Dict } from "./appLang";
 import { PostCard } from "./PostCard";
+import { useT } from "./LocaleProvider";
+import { useSession } from "./SessionProvider";
 import { StoriesRail } from "./StoriesRail";
 import { CheckCircleIcon, ImageIcon } from "./icons";
 
@@ -24,8 +27,36 @@ export function Feed() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Ba KI man obuna hastam - baroi tugmai "Follow" dar
+  // "Suggested Posts". Bе in, tugma hamesha "Follow" meguft.
+  const { me } = useSession();
+  const { t } = useT();
+  const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
+
   const seen = useRef(new Set<number>());
   const sentinel = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (me === null) return;
+
+    let alive = true;
+
+    api
+      .followings(me.userId)
+      .then((response) => {
+        if (!alive) return;
+        setFollowingIds(
+          new Set((response.data ?? []).map((user) => user.userId)),
+        );
+      })
+      .catch(() => {
+        /* be in ro-ykhat ham lenta kor mekunad */
+      });
+
+    return () => {
+      alive = false;
+    };
+  }, [me]);
 
   const remember = (posts: Post[]) => {
     const fresh = posts.filter((post) => !seen.current.has(post.postId));
@@ -133,7 +164,7 @@ export function Feed() {
       <StoriesRail />
 
       {error && (
-        <p className="mb-4 rounded-lg border border-[#ffd6d6] bg-[#fff5f5] px-4 py-3 text-[13px] text-[#c62828]">
+        <p className="mb-4 rounded-lg border border-[var(--danger)] bg-[var(--dangerSoft)] px-4 py-3 text-[13px] text-[var(--danger)]">
           {error}
         </p>
       )}
@@ -143,24 +174,24 @@ export function Feed() {
       ))}
 
       {nothingAtAll ? (
-        <EmptyFeed />
+        <EmptyFeed t={t} />
       ) : (
         <section className="animate-fade-up flex flex-col items-center gap-2 py-10 text-center">
           <CheckCircleIcon size={96} />
           <h2 className="mt-2 text-[16px] font-medium text-[var(--fg)]">
-            You&apos;re all caught up
+            {t.caughtUpTitle}
           </h2>
           <p className="text-[13px] text-[var(--muted)]">
-            You&apos;ve seen all new posts from the past 3 days.
+            {t.caughtUpText}
           </p>
           {!followingDone && (
             <button
               type="button"
               onClick={loadMoreFollowing}
               disabled={loadingMore}
-              className="mt-1 rounded-full px-4 py-1.5 text-[13px] font-semibold text-[var(--accentA)] transition-all duration-200 hover:bg-[#eaf3fc] active:scale-95 disabled:opacity-60"
+              className="mt-1 rounded-full px-4 py-1.5 text-[13px] font-semibold text-[var(--accentA)] transition-all duration-200 hover:bg-[var(--panel)] active:scale-95 disabled:opacity-60"
             >
-              {loadingMore ? "Loading..." : "View older posts"}
+              {loadingMore ? t.loading : t.viewOlder}
             </button>
           )}
         </section>
@@ -169,11 +200,18 @@ export function Feed() {
       {suggested.length > 0 && (
         <section>
           <h2 className="animate-fade-in mb-3 flex items-center gap-2 text-[16px] font-semibold text-[var(--fg)]">
-            Suggested Posts
+            {t.suggestedPosts}
             <span className="h-px flex-1 bg-[linear-gradient(90deg,var(--line),transparent)]" />
           </h2>
           {suggested.map((post, index) => (
-            <PostCard key={post.postId} post={post} index={index} showFollow />
+            <PostCard
+              key={post.postId}
+              post={post}
+              index={index}
+              // Posti KHUDAM tugmai "Follow" naboyad dosad
+              showFollow={post.userId !== me?.userId}
+              initialFollowing={followingIds.has(post.userId)}
+            />
           ))}
         </section>
       )}
@@ -183,29 +221,26 @@ export function Feed() {
       {loadingMore && (
         <p className="animate-fade-in flex items-center justify-center gap-2 pb-8 text-center text-[13px] text-[var(--muted)]">
           <span className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--line)] border-t-[var(--accentA)]" />
-          Loading...
+          {t.loading}
         </p>
       )}
     </div>
   );
 }
 
-function EmptyFeed() {
+function EmptyFeed({ t }: { t: Dict }) {
   return (
     <section className="animate-fade-up flex flex-col items-center gap-3 py-16 text-center text-[var(--muted)]">
-      <span className="flex h-20 w-20 items-center justify-center rounded-full bg-[linear-gradient(135deg,#fdf2f8,#eef2ff)] text-[#c084fc]">
+      <span className="flex h-20 w-20 items-center justify-center rounded-full bg-[var(--panel)] text-[var(--muted)]">
         <ImageIcon size={40} />
       </span>
-      <h2 className="text-[16px] font-medium text-[var(--fg)]">No posts yet</h2>
-      <p className="max-w-[320px] text-[13px]">
-        Nothing has been published to this backend yet. Add the first post or follow
-        someone from the suggestions.
-      </p>
+      <h2 className="text-[16px] font-medium text-[var(--fg)]">{t.noPostsTitle}</h2>
+      <p className="max-w-[320px] text-[13px]">{t.noPostsText}</p>
       <Link
         href="/create"
         className="mt-1 rounded-xl bg-[var(--accentA)] px-5 py-2.5 text-[14px] font-semibold text-white shadow-[0_8px_20px_-6px_rgba(0,149,246,0.8)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#1877f2] active:scale-95"
       >
-        Create post
+        {t.createPost}
       </Link>
     </section>
   );

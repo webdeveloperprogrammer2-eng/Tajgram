@@ -12,18 +12,20 @@
 //
 //  Holatho: loading / guest / error / ready
 // ============================================================
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { LockKeyhole, MessagesSquare, TriangleAlert } from "lucide-react";
 
-import { type Chat } from "./api";
+import { createChat, type Chat } from "./api";
+import { sameId } from "./call/realtime";
 import { useChats } from "./providers";
 import styles from "./chats.module.css";
 
 import ChatList from "./components/ChatList";
 import ChatWindow from "./components/ChatWindow";
 import NewChatModal from "./components/NewChatModal";
+import { useT } from "@/components/LocaleProvider";
 
 export default function ChatsPage() {
   // useSearchParams -> Suspense talab mekunad
@@ -35,18 +37,57 @@ export default function ChatsPage() {
 }
 
 function ChatsView() {
-  const { status, error, reload, chats, reloadChats } = useChats();
+  const { status, error, reload, chats, reloadChats, token } = useChats();
+  const { t } = useT();
   const params = useSearchParams();
 
   const [activeId, setActiveId] = useState<number | null>(null);
+  const [newChatOpen, setNewChatOpen] = useState(false);
 
-  // Agar az sahifai digar bo /chats?chatId=12 omada bosem -
-  // hamon suhbatro darhol mekushoem.
+  // Baroi yak odam FAQAT yak bor "create-chat" mefiristem.
+  // Be in, effect ba'di har navshavii ro-ykhat suhbati nav mesokht.
+  const tried = useRef<string>("");
+
+  // Az sahifai digar omadaem:
+  //   /chats?chatId=12                -> raqami suhbat ma'lum
+  //   /chats?userId=<guid>            -> faqat ODAM ma'lum
+  //                                      (az ogohinomai "payom")
   useEffect(() => {
     const fromUrl = Number(params.get("chatId"));
-    if (Number.isFinite(fromUrl) && fromUrl > 0) setActiveId(fromUrl);
-  }, [params]);
-  const [newChatOpen, setNewChatOpen] = useState(false);
+    if (Number.isFinite(fromUrl) && fromUrl > 0) {
+      queueMicrotask(() => setActiveId(fromUrl));
+      return;
+    }
+
+    const userId = (params.get("userId") ?? "").trim();
+    if (userId === "" || status !== "ready") return;
+
+    // Suhbat allakay hast -> hamonro mekushoem
+    const known = chats.find((chat) => sameId(chat.userId, userId)) ?? null;
+    if (known !== null) {
+      queueMicrotask(() => setActiveId(known.chatId));
+      return;
+    }
+
+    if (tried.current === userId) return;
+    tried.current = userId;
+
+    let alive = true;
+    (async () => {
+      try {
+        const chatId = await createChat(token, userId);
+        await reloadChats();
+        if (alive) setActiveId(chatId);
+      } catch {
+        // suhbat kushoda nashud - ro-ykhat dar joyash memonad
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params, status, chats, token]);
 
   // ---------- 1. Hanuz bor meshavad ----------
   if (status === "loading") {
@@ -63,20 +104,20 @@ function ChatsView() {
           <LockKeyhole className="h-6 w-6" strokeWidth={1.8} />
         </span>
 
-        <h1 className="text-2xl font-bold tracking-tight">Avval daroed</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t.loginFirst}</h1>
 
         <p
           className="max-w-sm text-sm leading-relaxed"
           style={{ color: "var(--muted)" }}
         >
-          Baroi didani payomho boyad ba account daroed.
+          {t.chatsGuestText}
         </p>
 
         <Link
           href="/Auth/login"
           className={`${styles.gradBg} rounded-full px-6 py-3 text-sm font-semibold`}
         >
-          Ba login raftan
+          {t.signIn}
         </Link>
       </Center>
     );
@@ -100,7 +141,7 @@ function ChatsView() {
           className="rounded-full px-6 py-3 text-sm font-semibold"
           style={{ background: "var(--panel)", color: "var(--fg)" }}
         >
-          Boz yak bor sanjed
+          {t.retry}
         </button>
       </Center>
     );
@@ -163,6 +204,7 @@ function ChatsView() {
 
 // ------------------------------------------------------------
 function EmptyRight({ onNewChat }: { onNewChat: () => void }) {
+  const { t } = useT();
   return (
     <div className={`${styles.rise} flex h-full flex-col items-center justify-center gap-5 px-8 text-center`}>
       <span
@@ -172,13 +214,13 @@ function EmptyRight({ onNewChat }: { onNewChat: () => void }) {
         <MessagesSquare className="h-9 w-9" strokeWidth={1.4} />
       </span>
 
-      <h2 className="text-xl font-bold tracking-tight">Payomhoi shumo</h2>
+      <h2 className="text-xl font-bold tracking-tight">{t.yourMessages}</h2>
 
       <p
         className="max-w-xs text-sm leading-relaxed"
         style={{ color: "var(--muted)" }}
       >
-        Yak suhbatro intikhob kuned yo bo doston suhbati nav sar kuned.
+        {t.chatsEmptyText}
       </p>
 
       <button
@@ -186,7 +228,7 @@ function EmptyRight({ onNewChat }: { onNewChat: () => void }) {
         onClick={onNewChat}
         className={`${styles.gradBg} rounded-full px-6 py-3 text-sm font-semibold`}
       >
-        Suhbati nav
+        {t.newChat}
       </button>
     </div>
   );

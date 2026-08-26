@@ -7,9 +7,11 @@ import type { ProfileUser } from "@/lib/types";
 import { Avatar } from "./Avatar";
 import { FollowButton } from "./FollowButton";
 import { useSession } from "./SessionProvider";
+import { useT } from "./LocaleProvider";
 
 /** Правая колонка: текущий пользователь и рекомендации. */
 export function RightRail() {
+  const { t } = useT();
   const { me } = useSession();
   const [people, setPeople] = useState<ProfileUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -17,9 +19,21 @@ export function RightRail() {
   useEffect(() => {
     let alive = true;
     api
-      .searchUsers(undefined, { page: 1, pageSize: 5 })
+      // 6 megirem, na 5 - chunki mumkin ast KHUDAM daruni
+      // ro-ykhat boshem va yaktoyash partofta shavad.
+      .searchUsers(undefined, { page: 1, pageSize: 6 })
       .then((response) => {
-        if (alive) setPeople(response.data ?? []);
+        if (!alive) return;
+
+        // KHATO BUD: /Search/search-users HAMAI korbaronro
+        // bar megardonad - HAMROHI KHUDAM. Baroi hamin dar
+        // "Suggested for you" nomi KHUDAM bo tugmai "Follow"
+        // meistod, va zadan khato medod.
+        setPeople(
+          (response.data ?? [])
+            .filter((user) => user.userId !== me?.userId)
+            .slice(0, 5),
+        );
       })
       .catch(() => {
         if (alive) setPeople([]);
@@ -30,7 +44,7 @@ export function RightRail() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [me?.userId]);
 
   return (
     <aside className="hidden w-[320px] shrink-0 pl-16 pt-9 xl:block">
@@ -55,13 +69,13 @@ export function RightRail() {
 
       <div className="mb-3 flex items-center justify-between px-2">
         <span className="text-[14px] font-semibold text-[var(--muted)]">
-          Suggested for you
+          {t.suggestedForYou}
         </span>
         <Link
           href="/search"
           className="text-[12px] font-semibold text-[var(--fg)] transition-colors hover:text-[var(--accentA)]"
         >
-          See all
+          {t.seeAll}
         </Link>
       </div>
 
@@ -110,11 +124,11 @@ export function RightRail() {
         ))}
 
         {!loading && people.length === 0 && (
-          <li className="px-2 text-[13px] text-[var(--muted)]">No suggestions right now.</li>
+          <li className="px-2 text-[13px] text-[var(--muted)]">{t.noSuggestions}</li>
         )}
       </ul>
 
-      <footer className="mt-8 space-y-3 px-2 text-[11px] uppercase text-[#c7c7c7]">
+      <footer className="mt-8 space-y-3 px-2 text-[11px] uppercase text-[var(--muted)]">
         <p className="flex flex-wrap gap-x-2 gap-y-1">
           {["About", "Help", "Press", "API", "Jobs", "Privacy", "Terms"].map((item) => (
             <span key={item} className="transition-colors hover:text-[var(--muted)]">

@@ -29,6 +29,7 @@ import {
 } from "./api";
 import { getToken, isTokenExpired, removeToken } from "./token";
 import { onThemeChange, toggleAppTheme } from "@/components/appTheme";
+import { tr } from "@/components/appLang";
 
 export type Theme = "dark" | "light";
 export type Feed = "all" | "following" | "saved";
@@ -120,7 +121,7 @@ export function ReelsProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      setError(errorText(err, "Khatoi nomalum dar server."));
+      setError(errorText(err, tr().unknownError));
       setStatus("error");
     }
   }
