@@ -3,6 +3,7 @@ import type {
   ActualDetails,
   AppNotification,
   Chat,
+  ChatMessage,
   Envelope,
   Post,
   PostComment,
@@ -222,6 +223,64 @@ const paging = ({ page = 1, pageSize = 10 }: Paged = {}) => ({
   PageSize: pageSize,
 });
 
+/**
+ * Хатои махсус: аккаунт дар backend админ нест ('/Admin/*' guard 403).
+ * Панел инро гирифта ба админ паём нишон медиҳад, на «хатои умумӣ».
+ */
+export class NotAdminError extends ApiError {
+  constructor(message: string) {
+    super(message, 403);
+    this.name = "NotAdminError";
+  }
+}
+
+/**
+ * Якчанд номи эҳтимолии роути '/Admin/*'-ро месанҷад ва аввалинеро,
+ * ки ҷавоб медиҳад, бармегардонад. Номи кордиҳандаро кеш мекунад.
+ */
+const adminRouteCache = new Map<string, string>();
+
+async function probeAdmin<T>(
+  candidates: string[],
+  query: Record<string, QueryValue>,
+): Promise<T> {
+  const cacheKey = candidates.join("|");
+  const known = adminRouteCache.get(cacheKey);
+  const order = known ? [known, ...candidates.filter((c) => c !== known)] : candidates;
+
+  let lastNotAdmin: NotAdminError | null = null;
+
+  for (const path of order) {
+    try {
+      const env = await request<T>(path, { query });
+      adminRouteCache.set(cacheKey, path);
+      return env.data;
+    } catch (err) {
+      if (!(err instanceof ApiError)) throw err;
+
+      // Guard-и /Admin: аккаунт админ нест -> паёми равшан.
+      if (
+        err.statusCode === 403 &&
+        /administrator access is required/i.test(err.message)
+      ) {
+        lastNotAdmin = new NotAdminError(
+          "Ин аккаунт дар backend ҳуқуқи администраторӣ надорад.",
+        );
+        continue;
+      }
+
+      // 404 = ин номи роут нест -> номи навбатиро месанҷем.
+      if (err.statusCode === 404) continue;
+
+      // Хатои дигар (масалан 401) -> дарҳол мепартоем.
+      throw err;
+    }
+  }
+
+  if (lastNotAdmin) throw lastNotAdmin;
+  throw new ApiError("Роути админи чат ёфт нашуд.", 404);
+}
+
 export const api = {
   // --- Профиль ---
   myProfile: () => request<UserProfile>("/UserProfile/get-my-profile"),
@@ -368,6 +427,36 @@ export const api = {
       method: "DELETE",
       query: { userId },
     }),
+
+  /**
+   * Chatҳои korбари muayyan (ФАҚАТ барои админ).
+   * Backend гурӯҳи /Admin/*-ро дорад, вале бо guard пинҳон аст,
+   * барои ҳамин номи дақиқи роут маълум нест -> номҳои эҳтимолиро
+   * як-як месанҷем. 404 = номи нодуруст (роути дигар); 403 =
+   * аккаунт админ нест (паём ба корбар нишон дода мешавад).
+   */
+  adminUserChats: (userId: string) =>
+    probeAdmin<Chat[]>(
+      [
+        "/Admin/get-user-chats",
+        "/Admin/get-chats",
+        "/Admin/get-user-chat",
+        "/Admin/user-chats",
+      ],
+      { UserId: userId, userId },
+    ),
+
+  /** Паёмҳои як чат (барои админ). */
+  adminChatMessages: (chatId: number) =>
+    probeAdmin<ChatMessage[]>(
+      [
+        "/Admin/get-chat-messages",
+        "/Admin/get-chat-by-id",
+        "/Admin/get-messages",
+        "/Admin/get-chat",
+      ],
+      { chatId, ChatId: chatId },
+    ),
 
   /** GET /FollowingRelationShip/get-subscribers -> KI ba U obuna ast */
   followers: (userId: string) =>

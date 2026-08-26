@@ -8,13 +8,13 @@ import type { Post, PostComment } from "@/lib/types";
 import { Avatar } from "./Avatar";
 import { CommentsModal } from "./CommentsModal";
 import { PostMedia } from "./PostMedia";
+import { ReportMenu } from "./ReportMenu";
 import { useT } from "./LocaleProvider";
 import {
   BookmarkIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   CommentIcon,
-  DotsIcon,
   HeartIcon,
   ShareIcon,
 } from "./icons";
@@ -197,13 +197,11 @@ export function PostCard({
           )}
         </div>
 
-        <button
-          type="button"
-          aria-label={t.moreOptions}
-          className="rounded-full p-1.5 text-[var(--fg)] transition-colors hover:bg-[var(--panel)]"
-        >
-          <DotsIcon size={20} />
-        </button>
+        <ReportMenu
+          targetUserId={post.userId}
+          targetUserName={post.userName}
+          ariaLabel={t.moreOptions}
+        />
       </header>
 
       <div

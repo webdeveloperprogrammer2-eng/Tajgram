@@ -71,6 +71,55 @@ export type ForwardOptions = {
   allowAnonymous?: boolean;
 };
 
+/**
+ * Yak so-rov, vale bo takror.
+ *
+ * DU sabab hast, ki fetch ba backend "fetch failed" mepartoyad, dar
+ * hole ki backend TAMOMAN solim ast:
+ *
+ *   1) Render (plani beparbardokht) ba'd az ~15 daqiqai bekori
+ *      KHOB meravad. So-rovi YAKUM onro bedor mekunad va metavonad
+ *      afted; so-rovi dujum aloqaman kor mekunad.
+ *
+ *   2) undici (fetch-i Node) aloqahoi keep-alive-ro NIGOH medorad va
+ *      az nav istifoda mebarad. Agar server hamon soniya onro pu-shad,
+ *      ECONNRESET meshavad. Takror sokete NAV megirad.
+ *
+ * Faqat khatoi SHABAKA takror meshavad. Agar backend javob dihad -
+ * hatto 400 yo 500 - onro AYNAN bar megardonem: takrori sabtinom
+ * korbari dukarata nasozad.
+ */
+const RETRY_DELAYS_MS = [400, 1500, 4000];
+
+async function fetchWithRetry(
+  target: string,
+  init: RequestInit
+): Promise<Response> {
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
+    try {
+      return await fetch(target, init);
+    } catch (error) {
+      lastError = error;
+
+      // Body-i takrornashavanda: agar stream bosad, bori dujum
+      // firistodan mumkin nest. Mo Uint8Array meguzarem, baroi hamin
+      // in jo bekhatar ast.
+      const delay = RETRY_DELAYS_MS[attempt];
+      if (delay === undefined) break;
+
+      console.warn(
+        `[proxy] ${target} nashud (kushishi ${attempt + 1}), ` +
+          `ba'di ${delay}ms az nav mesanjem`
+      );
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+
+  throw lastError;
+}
+
 export async function forwardToBackend(
   request: NextRequest,
   path: string[],
@@ -100,13 +149,16 @@ export async function forwardToBackend(
 
   let response: Response;
   try {
-    response = await fetch(target, {
+    response = await fetchWithRetry(target, {
       method: request.method,
       headers,
       body,
       cache: "no-store",
     });
-  } catch {
+  } catch (error) {
+    // Sababi ASLI-ro menavisem. Be in, dar log faqat "fetch failed"
+    // meistod va fahmidan mumkin nabud, ki chi shud.
+    console.error(`[proxy] ${request.method} ${target} nashud:`, error);
     return envelope("Backend dastras nest. Ba'dtar sanjed.", 502);
   }
 

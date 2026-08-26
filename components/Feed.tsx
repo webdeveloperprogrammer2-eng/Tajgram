@@ -8,6 +8,7 @@ import type { Dict } from "./appLang";
 import { PostCard } from "./PostCard";
 import { useT } from "./LocaleProvider";
 import { useSession } from "./SessionProvider";
+import { useBlockedIds } from "@/lib/blocks";
 import { StoriesRail } from "./StoriesRail";
 import { CheckCircleIcon, ImageIcon } from "./icons";
 
@@ -32,6 +33,7 @@ export function Feed() {
   const { me } = useSession();
   const { t } = useT();
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
+  const blockedIds = useBlockedIds();
 
   const seen = useRef(new Set<number>());
   const sentinel = useRef<HTMLDivElement>(null);
@@ -157,7 +159,17 @@ export function Feed() {
     );
   }
 
-  const nothingAtAll = following.length === 0 && suggested.length === 0;
+  // Kasone ki MAN bastaam - posthoi onho dar lentai MAN
+  // namoyon nameshavand. Baroi digaron hech chiz ivaz nashud.
+  const visibleFollowing = following.filter(
+    (post) => !blockedIds.has(post.userId),
+  );
+  const visibleSuggested = suggested.filter(
+    (post) => !blockedIds.has(post.userId),
+  );
+
+  const nothingAtAll =
+    visibleFollowing.length === 0 && visibleSuggested.length === 0;
 
   return (
     <div className="w-full max-w-[630px]">
@@ -169,41 +181,66 @@ export function Feed() {
         </p>
       )}
 
-      {following.map((post, index) => (
+      {visibleFollowing.map((post, index) => (
         <PostCard key={post.postId} post={post} index={index} />
       ))}
 
       {nothingAtAll ? (
         <EmptyFeed t={t} />
       ) : (
-        <section className="animate-fade-up flex flex-col items-center gap-2 py-10 text-center">
-          <CheckCircleIcon size={96} />
-          <h2 className="mt-2 text-[16px] font-medium text-[var(--fg)]">
+        <section className="animate-fade-up mt-2 flex flex-col items-center gap-3 border-t border-[var(--line)] px-6 py-16 text-center">
+          {/* Nuri narm dar pushti nishona - to blok "zinda" namoyon shavad */}
+          <span className="relative flex h-[140px] w-[140px] items-center justify-center">
+            <span
+              aria-hidden
+              className="animate-fade-in absolute inset-0 rounded-full blur-2xl"
+              style={{
+                background:
+                  "radial-gradient(circle, color-mix(in srgb, var(--accentA) 28%, transparent), transparent 70%)",
+              }}
+            />
+            <CheckCircleIcon size={120} className="relative" />
+          </span>
+
+          <h2 className="mt-1 text-[22px] font-semibold leading-tight tracking-[-0.01em] text-[var(--fg)]">
             {t.caughtUpTitle}
           </h2>
-          <p className="text-[13px] text-[var(--muted)]">
+          <p className="max-w-[330px] text-[15px] leading-[21px] text-[var(--muted)]">
             {t.caughtUpText}
           </p>
+
           {!followingDone && (
             <button
               type="button"
               onClick={loadMoreFollowing}
               disabled={loadingMore}
-              className="mt-1 rounded-full px-4 py-1.5 text-[13px] font-semibold text-[var(--accentA)] transition-all duration-200 hover:bg-[var(--panel)] active:scale-95 disabled:opacity-60"
+              style={{ backgroundImage: "var(--gradient)" }}
+              className="mt-3 flex items-center gap-2 rounded-full px-7 py-3 text-[14px] font-semibold text-white shadow-[0_12px_28px_-10px_var(--accentA)] transition-all duration-200 hover:-translate-y-0.5 hover:brightness-110 active:scale-95 disabled:opacity-60"
             >
+              {loadingMore && (
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+              )}
               {loadingMore ? t.loading : t.viewOlder}
             </button>
           )}
         </section>
       )}
 
-      {suggested.length > 0 && (
-        <section>
-          <h2 className="animate-fade-in mb-3 flex items-center gap-2 text-[16px] font-semibold text-[var(--fg)]">
-            {t.suggestedPosts}
-            <span className="h-px flex-1 bg-[linear-gradient(90deg,var(--line),transparent)]" />
-          </h2>
-          {suggested.map((post, index) => (
+      {visibleSuggested.length > 0 && (
+        <section className="border-t border-[var(--line)] pt-7">
+          {/* Sarlavha monandi instagram: chap - nom, rost - "Hama" */}
+          <header className="animate-fade-in mb-4 flex items-center justify-between gap-3 px-1">
+            <h2 className="text-[17px] font-semibold tracking-[-0.01em] text-[var(--fg)]">
+              {t.suggestedForYou}
+            </h2>
+            <Link
+              href="/explore"
+              className="rounded-full px-3 py-1.5 text-[13px] font-semibold text-[var(--accentA)] transition-colors duration-200 hover:bg-[var(--panel)]"
+            >
+              {t.seeAll}
+            </Link>
+          </header>
+          {visibleSuggested.map((post, index) => (
             <PostCard
               key={post.postId}
               post={post}

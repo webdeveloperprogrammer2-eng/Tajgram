@@ -10,6 +10,7 @@ import { type Chat } from "../api";
 import { chatTime } from "../format";
 import { useChats } from "../providers";
 import styles from "../chats.module.css";
+import { useBlockedIds } from "@/lib/blocks";
 
 import { useT } from "@/components/LocaleProvider";
 
@@ -25,14 +26,17 @@ export default function ChatList({
   onNewChat: () => void;
 }) {
   const { chats, allowedIds, me } = useChats();
+  // Suhbati kasone ki MAN bastaam - dar ro-ykhati man nest.
+  const blockedIds = useBlockedIds();
   const { t } = useT();
   const [query, setQuery] = useState("");
 
   const text = query.trim().toLowerCase();
+  const visible = chats.filter((chat) => !blockedIds.has(chat.userId));
   const list =
     text === ""
-      ? chats
-      : chats.filter(
+      ? visible
+      : visible.filter(
           (chat) =>
             chat.userName.toLowerCase().includes(text) ||
             (chat.fullName ?? "").toLowerCase().includes(text)
@@ -80,7 +84,7 @@ export default function ChatList({
             className="px-4 py-16 text-center text-[13px] leading-relaxed"
             style={{ color: "var(--muted)" }}
           >
-            {chats.length === 0
+            {visible.length === 0
               ? t.noChatsYet
               : t.nothingFound}
           </p>
