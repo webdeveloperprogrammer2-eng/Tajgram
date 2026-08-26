@@ -17,6 +17,7 @@
 // ============================================================
 
 import { useMemo, useState } from "react";
+import { Ban } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { useChats } from "@/app/chats/providers";
@@ -37,6 +38,8 @@ import { FollowersModal } from "./profile/FollowersModal";
 import { HighlightsRow } from "./profile/HighlightsRow";
 import { PostLightbox } from "./profile/PostLightbox";
 import { useT } from "./LocaleProvider";
+import { ProfileMenu } from "./profile/ProfileMenu";
+import { useBlockedIds } from "@/lib/blocks";
 
 export function ProfileView({
   profile,
@@ -76,6 +79,12 @@ export function ProfileView({
   const [following, setFollowing] = useState(profile.isFollowing);
   const [followers, setFollowers] = useState(profile.subscribersCount);
   const [busy, setBusy] = useState(false);
+
+  // BLOK - SHAKHSIST: faqat MAN uro namebinam. Ba khudi u va ba
+  // digaron hech chiz namoyon nameshavad. Ro-ykhat dar
+  // /api/block-i khudamon meistad (lib/blocks.ts).
+  const blockedIds = useBlockedIds();
+  const blocked = !isMe && blockedIds.has(profile.userId);
 
   // Videoho az hamon ro-ykhat judo meshavand - ma'lumoti soakhta nest
   const videos = useMemo(
@@ -127,6 +136,18 @@ export function ProfileView({
             <ProfileButton onClick={() => router.push("/profile")}>
               {t.editProfile}
             </ProfileButton>
+          ) : blocked ? (
+            // Bastaem -> tugmahoi "Obuna"/"Payom" ma’ni nadorand.
+            <>
+              <span
+                className="inline-flex h-8 items-center rounded-lg px-4 text-[14px] font-semibold"
+                style={{ background: "var(--dangerSoft)", color: "var(--danger)" }}
+              >
+                {t.blockedBadge}
+              </span>
+
+              <ProfileMenu user={profile} blocked />
+            </>
           ) : following ? (
             // Obuna shudaem -> hamon YAK tugma ba DU qism taqsim
             // meshavad: "Obuna shuda" (baromadan) va "Payom".
@@ -145,53 +166,68 @@ export function ProfileView({
               >
                 {t.message}
               </ProfileButton>
+
+              <ProfileMenu user={profile} blocked={false} />
             </>
           ) : (
             // Hanuz obuna nashudaem -> FAQAT yak tugmai DAROZ.
             // "Payom" in jo NEST: ba kase ki obuna nashudaem
             // navishtan ham mumkin nest.
-            <ProfileButton
-              onClick={toggleFollow}
-              disabled={busy}
-              primary
-              className="w-full md:w-[240px]"
-            >
-              {t.followShort}
-            </ProfileButton>
+            <>
+              <ProfileButton
+                onClick={toggleFollow}
+                disabled={busy}
+                primary
+                className="flex-1 md:w-[240px] md:flex-none"
+              >
+                {t.followShort}
+              </ProfileButton>
+
+              <ProfileMenu user={profile} blocked={false} />
+            </>
           )
         }
       />
 
-      {/* "ACTUALNIY" - to-plamhoi hameshagii story (/Actual).
-          Faqat DIDAN: dar profili kasi digar tark kardan
-          va guzoshtan mumkin nest. */}
-      <HighlightsRow userId={profile.userId} />
-
-      <ProfileTabs tabs={tabs} active={tab} onChange={setTab} />
-
-      {shown.length > 0 ? (
-        <ProfileGrid>
-          {shown.map((post) => (
-            <GridCell
-              key={post.postId}
-              post={post}
-              onOpen={() => setOpenPost(post)}
-            />
-          ))}
-        </ProfileGrid>
+      {blocked ? (
+        // Bastaem -> posthoi u baroi MAN penhon meshavand.
+        // Dar profili u hech chizi digar ivaz nashud: u va
+        // digaron hamon tavr mebinand.
+        <BlockedNotice />
       ) : (
-        <ProfileEmpty
-          icon={<ImageIcon size={26} />}
-          title={tab === "video" ? t.noVideosYet : t.noPostsTitle}
-          text={isMe ? t.firstPostHint : undefined}
-        />
-      )}
+        <>
+        {/* "ACTUALNIY" - to-plamhoi hameshagii story (/Actual).
+            Faqat DIDAN: dar profili kasi digar tark kardan
+            va guzoshtan mumkin nest. */}
+        <HighlightsRow userId={profile.userId} />
 
-      <PostLightbox post={openPost} onClose={() => setOpenPost(null)} />
+        <ProfileTabs tabs={tabs} active={tab} onChange={setTab} />
+
+        {shown.length > 0 ? (
+          <ProfileGrid>
+            {shown.map((post) => (
+              <GridCell
+                key={post.postId}
+                post={post}
+                onOpen={() => setOpenPost(post)}
+              />
+            ))}
+          </ProfileGrid>
+        ) : (
+          <ProfileEmpty
+            icon={<ImageIcon size={26} />}
+            title={tab === "video" ? t.noVideosYet : t.noPostsTitle}
+            text={isMe ? t.firstPostHint : undefined}
+          />
+        )}
+
+        <PostLightbox post={openPost} onClose={() => setOpenPost(null)} />
+        </>
+      )}
 
       {/* Suhbat dar boloi HAMIN profil - be raftan ba /chats */}
       <ProfileChatPanel
-        open={chatOpen}
+        open={chatOpen && !blocked}
         onClose={() => setChatOpen(false)}
         userId={profile.userId}
         userName={profile.userName}
@@ -205,6 +241,34 @@ export function ProfileView({
         myUserId={myUserId}
         onClose={() => setFollowTab(null)}
       />
+    </div>
+  );
+}
+
+// ------------------------------------------------------------
+//  "Man in korbarro bastaam" - ba JOI turi postho.
+//
+//  In khabar faqat baroi KHUDI man ast. Korbari bastashuda
+//  namedonad ki basta shudaast va digaron ham inro namebinand.
+// ------------------------------------------------------------
+function BlockedNotice() {
+  const { t } = useT();
+
+  return (
+    <div className="animate-fade-up mt-10 flex flex-col items-center gap-2 border-t px-6 py-16 text-center"
+      style={{ borderColor: "var(--line)" }}
+    >
+      <span
+        className="flex h-14 w-14 items-center justify-center rounded-full"
+        style={{ background: "var(--dangerSoft)", color: "var(--danger)" }}
+      >
+        <Ban className="h-6 w-6" />
+      </span>
+
+      <p className="mt-2 text-[16px] font-bold">{t.blockedNotice}</p>
+      <p className="max-w-[360px] text-[14px]" style={{ color: "var(--muted)" }}>
+        {t.blockedNoticeHint}
+      </p>
     </div>
   );
 }

@@ -16,7 +16,7 @@
 //  fullName / userName dar backend NEST.
 // ============================================================
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AtSign,
   Bell,
@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 
 import { api } from "@/lib/api";
+import { unblockUser as unblockLocal, useBlockedList } from "@/lib/blocks";
 import type { BlockedUser, Settings } from "@/lib/types";
 import { Avatar } from "@/components/Avatar";
 import { useSession } from "@/components/SessionProvider";
@@ -91,6 +92,28 @@ export default function SettingsPage() {
   const [passBusy, setPassBusy] = useState(false);
 
   const [blocked, setBlocked] = useState<BlockedUser[]>([]);
+
+  // Du ro-ykhat: yake az backend, digare az /api/block-i khudamon
+  // (kasone ki dar sahifai profil bastaam). In jo onhoro YAK
+  // mekunem - to korbar hamai bastagonro dar yak joy bubinad.
+  const localBlocked = useBlockedList();
+
+  const allBlocked = useMemo(() => {
+    const byId = new Map<
+      string,
+      {
+        userId: string;
+        userName: string;
+        fullName: string;
+        image: string | null;
+      }
+    >();
+
+    for (const item of blocked) byId.set(item.userId, item);
+    for (const item of localBlocked) byId.set(item.userId, item);
+
+    return [...byId.values()];
+  }, [blocked, localBlocked]);
 
   // "Saql shud" - 2 soniya namoyon memonad
   const flash = useCallback((text: string) => {
@@ -286,13 +309,21 @@ export default function SettingsPage() {
 
   // ---------- Kushodani korbar ----------
   async function unblock(userId: string) {
-    try {
-      await api.unblockUser(userId);
-      setBlocked((old) => old.filter((item) => item.userId !== userId));
-      flash(t.opened);
-    } catch {
+    // Az HAR DU ro-ykhat mebarorem: az backend va az khudamon.
+    // Agar yake az onho in korbarro nadosta bosad - be khato
+    // meguzarad, faqat digare kor mekunad.
+    const results = await Promise.allSettled([
+      api.unblockUser(userId),
+      unblockLocal(userId),
+    ]);
+
+    if (results.every((item) => item.status === "rejected")) {
       setError(t.openFailed);
+      return;
     }
+
+    setBlocked((old) => old.filter((item) => item.userId !== userId));
+    flash(t.opened);
   }
 
   return (
@@ -574,14 +605,14 @@ export default function SettingsPage() {
       {/* ================= 6. BLOKSHUDA ================= */}
       <Section
         icon={ShieldBan}
-        title={`${t.blockedUsers}${blocked.length > 0 ? ` (${blocked.length})` : ""}`}
+        title={`${t.blockedUsers}${allBlocked.length > 0 ? ` (${allBlocked.length})` : ""}`}
       >
-        {blocked.length === 0 ? (
+        {allBlocked.length === 0 ? (
           <p className="px-5 py-5 text-[13px] text-[var(--muted)]">
             {t.nobodyBlocked}
           </p>
         ) : (
-          blocked.map((item) => (
+          allBlocked.map((item) => (
             <div
               key={item.userId}
               className="flex items-center gap-3 border-t border-[var(--line)] px-5 py-3.5 first:border-t-0"

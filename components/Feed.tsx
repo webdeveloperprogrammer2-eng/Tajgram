@@ -8,6 +8,7 @@ import type { Dict } from "./appLang";
 import { PostCard } from "./PostCard";
 import { useT } from "./LocaleProvider";
 import { useSession } from "./SessionProvider";
+import { useBlockedIds } from "@/lib/blocks";
 import { StoriesRail } from "./StoriesRail";
 import { CheckCircleIcon, ImageIcon } from "./icons";
 
@@ -32,6 +33,7 @@ export function Feed() {
   const { me } = useSession();
   const { t } = useT();
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
+  const blockedIds = useBlockedIds();
 
   const seen = useRef(new Set<number>());
   const sentinel = useRef<HTMLDivElement>(null);
@@ -157,7 +159,17 @@ export function Feed() {
     );
   }
 
-  const nothingAtAll = following.length === 0 && suggested.length === 0;
+  // Kasone ki MAN bastaam - posthoi onho dar lentai MAN
+  // namoyon nameshavand. Baroi digaron hech chiz ivaz nashud.
+  const visibleFollowing = following.filter(
+    (post) => !blockedIds.has(post.userId),
+  );
+  const visibleSuggested = suggested.filter(
+    (post) => !blockedIds.has(post.userId),
+  );
+
+  const nothingAtAll =
+    visibleFollowing.length === 0 && visibleSuggested.length === 0;
 
   return (
     <div className="w-full max-w-[630px]">
@@ -169,7 +181,7 @@ export function Feed() {
         </p>
       )}
 
-      {following.map((post, index) => (
+      {visibleFollowing.map((post, index) => (
         <PostCard key={post.postId} post={post} index={index} />
       ))}
 
@@ -197,13 +209,13 @@ export function Feed() {
         </section>
       )}
 
-      {suggested.length > 0 && (
+      {visibleSuggested.length > 0 && (
         <section>
           <h2 className="animate-fade-in mb-3 flex items-center gap-2 text-[16px] font-semibold text-[var(--fg)]">
             {t.suggestedPosts}
             <span className="h-px flex-1 bg-[linear-gradient(90deg,var(--line),transparent)]" />
           </h2>
-          {suggested.map((post, index) => (
+          {visibleSuggested.map((post, index) => (
             <PostCard
               key={post.postId}
               post={post}
