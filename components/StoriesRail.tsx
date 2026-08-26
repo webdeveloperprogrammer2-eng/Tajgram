@@ -251,51 +251,130 @@ function StoryViewer({
     };
   }, [next, prev, onClose]);
 
+  // Hamsoyaho: dar instagram (PK) chap va rost korti khurdshuda
+  // meistad. Ba on zer kuni - ba hamon story meguzarad.
+  const before = index > 0 ? groups[index - 1] : null;
+  const after = index < groups.length - 1 ? groups[index + 1] : null;
+
   return (
     <div
-      className="animate-fade-in fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-4 backdrop-blur-sm"
+      className="animate-fade-in fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-[#1a1a1a]"
       onClick={onClose}
     >
+      {/* Logo dar kunji chap-bolo - monandi instagram */}
+      <span className="pointer-events-none absolute left-6 top-5 z-20 select-none font-logo text-[26px] leading-none text-white">
+        Tajgram
+      </span>
+
       <button
         type="button"
         onClick={onClose}
         aria-label={t.closeStory}
-        className="absolute right-4 top-4 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-[16px] leading-none text-white transition hover:bg-white/20"
+        className="absolute right-5 top-5 z-20 flex h-9 w-9 items-center justify-center rounded-full text-[20px] leading-none text-white transition hover:bg-white/10"
       >
         ✕
       </button>
 
+      {/* ---- Hamsoyai CHAP ---- */}
+      {before !== null && (
+        <StoryPeek
+          group={before}
+          side="left"
+          onClick={() => onChangeIndex(index - 1)}
+        />
+      )}
+
+      {/* ---- Hamsoyai ROST ---- */}
+      {after !== null && (
+        <StoryPeek
+          group={after}
+          side="right"
+          onClick={() => onChangeIndex(index + 1)}
+        />
+      )}
+
+      {/* ---- Tirchahoi gird (berun az kort, monandi instagram) ---- */}
+      {index > 0 && (
+        <button
+          type="button"
+          aria-label={t.prevStory}
+          onClick={(event) => {
+            event.stopPropagation();
+            onChangeIndex(index - 1);
+          }}
+          className="absolute left-[calc(50%-min(28vh,220px)-56px)] top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[20px] leading-none text-[#262626] shadow-md transition hover:scale-110 active:scale-95"
+        >
+          ‹
+        </button>
+      )}
+      {index < groups.length - 1 && (
+        <button
+          type="button"
+          aria-label={t.nextStory}
+          onClick={(event) => {
+            event.stopPropagation();
+            onChangeIndex(index + 1);
+          }}
+          className="absolute right-[calc(50%-min(28vh,220px)-56px)] top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[20px] leading-none text-[#262626] shadow-md transition hover:scale-110 active:scale-95"
+        >
+          ›
+        </button>
+      )}
+
+      {/* ---- KORTI ASOSI ---- */}
       <div
-        className="animate-scale-in relative flex aspect-[9/16] max-h-[92vh] w-full max-w-[420px] flex-col overflow-hidden rounded-2xl bg-[#101014] shadow-[0_24px_60px_rgba(0,0,0,0.6)]"
+        className="animate-scale-in relative flex aspect-[9/16] h-[calc(100vh-90px)] max-h-[860px] flex-col overflow-hidden rounded-[6px] bg-black shadow-[0_10px_60px_rgba(0,0,0,0.5)]"
         onClick={(event) => event.stopPropagation()}
         onPointerDown={() => setPaused(true)}
         onPointerUp={() => setPaused(false)}
         onPointerLeave={() => setPaused(false)}
       >
-        {/* Медиа */}
+        {/* Media. Suratho gohe pahn hastand (screenshot) - dar pusht
+            hamon surat kalonkarda va khira meistad, to navorhoi siyohi
+            murda namonand. Aynan hamon tavr ki instagram mekunad. */}
         <div className="absolute inset-0">
           {src && video ? (
-            <video
-              key={src}
-              ref={videoRef}
-              src={src}
-              autoPlay
-              playsInline
-              onTimeUpdate={(event) => {
-                const node = event.currentTarget;
-                if (node.duration > 0) setProgress(node.currentTime / node.duration);
-              }}
-              onEnded={next}
-              className="h-full w-full object-contain"
-            />
+            <>
+              <video
+                key={src + "-bg"}
+                src={src}
+                aria-hidden
+                muted
+                playsInline
+                className="pointer-events-none absolute inset-0 h-full w-full scale-125 object-cover opacity-60 blur-3xl"
+              />
+              <video
+                key={src}
+                ref={videoRef}
+                src={src}
+                autoPlay
+                playsInline
+                onTimeUpdate={(event) => {
+                  const node = event.currentTarget;
+                  if (node.duration > 0) setProgress(node.currentTime / node.duration);
+                }}
+                onEnded={next}
+                className="relative h-full w-full object-contain"
+              />
+            </>
           ) : src ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              key={src}
-              src={src}
-              alt={t.story}
-              className="h-full w-full object-contain"
-            />
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                key={src + "-bg"}
+                src={src}
+                alt=""
+                aria-hidden
+                className="pointer-events-none absolute inset-0 h-full w-full scale-125 object-cover opacity-60 blur-3xl"
+              />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                key={src}
+                src={src}
+                alt={t.story}
+                className="relative h-full w-full object-contain"
+              />
+            </>
           ) : (
             <div className="flex h-full items-center justify-center text-[13px] text-white/50">
               {t.storyUnavailable}
@@ -303,15 +382,15 @@ function StoryViewer({
           )}
         </div>
 
-        {/* Затемнение сверху, чтобы шапка читалась на любом фото */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/70 to-transparent" />
+        {/* Tira kardani boloi kort - to sarlavha dar har surat khonda shavad */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/60 via-black/25 to-transparent" />
 
-        {/* Полоски прогресса */}
-        <div className="relative z-10 flex gap-1 px-3 pt-3">
+        {/* Khathoi progress */}
+        <div className="relative z-10 flex gap-[3px] px-2 pt-3">
           {group.items.map((item, i) => (
             <span
               key={item.id}
-              className="h-[2.5px] flex-1 overflow-hidden rounded-full bg-white/30"
+              className="h-[2px] flex-1 overflow-hidden rounded-full bg-white/35"
             >
               <span
                 className="block h-full rounded-full bg-white"
@@ -323,24 +402,24 @@ function StoryViewer({
           ))}
         </div>
 
-        {/* Шапка: автор и когда выложил */}
-        <div className="relative z-10 flex items-center gap-2.5 px-3 py-3">
+        {/* Sarlavha: avatar, nom, vaqt */}
+        <div className="relative z-10 flex items-center gap-3 px-3 py-3">
           <Link
             href={`/profile/${group.userId}`}
-            className="flex min-w-0 items-center gap-2.5"
+            className="flex min-w-0 items-center gap-3"
             onClick={(event) => event.stopPropagation()}
           >
-            <Avatar src={group.avatar} name={group.userName} size={34} />
-            <span className="truncate text-[13px] font-semibold text-white">
+            <Avatar src={group.avatar} name={group.userName} size={32} />
+            <span className="truncate text-[14px] font-semibold text-white">
               {group.userName}
             </span>
           </Link>
-          <span className="shrink-0 text-[12px] text-white/60">
+          <span className="shrink-0 text-[14px] text-white/70">
             {shortTimeAgo(story?.createAt)}
           </span>
         </div>
 
-        {/* Зоны перелистывания */}
+        {/* Zonahoi guzarish: chap 1/3, rost 2/3 */}
         <button
           type="button"
           onClick={prev}
@@ -355,6 +434,45 @@ function StoryViewer({
         />
       </div>
     </div>
+  );
+}
+
+// Korti khurdi hamsoya (chap yo rost) - monandi instagram dar PK.
+// Dar telefon nishon doda NAMESHAVAD (md:block).
+function StoryPeek({
+  group,
+  side,
+  onClick,
+}: {
+  group: StoryGroup;
+  side: "left" | "right";
+  onClick: () => void;
+}) {
+  const first = group.items[0] ?? null;
+  const cover = mediaUrl(first?.fileName);
+
+  return (
+    <button
+      type="button"
+      onClick={(event) => {
+        event.stopPropagation();
+        onClick();
+      }}
+      style={{ [side]: "calc(50% + min(28vh, 220px) + 28px)" }}
+      className="absolute top-1/2 hidden aspect-[9/16] h-[52vh] max-h-[480px] -translate-y-1/2 overflow-hidden rounded-[6px] bg-[#262626] opacity-60 transition-opacity duration-200 hover:opacity-90 md:block"
+    >
+      {cover !== null && !isVideo(first?.fileName) ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={cover} alt="" aria-hidden className="h-full w-full object-cover" />
+      ) : (
+        <span className="flex h-full w-full items-center justify-center">
+          <Avatar src={group.avatar} name={group.userName} size={56} />
+        </span>
+      )}
+      <span className="pointer-events-none absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-black/70 to-transparent px-3 pb-3 pt-8 text-left text-[13px] font-semibold text-white">
+        {group.userName}
+      </span>
+    </button>
   );
 }
 
