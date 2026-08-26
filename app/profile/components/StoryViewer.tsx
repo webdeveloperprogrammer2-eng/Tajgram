@@ -200,7 +200,11 @@ export default function StoryViewer({
         if (!next) onClose();
       }}
     >
-      <DialogContent className="max-w-[440px] p-0" showClose={false}>
+      <DialogContent
+        className="max-w-[440px] p-0"
+        overlayClassName={styles.overlaySoft}
+        showClose={false}
+      >
         <DialogTitle className="sr-only">{t.story}</DialogTitle>
 
         {/* ================= SAHNA ================= */}
