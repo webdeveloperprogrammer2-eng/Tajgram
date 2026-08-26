@@ -251,228 +251,171 @@ function StoryViewer({
     };
   }, [next, prev, onClose]);
 
-  // Hamsoyaho: dar instagram (PK) chap va rost korti khurdshuda
-  // meistad. Ba on zer kuni - ba hamon story meguzarad.
-  const before = index > 0 ? groups[index - 1] : null;
-  const after = index < groups.length - 1 ? groups[index + 1] : null;
-
   return (
     <div
-      className="animate-fade-in fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-[#1a1a1a]"
+      className="animate-fade-in fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm"
       onClick={onClose}
     >
-      {/* Logo dar kunji chap-bolo - monandi instagram */}
-      <span className="pointer-events-none absolute left-6 top-5 z-20 select-none font-logo text-[26px] leading-none text-white">
-        Tajgram
-      </span>
-
-      <button
-        type="button"
-        onClick={onClose}
-        aria-label={t.closeStory}
-        className="absolute right-5 top-5 z-20 flex h-9 w-9 items-center justify-center rounded-full text-[20px] leading-none text-white transition hover:bg-white/10"
-      >
-        ✕
-      </button>
-
-      {/* ---- Hamsoyai CHAP ---- */}
-      {before !== null && (
-        <StoryPeek
-          group={before}
-          side="left"
-          onClick={() => onChangeIndex(index - 1)}
-        />
-      )}
-
-      {/* ---- Hamsoyai ROST ---- */}
-      {after !== null && (
-        <StoryPeek
-          group={after}
-          side="right"
-          onClick={() => onChangeIndex(index + 1)}
-        />
-      )}
-
-      {/* ---- Tirchahoi gird (berun az kort, monandi instagram) ---- */}
-      {index > 0 && (
-        <button
-          type="button"
-          aria-label={t.prevStory}
-          onClick={(event) => {
-            event.stopPropagation();
-            onChangeIndex(index - 1);
-          }}
-          className="absolute left-[calc(50%-min(28vh,220px)-56px)] top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[20px] leading-none text-[#262626] shadow-md transition hover:scale-110 active:scale-95"
-        >
-          ‹
-        </button>
-      )}
-      {index < groups.length - 1 && (
-        <button
-          type="button"
-          aria-label={t.nextStory}
-          onClick={(event) => {
-            event.stopPropagation();
-            onChangeIndex(index + 1);
-          }}
-          className="absolute right-[calc(50%-min(28vh,220px)-56px)] top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[20px] leading-none text-[#262626] shadow-md transition hover:scale-110 active:scale-95"
-        >
-          ›
-        </button>
-      )}
-
-      {/* ---- KORTI ASOSI ---- */}
+      {/* Kort: hamon dizayni sahifai PROFIL - yak khel dar tamomi sayt */}
       <div
-        className="animate-scale-in relative flex aspect-[9/16] h-[calc(100vh-90px)] max-h-[860px] flex-col overflow-hidden rounded-[6px] bg-black shadow-[0_10px_60px_rgba(0,0,0,0.5)]"
+        className="animate-scale-in relative flex w-full max-w-[440px] flex-col overflow-hidden rounded-2xl bg-[#0f0f12] shadow-[0_24px_60px_rgba(0,0,0,0.6)]"
         onClick={(event) => event.stopPropagation()}
         onPointerDown={() => setPaused(true)}
         onPointerUp={() => setPaused(false)}
         onPointerLeave={() => setPaused(false)}
       >
-        {/* Media. Suratho gohe pahn hastand (screenshot) - dar pusht
-            hamon surat kalonkarda va khira meistad, to navorhoi siyohi
-            murda namonand. Aynan hamon tavr ki instagram mekunad. */}
-        <div className="absolute inset-0">
+        {/* ================= SAHNA ================= */}
+        <div className="group relative flex min-h-[320px] w-full items-center justify-center overflow-hidden bg-black max-h-[min(70dvh,640px)]">
+          {/* Pasazaminai khira - joi kholiro por mekunad */}
+          {src !== null && !video && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={src}
+              alt=""
+              aria-hidden
+              className="pointer-events-none absolute inset-0 h-full w-full scale-125 object-cover opacity-55 blur-3xl"
+            />
+          )}
+
           {src && video ? (
-            <>
-              <video
-                key={src + "-bg"}
-                src={src}
-                aria-hidden
-                muted
-                playsInline
-                className="pointer-events-none absolute inset-0 h-full w-full scale-125 object-cover opacity-60 blur-3xl"
-              />
-              <video
-                key={src}
-                ref={videoRef}
-                src={src}
-                autoPlay
-                playsInline
-                onTimeUpdate={(event) => {
-                  const node = event.currentTarget;
-                  if (node.duration > 0) setProgress(node.currentTime / node.duration);
-                }}
-                onEnded={next}
-                className="relative h-full w-full object-contain"
-              />
-            </>
+            <video
+              key={src}
+              ref={videoRef}
+              src={src}
+              autoPlay
+              playsInline
+              onTimeUpdate={(event) => {
+                const node = event.currentTarget;
+                if (node.duration > 0) setProgress(node.currentTime / node.duration);
+              }}
+              onEnded={next}
+              className="relative max-h-[min(70dvh,640px)] w-full object-contain"
+            />
           ) : src ? (
-            <>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                key={src + "-bg"}
-                src={src}
-                alt=""
-                aria-hidden
-                className="pointer-events-none absolute inset-0 h-full w-full scale-125 object-cover opacity-60 blur-3xl"
-              />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                key={src}
-                src={src}
-                alt={t.story}
-                className="relative h-full w-full object-contain"
-              />
-            </>
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              key={src}
+              src={src}
+              alt={t.story}
+              className="relative max-h-[min(70dvh,640px)] w-full object-contain"
+            />
           ) : (
-            <div className="flex h-full items-center justify-center text-[13px] text-white/50">
+            <div className="flex h-[320px] items-center justify-center text-[13px] text-white/50">
               {t.storyUnavailable}
             </div>
           )}
-        </div>
 
-        {/* Tira kardani boloi kort - to sarlavha dar har surat khonda shavad */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/60 via-black/25 to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/75 via-black/30 to-transparent" />
 
-        {/* Khathoi progress */}
-        <div className="relative z-10 flex gap-[3px] px-2 pt-3">
-          {group.items.map((item, i) => (
-            <span
-              key={item.id}
-              className="h-[2px] flex-1 overflow-hidden rounded-full bg-white/35"
-            >
-              <span
-                className="block h-full rounded-full bg-white"
+          {/* ---------- Bolo: navorho + korbar + bastan ---------- */}
+          <div className="absolute inset-x-0 top-0 z-10 px-3 pt-3">
+            <div className="flex gap-1.5">
+              {group.items.map((item, i) => (
+                <span
+                  key={item.id}
+                  className="h-[3px] flex-1 overflow-hidden rounded-full bg-white/28"
+                >
+                  <span
+                    className="block h-full rounded-full bg-white transition-[width] duration-75 ease-linear"
+                    style={{
+                      width:
+                        i < step
+                          ? "100%"
+                          : i === step
+                            ? `${Math.round(progress * 100)}%`
+                            : "0%",
+                    }}
+                  />
+                </span>
+              ))}
+            </div>
+
+            <div className="mt-3 flex items-center gap-2.5">
+              <Link
+                href={`/profile/${group.userId}`}
+                onClick={(event) => event.stopPropagation()}
+                className="block shrink-0 rounded-full p-[2.5px] transition-transform duration-200 hover:scale-105"
                 style={{
-                  width: i < step ? "100%" : i === step ? `${progress * 100}%` : "0%",
+                  background:
+                    "linear-gradient(45deg, #f9ce34, #ee2a7b 45%, #6228d7)",
                 }}
-              />
-            </span>
-          ))}
+              >
+                <span className="block rounded-full border-2 border-[#0f0f12]">
+                  <Avatar src={group.avatar} name={group.userName} size={32} />
+                </span>
+              </Link>
+
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[12px] font-bold uppercase tracking-[0.14em] text-white">
+                  {group.userName}
+                </p>
+                <p className="text-[9px] uppercase tracking-[0.2em] text-white/60">
+                  {shortTimeAgo(story?.createAt)}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label={t.closeStory}
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black/45 text-[15px] leading-none text-white backdrop-blur transition-all duration-200 hover:bg-black/70 active:scale-95"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+
+          {/* ---------- Guzarish: chap va rost ---------- */}
+          <button
+            type="button"
+            onClick={prev}
+            aria-label={t.prevStory}
+            className="absolute bottom-0 left-0 top-20 w-1/3"
+          />
+          <button
+            type="button"
+            onClick={next}
+            aria-label={t.nextStory}
+            className="absolute bottom-0 right-0 top-20 w-2/3"
+          />
+
+          {/* Tugmahoi girdi chap/rost - faqat hangomi hover */}
+          {(index > 0 || step > 0) && (
+            <button
+              type="button"
+              onClick={prev}
+              aria-label={t.prevStory}
+              className="absolute left-2 top-1/2 z-10 flex h-[34px] w-[34px] -translate-y-1/2 items-center justify-center rounded-full bg-black/55 text-[18px] leading-none text-white opacity-0 backdrop-blur transition-opacity duration-200 hover:bg-black/75 focus-visible:opacity-100 group-hover:opacity-100"
+            >
+              ‹
+            </button>
+          )}
+          {(index < groups.length - 1 || step < group.items.length - 1) && (
+            <button
+              type="button"
+              onClick={next}
+              aria-label={t.nextStory}
+              className="absolute right-2 top-1/2 z-10 flex h-[34px] w-[34px] -translate-y-1/2 items-center justify-center rounded-full bg-black/55 text-[18px] leading-none text-white opacity-0 backdrop-blur transition-opacity duration-200 hover:bg-black/75 focus-visible:opacity-100 group-hover:opacity-100"
+            >
+              ›
+            </button>
+          )}
         </div>
 
-        {/* Sarlavha: avatar, nom, vaqt */}
-        <div className="relative z-10 flex items-center gap-3 px-3 py-3">
-          <Link
-            href={`/profile/${group.userId}`}
-            className="flex min-w-0 items-center gap-3"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <Avatar src={group.avatar} name={group.userName} size={32} />
-            <span className="truncate text-[14px] font-semibold text-white">
-              {group.userName}
-            </span>
-          </Link>
-          <span className="shrink-0 text-[14px] text-white/70">
-            {shortTimeAgo(story?.createAt)}
+        {/* ================= POYON: hisob ================= */}
+        <div
+          className="flex items-center justify-between gap-4 border-t px-4 py-3"
+          style={{ borderColor: "rgba(255,255,255,0.10)" }}
+        >
+          <span className="text-[10px] uppercase tracking-[0.18em] text-white/55">
+            {step + 1} / {group.items.length}
+          </span>
+          <span className="text-[10px] uppercase tracking-[0.18em] text-white/40">
+            {index + 1} / {groups.length}
           </span>
         </div>
-
-        {/* Zonahoi guzarish: chap 1/3, rost 2/3 */}
-        <button
-          type="button"
-          onClick={prev}
-          aria-label={t.prevStory}
-          className="absolute bottom-0 left-0 top-16 w-1/3"
-        />
-        <button
-          type="button"
-          onClick={next}
-          aria-label={t.nextStory}
-          className="absolute bottom-0 right-0 top-16 w-2/3"
-        />
       </div>
     </div>
-  );
-}
-
-// Korti khurdi hamsoya (chap yo rost) - monandi instagram dar PK.
-// Dar telefon nishon doda NAMESHAVAD (md:block).
-function StoryPeek({
-  group,
-  side,
-  onClick,
-}: {
-  group: StoryGroup;
-  side: "left" | "right";
-  onClick: () => void;
-}) {
-  const first = group.items[0] ?? null;
-  const cover = mediaUrl(first?.fileName);
-
-  return (
-    <button
-      type="button"
-      onClick={(event) => {
-        event.stopPropagation();
-        onClick();
-      }}
-      style={{ [side]: "calc(50% + min(28vh, 220px) + 28px)" }}
-      className="absolute top-1/2 hidden aspect-[9/16] h-[52vh] max-h-[480px] -translate-y-1/2 overflow-hidden rounded-[6px] bg-[#262626] opacity-60 transition-opacity duration-200 hover:opacity-90 md:block"
-    >
-      {cover !== null && !isVideo(first?.fileName) ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={cover} alt="" aria-hidden className="h-full w-full object-cover" />
-      ) : (
-        <span className="flex h-full w-full items-center justify-center">
-          <Avatar src={group.avatar} name={group.userName} size={56} />
-        </span>
-      )}
-      <span className="pointer-events-none absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-black/70 to-transparent px-3 pb-3 pt-8 text-left text-[13px] font-semibold text-white">
-        {group.userName}
-      </span>
-    </button>
   );
 }
 

@@ -200,72 +200,21 @@ export default function StoryViewer({
         if (!next) onClose();
       }}
     >
-      {/* Ramkai oyna ba TAMOMI ekran meshavad - monandi instagram dar PK.
-         Sabkho AYNAN dar style-and, chunki styles.modal (CSS module)
-         paҳноии 440px va foni panel-ro talab mekunad. */}
-      <DialogContent
-        showClose={false}
-        className="animate-fade-in"
-        style={{
-          width: "100vw",
-          maxWidth: "none",
-          height: "100dvh",
-          padding: 0,
-          border: 0,
-          borderRadius: 0,
-          background: "#1a1a1a",
-          boxShadow: "none",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          overflow: "hidden",
-        }}
-      >
+      <DialogContent className="max-w-[440px] p-0" showClose={false}>
         <DialogTitle className="sr-only">{t.story}</DialogTitle>
 
-        <DialogClose
-          aria-label={t.close}
-          className="absolute right-5 top-5 z-30 flex h-9 w-9 items-center justify-center rounded-full text-white transition hover:bg-white/10"
-        >
-          <X className="h-5 w-5" strokeWidth={2} />
-        </DialogClose>
-
-        {/* ---- Tirchahoi girdi safed BERUN az kort ---- */}
-        {index > 0 && (
-          <button
-            type="button"
-            onClick={goPrev}
-            aria-label={t.previous}
-            className="absolute left-[calc(50%-min(28vh,220px)-56px)] top-1/2 z-30 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[#262626] shadow-md transition hover:scale-110 active:scale-95"
-          >
-            <ChevronLeft className="h-5 w-5" strokeWidth={2} />
-          </button>
-        )}
-        {index < stories.length - 1 && (
-          <button
-            type="button"
-            onClick={goNext}
-            aria-label={t.next}
-            className="absolute right-[calc(50%-min(28vh,220px)-56px)] top-1/2 z-30 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[#262626] shadow-md transition hover:scale-110 active:scale-95"
-          >
-            <ChevronRight className="h-5 w-5" strokeWidth={2} />
-          </button>
-        )}
-
-        {/* ================= KORTI ASOSI (9:16) ================= */}
-        <div className="animate-scale-in relative flex aspect-[9/16] h-[calc(100dvh-90px)] max-h-[860px] flex-col overflow-hidden rounded-[6px] bg-black shadow-[0_10px_60px_rgba(0,0,0,0.5)]">
-          {/* Pasazamina: hamon surat, kalonkarda va khira. Bе in,
-             surathoi PAHN dar miyoni navorhoi siyoh meistodand. */}
+        {/* ================= SAHNA ================= */}
+        <div className={styles.stage}>
+          {/* Pasazaminai mahv - joi kholiro por mekunad (na navori siyoh).
+              Baroi VIDEO onro nameguzorem: <img> videoro nishon
+              namedihad va faqat "surati shikasta" paydo meshud. */}
           {src !== null && !isVideo && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={src}
-              alt=""
-              aria-hidden
-              className="pointer-events-none absolute inset-0 h-full w-full scale-125 object-cover opacity-60 blur-3xl"
-            />
+            <img src={src} alt="" aria-hidden className={styles.stageBlur} />
           )}
 
+          {/* KHATOI KUHNA: in jo HAMESHA <img> bud - baroi hamin
+              storyi VIDEOI hamesha shikasta namoyon meshud. */}
           {src !== null &&
             (isVideo ? (
               <video
@@ -273,7 +222,7 @@ export default function StoryViewer({
                 src={src}
                 autoPlay
                 playsInline
-                className="absolute inset-0 h-full w-full object-contain"
+                className={styles.stageMedia}
                 onTimeUpdate={(event) => {
                   const node = event.currentTarget;
                   if (Number.isFinite(node.duration) && node.duration > 0) {
@@ -281,29 +230,25 @@ export default function StoryViewer({
                   }
                 }}
                 onEnded={() => advance.current()}
+                // Agar video bor nashavad - story band namemonad
                 onError={() => advance.current()}
               />
             ) : (
               // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={src}
-                alt={t.story}
-                className="absolute inset-0 h-full w-full object-contain"
-              />
+              <img src={src} alt={t.story} className={styles.stageMedia} />
             ))}
 
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/60 via-black/25 to-transparent" />
+          <div className={styles.stageTopScrim} />
 
-          {/* ---------- Bolo: navorho + korbar ---------- */}
-          <div className="absolute inset-x-0 top-0 z-10 px-2 pt-3">
-            <div className="flex gap-[3px]">
+          {/* ---------- Bolo: navorho + korbar + bastan ---------- */}
+          <div className="absolute inset-x-0 top-0 z-10 px-3 pt-3">
+            <div className="flex gap-1.5">
+              {/* Navori guzashti vaqt - hozir HARAKAT mekunad:
+                  storyhoi guzashta purra, hozira - qadar-i taymer. */}
               {stories.map((item, i) => (
-                <span
-                  key={item.id}
-                  className="h-[2px] flex-1 overflow-hidden rounded-full bg-white/35"
-                >
+                <span key={item.id} className={styles.track}>
                   <span
-                    className="block h-full rounded-full bg-white"
+                    className={styles.trackFill}
                     style={{
                       width:
                         i < index
@@ -317,9 +262,9 @@ export default function StoryViewer({
               ))}
             </div>
 
-            <div className="mt-3 flex items-center gap-3 px-1">
+            <div className="mt-3 flex items-center gap-2.5">
               <span className={styles.ring}>
-                <Avatar className="h-8 w-8 border-2 border-black">
+                <Avatar className="h-8 w-8 border-2 border-[var(--bg)]">
                   {avatar !== null && <AvatarImage src={avatar} alt={userName} />}
                   <AvatarFallback className="text-[10px]">
                     {initials(userName)}
@@ -327,46 +272,96 @@ export default function StoryViewer({
                 </Avatar>
               </span>
 
-              <p className="truncate text-[14px] font-semibold text-white">
-                {userName}
-              </p>
-              <p className="shrink-0 text-[14px] text-white/70">
-                {shortDate(story.createAt)}
-              </p>
-            </div>
-          </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[12px] font-bold uppercase tracking-[0.14em] text-white">
+                  {userName}
+                </p>
+                <p
+                  className={`${styles.mono} text-[9px] uppercase tracking-[0.2em] text-white/60`}
+                >
+                  {shortDate(story.createAt)}
+                </p>
+              </div>
 
-          {/* ---------- Poyon: hisobho va tark ---------- */}
-          <div className="absolute inset-x-0 bottom-0 z-10 flex items-center justify-between gap-3 bg-gradient-to-t from-black/75 to-transparent px-4 pb-4 pt-10">
-            <div className="flex items-center gap-3">
-              <span className="flex items-center gap-1.5 rounded-full bg-white/12 px-3 py-1.5 text-[13px] tabular-nums text-white backdrop-blur">
-                <Eye className="h-4 w-4" strokeWidth={1.7} />
-                {views}
-              </span>
-
-              <span className="flex items-center gap-1.5 rounded-full bg-white/12 px-3 py-1.5 text-[13px] tabular-nums text-white backdrop-blur">
-                <Heart className="h-4 w-4" strokeWidth={1.7} />
-                {likes}
-              </span>
-
-              <span className="text-[13px] tabular-nums text-white/60">
-                {index + 1} / {stories.length}
-              </span>
-            </div>
-
-            {canDelete && (
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={handleDelete}
-                disabled={busy}
-                className="gap-1.5 rounded-full bg-white/12 text-[#ff5a68] backdrop-blur hover:bg-white/20 hover:text-[#ff5a68]"
+              <DialogClose
+                aria-label={t.close}
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur transition-all duration-200 hover:bg-black/70 active:scale-95"
               >
-                <Trash2 className="h-4 w-4" strokeWidth={1.8} />
-                {removeLabel ?? "TARK"}
-              </Button>
-            )}
+                <X className="h-4 w-4" strokeWidth={2} />
+              </DialogClose>
+            </div>
           </div>
+
+          {/* ---------- Tugmahoi chap va rost ---------- */}
+          {index > 0 && (
+            <button
+              type="button"
+              onClick={goPrev}
+              aria-label={t.previous}
+              className={`${styles.navSide} left-0`}
+            >
+              <span>
+                <ChevronLeft className="h-5 w-5" strokeWidth={1.8} />
+              </span>
+            </button>
+          )}
+
+          {index < stories.length - 1 && (
+            <button
+              type="button"
+              onClick={goNext}
+              aria-label={t.next}
+              className={`${styles.navSide} right-0`}
+            >
+              <span>
+                <ChevronRight className="h-5 w-5" strokeWidth={1.8} />
+              </span>
+            </button>
+          )}
+        </div>
+
+        {/* ================= POYON: hisobho ================= */}
+        <div
+          className="flex items-center justify-between gap-4 border-t px-4 py-3"
+          style={{ borderColor: "var(--line)" }}
+        >
+          <div className="flex items-center gap-4">
+            <span
+              className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs tabular-nums"
+              style={{ background: "var(--panel)" }}
+            >
+              <Eye className="h-3.5 w-3.5" strokeWidth={1.6} />
+              {views}
+            </span>
+
+            <span
+              className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs tabular-nums"
+              style={{ background: "var(--panel)" }}
+            >
+              <Heart className="h-3.5 w-3.5" strokeWidth={1.6} />
+              {likes}
+            </span>
+
+            <span
+              className={`${styles.mono} text-[10px] uppercase tracking-[0.18em]`}
+              style={{ color: "var(--muted)" }}
+            >
+              {index + 1} / {stories.length}
+            </span>
+          </div>
+
+          {canDelete && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={handleDelete}
+              disabled={busy}
+              className="gap-1.5 text-[#ed4956] hover:bg-[#ed4956]/10 hover:text-[#ed4956]"
+            >
+              <Trash2 className="h-3.5 w-3.5" strokeWidth={1.8} />
+              {removeLabel ?? "TARK"}
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>
