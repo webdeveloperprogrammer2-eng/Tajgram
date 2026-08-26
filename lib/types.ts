@@ -155,6 +155,24 @@ export type Chat = {
   createdAt: string;
 };
 
+/** Паёми чат (GetMessageDto). Барои панели админ низ истифода мешавад. */
+export type ChatMessage = {
+  messageId: number;
+  chatId: number;
+  userId: string;
+  userName: string;
+  messageText: string | null;
+  fileName: string | null;
+  dateSent: string;
+  isMine: boolean;
+  kind: string | null;
+  durationSeconds: number | null;
+  waveform: number[] | null;
+  callId: number | null;
+  callType: string | null;
+  callStatus: string | null;
+};
+
 export type NotificationType = "like" | "subscribed" | "message";
 
 export type AppNotification = {
