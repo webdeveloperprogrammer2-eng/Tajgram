@@ -42,8 +42,6 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
   const [success, setSuccess] = useState("");
-
-  // Field validation errors
   const [userNameError, setUserNameError] = useState("");
   const [fullNameError, setFullNameError] = useState("");
   const [emailError, setEmailError] = useState("");

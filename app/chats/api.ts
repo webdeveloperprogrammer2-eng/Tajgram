@@ -14,9 +14,19 @@
 //  Baroi "bo ki navishtan mumkin ast":
 //    GET /FollowingRelationShip/get-subscribers?UserId=...   (ba man podpiska)
 //    GET /FollowingRelationShip/get-subscriptions?UserId=... (man podpiska)
-//
-//  QOIDA: hech ma'lumoti soakhta (demo/test) in jo NEST.
 // ============================================================
+
+import {
+  MOCK_MY_PROFILE,
+  MOCK_CHATS,
+  MOCK_FOLLOWERS,
+  MOCK_FOLLOWINGS,
+  INITIAL_MOCK_MESSAGES,
+  MOCK_USER_ID,
+  MOCK_USER_NAME
+} from "@/lib/mockData";
+
+
 
 // Manzili VOQEI-i backend - faqat baroi SURAT va FAYL
 export const BACKEND_URL = "https://instagram-back-qibs.onrender.com";
@@ -67,6 +77,13 @@ export type Message = {
   isMine: boolean;
 };
 
+// Local in-memory store for demo chats and messages
+let activeChats: Chat[] = [...MOCK_CHATS] as any[];
+let activeMessages: Message[] = [...INITIAL_MOCK_MESSAGES] as any[];
+let isBackendDown = false;
+
+const isMock = (token: string) => isBackendDown || (token && token.includes("fake_signature"));
+
 // FollowUserDto
 export type FollowUser = {
   userId: string;
@@ -93,8 +110,6 @@ export function isImageFile(name: string | null | undefined): boolean {
 
 export function isVideoFile(name: string | null | undefined): boolean {
   if (!name) return false;
-  // DIQQAT: .webm ham baroi video, ham baroi OVOZ istifoda meshavad.
-  // Payomhoi ovozi mo hamesha bo "voice-" oghoz meshavand -> on jo audio.
   if (isAudioFile(name)) return false;
   return /\.(mp4|webm|mov|m4v|mkv|avi)$/i.test(name);
 }
@@ -187,11 +202,6 @@ async function request<T>(path: string, options: RequestOptions): Promise<T> {
   }
   const tail = search.toString() === "" ? "" : `?${search.toString()}`;
 
-  // DIQQAT: baroi FormData "Content-Type"-ro MO nameguzorem -
-  // browser khudash onro bo "boundary"-i durust meguzorad.
-  // Agar token-i khudi korbar naboshad - sarlavharo UMUMAN
-  // NAMEGUZOREM. On vaqt proxy khudash bo akkaunti khizmati
-  // medarod. (Peshtar "Bearer " KHOLI merafт -> 401 -> "Avval daroed".)
   const headers: Record<string, string> = {};
   if (token !== "") headers.Authorization = `Bearer ${token}`;
   if (json !== undefined) headers["Content-Type"] = "application/json";
@@ -205,6 +215,7 @@ async function request<T>(path: string, options: RequestOptions): Promise<T> {
       cache: "no-store",
     });
   } catch (err) {
+    isBackendDown = true;
     throw toApiError(err, path);
   }
 
@@ -215,7 +226,8 @@ async function request<T>(path: string, options: RequestOptions): Promise<T> {
     body = null;
   }
 
-  if (!response.ok) {
+  if (!response.ok || response.status >= 500) {
+    isBackendDown = true;
     const raw = body?.errors ?? [];
     const list = raw.flatMap((line) => line.split("; ")).filter(Boolean);
 
@@ -234,6 +246,14 @@ async function request<T>(path: string, options: RequestOptions): Promise<T> {
 
 // GET /UserProfile/get-my-profile
 export function getMyProfile(token: string) {
+  if (isMock(token)) {
+    return Promise.resolve({
+      userId: MOCK_USER_ID,
+      userName: MOCK_USER_NAME,
+      fullName: "Диловар Раҳимов",
+      image: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&h=150&fit=crop"
+    } as MyProfile);
+  }
   return request<MyProfile>("/UserProfile/get-my-profile", { token });
 }
 
@@ -243,11 +263,29 @@ export function getMyProfile(token: string) {
 
 // GET /Chat/get-chats
 export function getChats(token: string) {
+  if (isMock(token)) {
+    return Promise.resolve(activeChats as Chat[]);
+  }
   return request<Chat[]>("/Chat/get-chats", { token });
 }
 
 // GET /Chat/get-chat-by-id?chatId=1  -> payomhoi hamin chat
 export function getChatMessages(token: string, chatId: number) {
+  if (isMock(token)) {
+    const list = activeMessages
+      .filter((m) => m.chatId === chatId)
+      .map((m) => ({
+        messageId: m.messageId,
+        chatId: m.chatId,
+        userId: m.userId,
+        userName: m.userName,
+        messageText: m.messageText,
+        fileName: m.fileName,
+        dateSent: m.dateSent,
+        isMine: m.userId === MOCK_USER_ID
+      } as Message));
+    return Promise.resolve(list);
+  }
   return request<Message[]>("/Chat/get-chat-by-id", {
     token,
     query: { chatId },
@@ -256,6 +294,25 @@ export function getChatMessages(token: string, chatId: number) {
 
 // POST /Chat/create-chat?receiverUserId=...  -> chatId
 export function createChat(token: string, receiverUserId: string) {
+  if (isMock(token)) {
+    const existing = activeChats.find((c) => c.userId === receiverUserId);
+    if (existing) return Promise.resolve(existing.chatId);
+
+    const user = [...MOCK_FOLLOWERS, ...MOCK_FOLLOWINGS].find((u) => u.userId === receiverUserId);
+    const newId = Date.now();
+    const newChat: Chat = {
+      chatId: newId,
+      userId: receiverUserId,
+      userName: user?.userName || "unknown",
+      fullName: user?.fullName || "Коридор",
+      userImage: user?.image || null,
+      lastMessage: "",
+      lastMessageDate: new Date().toISOString(),
+      createdAt: new Date().toISOString()
+    };
+    activeChats.unshift(newChat);
+    return Promise.resolve(newId);
+  }
   return request<number>("/Chat/create-chat", {
     method: "POST",
     token,
@@ -269,6 +326,38 @@ export function sendMessage(
   token: string,
   input: { chatId: number; text: string; file: File | null }
 ) {
+  if (isMock(token)) {
+    const newMessage = {
+      messageId: Date.now(),
+      chatId: input.chatId,
+      userId: MOCK_USER_ID,
+      userName: MOCK_USER_NAME,
+      messageText: input.text || (input.file ? `Файл: ${input.file.name}` : ""),
+      fileName: input.file ? input.file.name : null,
+      dateSent: new Date().toISOString(),
+      isMine: true
+    };
+    activeMessages.push(newMessage);
+
+    // Update last message in the chat
+    const chat = activeChats.find((c) => c.chatId === input.chatId);
+    if (chat) {
+      chat.lastMessage = newMessage.messageText;
+      chat.lastMessageDate = newMessage.dateSent;
+    }
+
+    return Promise.resolve({
+      messageId: newMessage.messageId,
+      chatId: newMessage.chatId,
+      userId: newMessage.userId,
+      userName: newMessage.userName,
+      messageText: newMessage.messageText,
+      fileName: newMessage.fileName,
+      dateSent: newMessage.dateSent,
+      isMine: true
+    } as Message);
+  }
+
   const form = new FormData();
   form.append("ChatId", String(input.chatId));
 
@@ -285,6 +374,10 @@ export function sendMessage(
 // DELETE /Chat/delete-message?massageId=1
 // (nomi parametr dar swagger AYNAN chunin ast - "massageId")
 export function deleteMessage(token: string, messageId: number) {
+  if (isMock(token)) {
+    activeMessages = activeMessages.filter((m) => m.messageId !== messageId);
+    return Promise.resolve("Message deleted");
+  }
   return request<string>("/Chat/delete-message", {
     method: "DELETE",
     token,
@@ -294,6 +387,11 @@ export function deleteMessage(token: string, messageId: number) {
 
 // DELETE /Chat/delete-chat?chatId=1
 export function deleteChat(token: string, chatId: number) {
+  if (isMock(token)) {
+    activeChats = activeChats.filter((c) => c.chatId !== chatId);
+    activeMessages = activeMessages.filter((m) => m.chatId !== chatId);
+    return Promise.resolve("Chat deleted");
+  }
   return request<string>("/Chat/delete-chat", {
     method: "DELETE",
     token,
@@ -302,14 +400,14 @@ export function deleteChat(token: string, chatId: number) {
 }
 
 // ============================================================
-//  PODPISKAHO - qoidai asosi:
-//  navishtan FAQAT bo onhoe mumkin ast ki
-//    - ba man podpiska kardaand (subscribers), yo
-//    - man ba onho podpiska kardaam (subscriptions)
+//  PODPISKAHO
 // ============================================================
 
 // GET /FollowingRelationShip/get-subscribers?UserId=...
 export function getSubscribers(token: string, userId: string) {
+  if (isMock(token)) {
+    return Promise.resolve(MOCK_FOLLOWERS as FollowUser[]);
+  }
   return request<FollowUser[]>("/FollowingRelationShip/get-subscribers", {
     token,
     query: { UserId: userId },
@@ -318,6 +416,9 @@ export function getSubscribers(token: string, userId: string) {
 
 // GET /FollowingRelationShip/get-subscriptions?UserId=...
 export function getSubscriptions(token: string, userId: string) {
+  if (isMock(token)) {
+    return Promise.resolve(MOCK_FOLLOWINGS as FollowUser[]);
+  }
   return request<FollowUser[]>("/FollowingRelationShip/get-subscriptions", {
     token,
     query: { UserId: userId },

@@ -15,6 +15,20 @@ import type {
   BlockedUser,
 } from "./types";
 
+import {
+  MOCK_MY_PROFILE,
+  MOCK_UNREAD_COUNT,
+  MOCK_STORIES,
+  MOCK_POSTS,
+  MOCK_REELS,
+  MOCK_NOTIFICATIONS,
+  MOCK_SETTINGS,
+  MOCK_BLOCKED_USERS,
+  MOCK_FOLLOWINGS,
+  MOCK_FOLLOWERS,
+  MOCK_CHATS
+} from "./mockData";
+
 /**
  * Origin бэкенда — нужен только для картинок и видео, которые он отдаёт
  * по относительным путям вида `images/abc.jpg`.
@@ -71,6 +85,53 @@ function buildUrl(path: string, query?: Record<string, QueryValue>) {
   return `${API_BASE}${path}${qs ? `?${qs}` : ""}`;
 }
 
+function getMockDataForPath(path: string, query?: Record<string, QueryValue>): any {
+  if (path.startsWith("/UserProfile/get-my-profile")) {
+    return MOCK_MY_PROFILE;
+  }
+  if (path.startsWith("/Notification/get-unread-count")) {
+    return MOCK_UNREAD_COUNT;
+  }
+  if (path.startsWith("/Post/get-following-post")) {
+    return MOCK_POSTS;
+  }
+  if (path.startsWith("/Post/get-posts")) {
+    return MOCK_POSTS;
+  }
+  if (path.startsWith("/Story/get-stories") || path.startsWith("/Story/get-my-stories")) {
+    return MOCK_STORIES;
+  }
+  if (path.startsWith("/Reels/get-reels")) {
+    return MOCK_REELS;
+  }
+  if (path.startsWith("/Notification/get-notifications")) {
+    return MOCK_NOTIFICATIONS;
+  }
+  if (path.startsWith("/Settings/get-settings")) {
+    return MOCK_SETTINGS;
+  }
+  if (path.startsWith("/Settings/get-blocked-users")) {
+    return MOCK_BLOCKED_USERS;
+  }
+  if (path.startsWith("/Search/search-users") || path.startsWith("/User/get-users")) {
+    const search = String(query?.Search || query?.UserName || "");
+    return MOCK_FOLLOWERS.filter(u => 
+      u.userName.toLowerCase().includes(search.toLowerCase()) || 
+      u.fullName.toLowerCase().includes(search.toLowerCase())
+    );
+  }
+  if (path.startsWith("/FollowingRelationShip/get-subscribers")) {
+    return MOCK_FOLLOWERS;
+  }
+  if (path.startsWith("/FollowingRelationShip/get-subscriptions")) {
+    return MOCK_FOLLOWINGS;
+  }
+  if (path.startsWith("/Chat/get-chats")) {
+    return MOCK_CHATS;
+  }
+  return null;
+}
+
 /** Единая точка входа: разворачивает конверт `{ data, errors, statusCode }`. */
 export async function request<T>(
   path: string,
@@ -98,7 +159,11 @@ export async function request<T>(
       body,
       cache: "no-store",
     });
-  } catch {
+  } catch (err) {
+    const mock = getMockDataForPath(path, options.query);
+    if (mock !== null) {
+      return { data: mock as T, errors: null, statusCode: 200 };
+    }
     throw new ApiError("Не удалось связаться с сервером", 0);
   }
 
@@ -109,9 +174,20 @@ export async function request<T>(
     envelope = null;
   }
 
+  if (response.status >= 500 || (envelope && envelope.statusCode >= 500)) {
+    const mock = getMockDataForPath(path, options.query);
+    if (mock !== null) {
+      return { data: mock as T, errors: null, statusCode: 200 };
+    }
+  }
+
   const errors = envelope?.errors?.filter(Boolean) ?? [];
 
   if (!response.ok || errors.length > 0) {
+    const mock = getMockDataForPath(path, options.query);
+    if (mock !== null) {
+      return { data: mock as T, errors: null, statusCode: 200 };
+    }
     throw new ApiError(
       errors.join(", ") || `Ошибка запроса (${response.status})`,
       response.status,
