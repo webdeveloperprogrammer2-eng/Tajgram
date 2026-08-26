@@ -253,7 +253,7 @@ function StoryViewer({
 
   return (
     <div
-      className="animate-fade-in fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm"
+      className="animate-fade-in fixed inset-0 z-[100] flex items-center justify-center bg-black/45 p-4 backdrop-blur-[2px]"
       onClick={onClose}
     >
       {/* Kort: hamon dizayni sahifai PROFIL - yak khel dar tamomi sayt */}
