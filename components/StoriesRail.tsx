@@ -265,7 +265,7 @@ function StoryViewer({
         onPointerLeave={() => setPaused(false)}
       >
         {/* ================= SAHNA ================= */}
-        <div className="group relative flex min-h-[320px] w-full items-center justify-center overflow-hidden bg-black max-h-[min(70dvh,640px)]">
+        <div className="group relative flex min-h-[420px] w-full items-center justify-center overflow-hidden bg-black max-h-[min(86dvh,820px)]">
           {/* Pasazaminai khira - joi kholiro por mekunad */}
           {src !== null && !video && (
             // eslint-disable-next-line @next/next/no-img-element
@@ -289,7 +289,7 @@ function StoryViewer({
                 if (node.duration > 0) setProgress(node.currentTime / node.duration);
               }}
               onEnded={next}
-              className="relative max-h-[min(70dvh,640px)] w-full object-contain"
+              className="relative max-h-[min(86dvh,820px)] w-full object-contain"
             />
           ) : src ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -297,7 +297,7 @@ function StoryViewer({
               key={src}
               src={src}
               alt={t.story}
-              className="relative max-h-[min(70dvh,640px)] w-full object-contain"
+              className="relative max-h-[min(86dvh,820px)] w-full object-contain"
             />
           ) : (
             <div className="flex h-[320px] items-center justify-center text-[13px] text-white/50">
