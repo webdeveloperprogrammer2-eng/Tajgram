@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { api, isVideo, mediaUrl } from "@/lib/api";
 import { shortTimeAgo } from "@/lib/format";
@@ -251,9 +252,13 @@ function StoryViewer({
     };
   }, [next, prev, onClose]);
 
-  return (
+  // DIQQAT: oyna ba <body> guzoshta meshavad (portal).
+  // Peshtar u DARUNI lenta bud, va lenta animatsiyai transform dorad ->
+  // "fixed" nisbati HAMON blok hisob meshud. Natija: kort dar markazi
+  // sayt nameistod va nishonai "Hamaashro dided" BOLOI oyna mebaromad.
+  return createPortal(
     <div
-      className="animate-fade-in fixed inset-0 z-[100] flex items-center justify-center bg-black/45 p-4 backdrop-blur-[2px]"
+      className="animate-fade-in fixed inset-0 z-[200] flex items-start justify-center overflow-y-auto bg-black/45 px-4 py-10 backdrop-blur-[2px] md:items-center md:py-12"
       onClick={onClose}
     >
       {/* Kort: hamon dizayni sahifai PROFIL - yak khel dar tamomi sayt */}
@@ -415,7 +420,8 @@ function StoryViewer({
           </span>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
